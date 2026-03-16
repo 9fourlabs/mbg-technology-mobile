@@ -4,12 +4,12 @@ type Props = {
   tabs: { id: string; label: string }[];
   activeId: string;
   onChange: (id: string) => void;
-  theme: { primary: string };
+  theme: { primary: string; background: string; text: string; mutedText: string };
 };
 
 export function TabBar({ tabs, activeId, onChange, theme }: Props) {
   return (
-    <View style={styles.tabBar}>
+    <View style={[styles.tabBar, { backgroundColor: theme.background }]}>
       {tabs.map((t) => {
         const active = t.id === activeId;
         return (
@@ -22,7 +22,15 @@ export function TabBar({ tabs, activeId, onChange, theme }: Props) {
               pressed && styles.tabButtonPressed,
             ]}
           >
-            <Text style={[styles.tabButtonText, active && { color: theme.primary }]}>{t.label}</Text>
+            <Text
+              style={[
+                styles.tabButtonText,
+                { color: theme.mutedText },
+                active && { color: theme.primary },
+              ]}
+            >
+              {t.label}
+            </Text>
           </Pressable>
         );
       })}

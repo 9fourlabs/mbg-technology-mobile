@@ -32,8 +32,8 @@ Type definitions live in:
 
 ### Where template content lives
 
-Tenant templates live here:
-- `src/templates/informational/mbg.ts`
+Tenant templates live here as JSON configs:
+- `configs/tenants/<tenant>.json`
 
 The template loader is here:
 - `src/templates/informational/index.ts` (`getInformationalTemplate(tenant)`)
@@ -55,7 +55,7 @@ It:
 ### How to update content (no layout changes)
 
 To update a page/tab:
-- edit `src/templates/informational/mbg.ts`
+- edit `configs/tenants/<tenant>.json`
   - change the tab header text
   - add/remove/reorder cards
   - change `imageUri` (stock images)
@@ -66,7 +66,7 @@ If you follow the type shape, the UI stays uniform.
 ### Adding a new tenant (multi-client)
 
 1. Create a new tenant template file:
-   - `src/templates/informational/<tenant>.ts`
+   - `configs/tenants/<tenant>.json`
 2. Update `getInformationalTemplate(tenant)` to return the correct one.
 3. Run with:
    - `APP_TENANT=<tenant> npm run start`

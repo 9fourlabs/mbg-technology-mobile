@@ -5,8 +5,45 @@ on:
     branches: [ main ]
 
 jobs:
-  preview:
+  detect-tenants:
     runs-on: ubuntu-latest
+    outputs:
+      tenants: ${{ steps.changed-tenants.outputs.tenants }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect changed tenant configs
+        id: changed-tenants
+        run: |
+          CHANGED_FILES=$(git diff --name-only origin/main...HEAD -- "configs/tenants/*.json" || true)
+
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No tenant configs changed."
+            echo '[]' > tenants.json
+          else
+            echo "Changed tenant config files:"
+            echo "$CHANGED_FILES"
+            echo "$CHANGED_FILES" \
+              | xargs -n1 basename \
+              | sed 's/.json$//' \
+              | jq -R . | jq -s . > tenants.json
+          fi
+
+          echo "Detected tenants:"
+          cat tenants.json
+
+          TENANTS_JSON=$(cat tenants.json)
+          echo "tenants=$TENANTS_JSON" >> $GITHUB_OUTPUT
+
+  preview:
+    needs: detect-tenants
+    if: ${{ needs.detect-tenants.outputs.tenants != '[]' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        tenant: ${{ fromJson(needs.detect-tenants.outputs.tenants) }}
     env:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
@@ -25,11 +62,12 @@ jobs:
       - name: Install EAS CLI
         run: npm install -g eas-cli
 
-      - name: iOS preview build (MBG)
+      - name: iOS preview build
         run: |
-          APP_TENANT=mbg eas build --profile preview --platform ios --non-interactive
+          APP_TENANT=${{ matrix.tenant }} eas build --profile preview --platform ios --non-interactive
 
-      - name: Android preview build (MBG)
+      - name: Android preview build
         run: |
-          APP_TENANT=mbg eas build --profile preview --platform android --non-interactive
+          APP_TENANT=${{ matrix.tenant }} eas build --profile preview --platform android --non-interactive
+
 

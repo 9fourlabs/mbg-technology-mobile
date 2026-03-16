@@ -46,7 +46,11 @@ export default function TemplateApp() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <PageHeader title={activeTab.headerTitle} body={activeTab.headerBody} />
+          <PageHeader
+            title={activeTab.headerTitle}
+            body={activeTab.headerBody}
+            colors={{ text: theme.text, muted: theme.mutedText }}
+          />
 
           {activeTab.cards.map((card) => (
             <View key={card.id} style={styles.cardGrid}>

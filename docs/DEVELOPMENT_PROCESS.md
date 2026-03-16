@@ -108,7 +108,7 @@ APP_TENANT=mbg npm run start
   - follow the `InformationalTemplate` shape from `src/templates/types.ts`
   - are loaded by `src/templates/informational/index.ts` based on `APP_TENANT`
 - GitHub Actions:
-  - `.github/workflows/eas-preview.yml` – builds **preview** apps on PRs (currently wired for `APP_TENANT=mbg`)
+  - `.github/workflows/eas-preview.yml` – on PRs, **detects which `configs/tenants/*.json` files changed** and only builds preview apps for those tenants
   - `.github/workflows/eas-promote.yml` – manual “Promote to production” (input: `tenant`, `platform`)
 
 These workflows assume a valid `EXPO_TOKEN` secret in the GitHub repo.
