@@ -39,7 +39,8 @@ In this repo:
 
 - **Template types**: `src/templates/types.ts`
 - **Template data (per tenant)**:
-  - JSON configs: `configs/tenants/<tenant>.json`
+  - Authoring (TypeScript): `configs/tenants-src/<tenant>.ts`
+  - Generated JSON (runtime): `configs/tenants/<tenant>.json` (via `npm run build:tenants`)
   - Loader: `src/templates/informational/index.ts`
 - **Renderer**: `src/TemplateApp.tsx`
 - **Reusable UI building blocks**:
@@ -47,7 +48,7 @@ In this repo:
   - `src/components/TemplateCard.tsx`
   - `src/components/TabBar.tsx`
 
-Rule: client customizations should primarily be **template data changes**, not layout rewrites.
+Rule: client customizations should primarily be **template data changes** in the TS configs, not layout rewrites.
 
 ### 4) Running locally in Cursor + emulator
 

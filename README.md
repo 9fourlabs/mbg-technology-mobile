@@ -12,10 +12,9 @@ This repo is a **template engine for informational Expo apps**. Each client app 
 
 ### Where things live
 
-- **Tenant configs (apps)**: `configs/tenants/<tenant>.json`
-  - `brand.logoUri`
-  - `brand.primaryColor`, `brand.backgroundColor`, `brand.textColor`, `brand.mutedTextColor`
-  - `tabs[]` with `headerTitle`, `headerBody`, and `cards[]`
+- **Tenant source (authoring)**: `configs/tenants-src/<tenant>.ts`
+  - Exports an `InformationalTemplate` object (TS-typed).
+- **Generated tenant configs (runtime)**: `configs/tenants/<tenant>.json`
 - **Template types**: `src/templates/types.ts`
 - **Template loader**: `src/templates/informational/index.ts`
 - **Renderer app**: `src/TemplateApp.tsx`
@@ -24,13 +23,19 @@ This repo is a **template engine for informational Expo apps**. Each client app 
 
 ### Add a new app (tenant)
 
-1. **Create a JSON config**
-   - Copy an existing one, e.g. `configs/tenants/mbg.json` or `big-worms-pet-shop.json`.
-   - Save as `configs/tenants/<tenant-id>.json` (e.g. `acme-dental.json`).
-   - Fill in:
-     - `brand` colors + logo URL
-     - `tabs[]` and `cards[]` (content, stock images, URLs)
-2. **Register the tenant**
+1. **Create a TypeScript tenant source**
+   - Copy an existing one, e.g. `configs/tenants-src/mbg.ts` or `configs/tenants-src/acme-dental.ts`.
+   - Save as `configs/tenants-src/<tenant-id>.ts` (e.g. `configs/tenants-src/smith-law.ts`).
+   - Export an `InformationalTemplate` (with full TS type-checking and IDE help).
+2. **Register the tenant in the generator**
+   - Add it to the `tenants` array in `scripts/generateTenants.ts`.
+3. **Generate JSON configs**
+   - Run:
+     ```bash
+     npm run build:tenants
+     ```
+   - This writes `configs/tenants/<tenant-id>.json` files used at runtime.
+4. **Register the tenant in the loader**
    - Add it to the `jsonTenants` map in `src/templates/informational/index.ts`.
 
 That’s it: no layout changes required. The app will render the new tenant’s content with the shared UI.
@@ -71,8 +76,9 @@ npm run android
 
 **Typical flow for a new or updated tenant:**
 
-1. Create/update `configs/tenants/<tenant>.json`.
-2. Register the tenant in `src/templates/informational/index.ts` (only when adding a new one).
+1. Create/update `configs/tenants-src/<tenant>.ts`.
+2. Run `npm run build:tenants` to regenerate JSON.
+3. Register the tenant in `src/templates/informational/index.ts` (only when adding a new one).
 3. Run locally with `APP_TENANT=<tenant> npm run start` and verify iOS/Android.
 4. Commit to a feature branch and open a **PR** into `main`.
 

@@ -1,0 +1,175 @@
+import type { InformationalTemplate } from "../../src/templates/types";
+
+export const mbgTemplate: InformationalTemplate = {
+  templateId: "informational",
+  brand: {
+    logoUri:
+      "https://images.squarespace-cdn.com/content/v1/62a77a4d742c1a5b64a31e56/574e082c-9002-4249-a525-13f72c69f51d/Untitled+%28125+×+125+px%29.png?format=1500w",
+    primaryColor: "#d4af37",
+    backgroundColor: "#000000",
+    textColor: "#ffffff",
+    mutedTextColor: "#999999",
+  },
+  tabs: [
+    {
+      id: "home",
+      label: "Home",
+      headerTitle: "Home",
+      headerBody:
+        "A quick look at how we support your business with modern web, smart systems, and ongoing help.",
+      cards: [
+        {
+          id: "hero",
+          imageUri:
+            "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1200&q=80",
+          title: "Innovate. Integrate. Elevate.",
+          body: "Smart, modern technology support for small and growing teams.",
+          action: {
+            type: "open_url",
+            url: "https://mbgtechnology.com/appointment",
+            label: "Book a consultation",
+            variant: "primary",
+          },
+        },
+        {
+          id: "pillars",
+          imageUri:
+            "https://images.unsplash.com/photo-1522202195461-41fb4a15fd48?auto=format&fit=crop&w=1200&q=80",
+          title: "What we do",
+          body:
+            "Modern web: clean, responsive sites.\nSmart systems: tools + automations.\nOngoing support: reliable help when you need it.",
+        },
+      ],
+    },
+    {
+      id: "services",
+      label: "Services",
+      headerTitle: "Services",
+      headerBody:
+        "Explore what we do. Each service is a card with a quick overview and a next step.",
+      cards: [
+        {
+          id: "web",
+          imageUri:
+            "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80",
+          title: "Web Design & Management",
+          body: "Custom websites built to grow with your business.",
+          action: {
+            type: "open_url",
+            url: "https://mbgtechnology.com/appointment",
+            label: "Get started",
+            variant: "primary",
+          },
+        },
+        {
+          id: "systems",
+          imageUri:
+            "https://images.unsplash.com/photo-1553877522-43269d4ea984?auto=format&fit=crop&w=1200&q=80",
+          title: "Business Technology Systems",
+          body: "Smart, scalable systems for your operations.",
+          action: {
+            type: "open_url",
+            url: "https://mbgtechnology.com/appointment",
+            label: "Talk to us",
+            variant: "primary",
+          },
+        },
+        {
+          id: "support",
+          imageUri:
+            "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=1200&q=80",
+          title: "Technical Support",
+          body: "Reliable support so technology doesn’t slow you down.",
+          action: {
+            type: "open_url",
+            url: "https://www.mbgtechnology.com/contact-us",
+            label: "Contact us",
+            variant: "secondary",
+          },
+        },
+      ],
+    },
+    {
+      id: "plans",
+      label: "Plans",
+      headerTitle: "Plans",
+      headerBody: "Simple options for ongoing website support and business systems.",
+      cards: [
+        {
+          id: "website-management",
+          imageUri:
+            "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80",
+          title: "Website Management",
+          body: "Monthly upkeep for your site. Updates, maintenance, and peace of mind.",
+          action: {
+            type: "open_url",
+            url: "https://www.mbgtechnology.com/subscriptions",
+            label: "View subscriptions",
+            variant: "secondary",
+          },
+        },
+        {
+          id: "business-systems",
+          imageUri:
+            "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=1200&q=80",
+          title: "Business Systems",
+          body: "Starting at $125. System setup options based on team size.",
+          action: {
+            type: "open_url",
+            url: "https://mbgtechnology.com/appointment",
+            label: "Talk to us",
+            variant: "primary",
+          },
+        },
+      ],
+    },
+    {
+      id: "contact",
+      label: "Contact",
+      headerTitle: "Contact",
+      headerBody: "Choose the option that fits where you are right now.",
+      cards: [
+        {
+          id: "book",
+          imageUri:
+            "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1200&q=80",
+          title: "Book a consultation",
+          body: "Schedule focused time to talk through your website, systems, or support needs.",
+          action: {
+            type: "open_url",
+            url: "https://mbgtechnology.com/appointment",
+            label: "Book now",
+            variant: "primary",
+          },
+        },
+        {
+          id: "message",
+          imageUri:
+            "https://images.unsplash.com/photo-1522202195461-41fb4a15fd48?auto=format&fit=crop&w=1200&q=80",
+          title: "Send us a message",
+          body: "Have a quick question or a project idea? Reach out and we’ll follow up.",
+          action: {
+            type: "open_url",
+            url: "https://www.mbgtechnology.com/contact-us",
+            label: "Go to contact form",
+            variant: "secondary",
+          },
+        },
+        {
+          id: "review",
+          imageUri:
+            "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80",
+          title: "Share your experience",
+          body: "Reviews help other small businesses find the right support partner.",
+          action: {
+            type: "open_url",
+            url: "https://g.page/r/CYoriLeElnaXEAI/review",
+            label: "Leave a review",
+            variant: "secondary",
+          },
+        },
+      ],
+    },
+  ],
+};
+

@@ -32,8 +32,11 @@ Type definitions live in:
 
 ### Where template content lives
 
-Tenant templates live here as JSON configs:
-- `configs/tenants/<tenant>.json`
+Tenant templates are authored in TypeScript:
+- `configs/tenants-src/<tenant>.ts` (exports `InformationalTemplate`)
+
+They are generated to JSON for runtime:
+- `configs/tenants/<tenant>.json` (via `npm run build:tenants`)
 
 The template loader is here:
 - `src/templates/informational/index.ts` (`getInformationalTemplate(tenant)`)
@@ -55,7 +58,7 @@ It:
 ### How to update content (no layout changes)
 
 To update a page/tab:
-- edit `configs/tenants/<tenant>.json`
+- edit `configs/tenants-src/<tenant>.ts`
   - change the tab header text
   - add/remove/reorder cards
   - change `imageUri` (stock images)
@@ -66,7 +69,8 @@ If you follow the type shape, the UI stays uniform.
 ### Adding a new tenant (multi-client)
 
 1. Create a new tenant template file:
-   - `configs/tenants/<tenant>.json`
+   - `configs/tenants-src/<tenant>.ts`
+2. Add it to `scripts/generateTenants.ts` and run `npm run build:tenants`.
 2. Update `getInformationalTemplate(tenant)` to return the correct one.
 3. Run with:
    - `APP_TENANT=<tenant> npm run start`

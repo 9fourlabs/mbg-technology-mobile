@@ -49,7 +49,7 @@ Tabs:
     - Leave a review (cta to https://g.page/r/CYoriLeElnaXEAI/review)
 
 Deliverables:
-- Update `configs/tenants/mbg.json` to match the above.
+- Update `configs/tenants-src/mbg.ts` to match the above and run `npm run build:tenants`.
 - Ensure app runs on iOS simulator and Android emulator via Expo.
 ```
 
@@ -63,7 +63,7 @@ Update the Informational Template tenant `mbg`:
 - Change its action URL to: https://mbgtechnology.com/quote
 - Change its stock image to a modern office image (Unsplash URL).
 
-Do not change any layout components. Only edit `configs/tenants/mbg.json`.
+Do not change any layout components. Only edit `configs/tenants-src/mbg.ts` and run `npm run build:tenants`.
 ```
 
 ### Example 3: Add a new card section

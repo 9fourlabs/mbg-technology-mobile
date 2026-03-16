@@ -1,0 +1,105 @@
+import type { InformationalTemplate } from "../../src/templates/types";
+
+export const acmeDentalTemplate: InformationalTemplate = {
+  templateId: "informational",
+  brand: {
+    logoUri:
+      "https://images.unsplash.com/photo-1525134479668-1bee5c7c6845?auto=format&fit=crop&w=600&q=80",
+    primaryColor: "#1b9aaa",
+    backgroundColor: "#000000",
+    textColor: "#ffffff",
+    mutedTextColor: "#999999",
+  },
+  tabs: [
+    {
+      id: "home",
+      label: "Home",
+      headerTitle: "Welcome to Acme Dental",
+      headerBody: "Modern, friendly care for families and professionals.",
+      cards: [
+        {
+          id: "hero",
+          imageUri:
+            "https://images.unsplash.com/photo-1520012218364-4f6c1e0c11cd?auto=format&fit=crop&w=1200&q=80",
+          title: "Smile with confidence.",
+          body: "Acme Dental combines modern technology with personal care.",
+          action: {
+            type: "open_url",
+            url: "https://example.com/acme-dental/book",
+            label: "Book appointment",
+            variant: "primary",
+          },
+        },
+      ],
+    },
+    {
+      id: "services",
+      label: "Services",
+      headerTitle: "Services",
+      headerBody: "From routine cleanings to cosmetic dentistry.",
+      cards: [
+        {
+          id: "cleanings",
+          imageUri:
+            "https://images.unsplash.com/photo-1520012218364-4f6c1e0c11cd?auto=format&fit=crop&w=1200&q=80",
+          title: "Checkups & cleanings",
+          body: "Keep your smile healthy with regular visits.",
+          action: {
+            type: "open_url",
+            url: "https://example.com/acme-dental/book",
+            label: "Schedule visit",
+            variant: "secondary",
+          },
+        },
+        {
+          id: "cosmetic",
+          imageUri:
+            "https://images.unsplash.com/photo-1519181245277-cffeb31da2fb?auto=format&fit=crop&w=1200&q=80",
+          title: "Cosmetic options",
+          body: "Whitening, veneers, and more to upgrade your smile.",
+          action: {
+            type: "open_url",
+            url: "https://example.com/acme-dental/book",
+            label: "Explore options",
+            variant: "secondary",
+          },
+        },
+      ],
+    },
+    {
+      id: "contact",
+      label: "Contact",
+      headerTitle: "Contact",
+      headerBody: "Reach out to our team.",
+      cards: [
+        {
+          id: "book",
+          imageUri:
+            "https://images.unsplash.com/photo-1520012218364-4f6c1e0c11cd?auto=format&fit=crop&w=1200&q=80",
+          title: "Book appointment",
+          body: "Select a day and time that works for you.",
+          action: {
+            type: "open_url",
+            url: "https://example.com/acme-dental/book",
+            label: "Book now",
+            variant: "primary",
+          },
+        },
+        {
+          id: "call",
+          imageUri:
+            "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80",
+          title: "Call the office",
+          body: "Have questions? Talk to our front desk.",
+          action: {
+            type: "open_url",
+            url: "tel:+15555555555",
+            label: "Call now",
+            variant: "secondary",
+          },
+        },
+      ],
+    },
+  ],
+};
+

@@ -6,7 +6,8 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "build:tenants": "tsx scripts/generateTenants.ts"
   },
   "dependencies": {
     "expo": "~55.0.6",
@@ -17,6 +18,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
+    "tsx": "^4.19.2",
     "typescript": "~5.9.2"
   },
   "private": true
