@@ -3,13 +3,17 @@ import { StyleSheet, Text, View } from "react-native";
 type Props = {
   title: string;
   body: string;
+  colors: {
+    text: string;
+    muted: string;
+  };
 };
 
-export function PageHeader({ title, body }: Props) {
+export function PageHeader({ title, body, colors }: Props) {
   return (
     <View style={styles.section}>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.body}>{body}</Text>
+      <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+      <Text style={[styles.body, { color: colors.muted }]}>{body}</Text>
     </View>
   );
 }
@@ -17,13 +21,11 @@ export function PageHeader({ title, body }: Props) {
 const styles = StyleSheet.create({
   section: { marginBottom: 24 },
   title: {
-    color: "#fff",
     fontSize: 22,
     fontWeight: "700",
     marginBottom: 10,
   },
   body: {
-    color: "#999",
     fontSize: 16,
     lineHeight: 24,
   },

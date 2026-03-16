@@ -49,7 +49,7 @@ Tabs:
     - Leave a review (cta to https://g.page/r/CYoriLeElnaXEAI/review)
 
 Deliverables:
-- Update `src/templates/informational/mbg.ts` to match the above.
+- Update `configs/tenants/mbg.json` to match the above.
 - Ensure app runs on iOS simulator and Android emulator via Expo.
 ```
 
@@ -63,7 +63,7 @@ Update the Informational Template tenant `mbg`:
 - Change its action URL to: https://mbgtechnology.com/quote
 - Change its stock image to a modern office image (Unsplash URL).
 
-Do not change any layout components. Only edit `src/templates/informational/mbg.ts`.
+Do not change any layout components. Only edit `configs/tenants/mbg.json`.
 ```
 
 ### Example 3: Add a new card section
@@ -76,6 +76,6 @@ Add a new card to the Home tab (tenant `mbg`):
 - imageUri: choose an appropriate stock image (Unsplash)
 - action: { type: open_url, label: "View case studies", url: https://mbgtechnology.com/work, variant: secondary }
 
-Only edit the template data file.
+Only edit the tenant template JSON file.
 ```
 
