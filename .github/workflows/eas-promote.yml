@@ -38,15 +38,34 @@ jobs:
       - name: Install EAS CLI
         run: npm install -g eas-cli
 
+      - name: Resolve Expo project ID
+        id: project
+        run: |
+          case "${{ inputs.tenant }}" in
+            mbg)
+              PROJECT_ID="f1c6d7ea-a92f-47d2-931b-d7d6b957d5dd"
+              ;;
+            acme-dental)
+              PROJECT_ID="f1c6d7ea-a92f-47d2-931b-d7d6b957d5dd"
+              ;;
+            *)
+              echo "Unknown tenant '${{ inputs.tenant }}' for project mapping"
+              exit 1
+              ;;
+          esac
+
+          echo "Using project ID: $PROJECT_ID"
+          echo "project_id=$PROJECT_ID" >> $GITHUB_OUTPUT
+
       - name: Build and submit iOS
         if: ${{ inputs.platform == 'ios' || inputs.platform == 'both' }}
         run: |
-          APP_TENANT=${{ inputs.tenant }} eas build --profile production --platform ios --non-interactive
-          APP_TENANT=${{ inputs.tenant }} eas submit --profile production --platform ios --non-interactive
+          APP_TENANT=${{ inputs.tenant }} eas build --profile production --platform ios --non-interactive --project-id ${{ steps.project.outputs.project_id }}
+          APP_TENANT=${{ inputs.tenant }} eas submit --profile production --platform ios --non-interactive --project-id ${{ steps.project.outputs.project_id }}
 
       - name: Build and submit Android
         if: ${{ inputs.platform == 'android' || inputs.platform == 'both' }}
         run: |
-          APP_TENANT=${{ inputs.tenant }} eas build --profile production --platform android --non-interactive
-          APP_TENANT=${{ inputs.tenant }} eas submit --profile production --platform android --non-interactive
+          APP_TENANT=${{ inputs.tenant }} eas build --profile production --platform android --non-interactive --project-id ${{ steps.project.outputs.project_id }}
+          APP_TENANT=${{ inputs.tenant }} eas submit --profile production --platform android --non-interactive --project-id ${{ steps.project.outputs.project_id }}
 
