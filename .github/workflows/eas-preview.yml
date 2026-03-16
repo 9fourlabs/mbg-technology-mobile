@@ -1,0 +1,35 @@
+name: EAS Preview Builds
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
+
+      - name: iOS preview build (MBG)
+        run: |
+          APP_TENANT=mbg eas build --profile preview --platform ios --non-interactive
+
+      - name: Android preview build (MBG)
+        run: |
+          APP_TENANT=mbg eas build --profile preview --platform android --non-interactive
+
