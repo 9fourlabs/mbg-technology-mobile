@@ -7,7 +7,9 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "build:tenants": "tsx scripts/generateTenants.ts"
+    "build:tenants": "tsx scripts/generateTenants.ts",
+    "validate:tenants": "tsx scripts/validateTenants.ts",
+    "new-tenant": "tsx scripts/newTenant.ts"
   },
   "dependencies": {
     "expo": "~55.0.6",
