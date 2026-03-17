@@ -64,31 +64,8 @@ jobs:
       - name: Install EAS CLI
         run: npm install -g eas-cli
 
-      - name: Resolve Expo project ID
-        id: project
+      - name: Run EAS preview workflow (tenant)
         run: |
-          case "${{ matrix.tenant }}" in
-            mbg)
-              PROJECT_ID="f1c6d7ea-a92f-47d2-931b-d7d6b957d5dd"
-              ;;
-            acme-dental)
-              PROJECT_ID="f1c6d7ea-a92f-47d2-931b-d7d6b957d5dd"
-              ;;
-            *)
-              echo "Unknown tenant '${{ matrix.tenant }}' for project mapping"
-              exit 1
-              ;;
-          esac
-
-          echo "Using project ID: $PROJECT_ID"
-          echo "project_id=$PROJECT_ID" >> $GITHUB_OUTPUT
-
-      - name: iOS preview build
-        run: |
-          APP_TENANT=${{ matrix.tenant }} eas build --profile preview --platform ios --non-interactive --project-id ${{ steps.project.outputs.project_id }}
-
-      - name: Android preview build
-        run: |
-          APP_TENANT=${{ matrix.tenant }} eas build --profile preview --platform android --non-interactive --project-id ${{ steps.project.outputs.project_id }}
+          eas workflow:run .eas/workflows/preview-tenant.yml --input tenant=${{ matrix.tenant }} --non-interactive
 
 

@@ -1,0 +1,78 @@
+name: Release to production (tenant)
+
+on:
+  workflow_dispatch:
+    inputs:
+      tenant:
+        type: string
+        required: true
+      platform:
+        type: string
+        required: true
+        default: both
+
+jobs:
+  prepare:
+    outputs:
+      project_id: ${{ steps.project.outputs.project_id }}
+    steps:
+      - uses: eas/checkout
+      - uses: eas/install_node_modules
+      - name: Build and validate tenant configs
+        run: |
+          npm run build:tenants
+          npm run validate:tenants
+      - name: Resolve Expo project ID
+        id: project
+        run: |
+          PROJECT_ID=$(npx --yes tsx scripts/getProjectId.ts "${{ inputs.tenant }}")
+          set-output project_id "$PROJECT_ID"
+
+  build_ios:
+    needs: [prepare]
+    if: ${{ inputs.platform == 'ios' || inputs.platform == 'both' }}
+    steps:
+      - uses: eas/checkout
+      - uses: eas/install_node_modules
+      - name: iOS production build
+        run: |
+          APP_TENANT="${{ inputs.tenant }}" \
+          eas build --profile production --platform ios --non-interactive \
+          --project-id "${{ needs.prepare.outputs.project_id }}"
+
+  submit_ios:
+    needs: [build_ios, prepare]
+    if: ${{ inputs.platform == 'ios' || inputs.platform == 'both' }}
+    steps:
+      - uses: eas/checkout
+      - uses: eas/install_node_modules
+      - name: iOS submit
+        run: |
+          APP_TENANT="${{ inputs.tenant }}" \
+          eas submit --profile production --platform ios --non-interactive \
+          --project-id "${{ needs.prepare.outputs.project_id }}"
+
+  build_android:
+    needs: [prepare]
+    if: ${{ inputs.platform == 'android' || inputs.platform == 'both' }}
+    steps:
+      - uses: eas/checkout
+      - uses: eas/install_node_modules
+      - name: Android production build
+        run: |
+          APP_TENANT="${{ inputs.tenant }}" \
+          eas build --profile production --platform android --non-interactive \
+          --project-id "${{ needs.prepare.outputs.project_id }}"
+
+  submit_android:
+    needs: [build_android, prepare]
+    if: ${{ inputs.platform == 'android' || inputs.platform == 'both' }}
+    steps:
+      - uses: eas/checkout
+      - uses: eas/install_node_modules
+      - name: Android submit
+        run: |
+          APP_TENANT="${{ inputs.tenant }}" \
+          eas submit --profile production --platform android --non-interactive \
+          --project-id "${{ needs.prepare.outputs.project_id }}"
+

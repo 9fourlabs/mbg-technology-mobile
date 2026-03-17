@@ -86,11 +86,18 @@ npm run android
 
 - `.github/workflows/eas-preview.yml`
   - On PRs into `main`, detects which `configs/tenants/*.json` files changed.
-  - Builds **preview iOS/Android apps** only for those tenants using `eas build --profile preview`.
+  - Triggers the EAS Workflow `.eas/workflows/preview-tenant.yml` for those tenants.
 - `.github/workflows/eas-promote.yml`
   - Manual workflow (from the Actions tab).
   - Inputs: `tenant` and `platform`.
-  - Builds and **submits production iOS/Android apps** via `eas build` + `eas submit`.
+  - Triggers the EAS Workflow `.eas/workflows/release-tenant.yml`.
+
+**EAS Workflows:**
+
+- `.eas/workflows/preview-tenant.yml` – preview builds for a tenant
+- `.eas/workflows/release-tenant.yml` – production build + submit for a tenant
+
+Tenant → Expo project IDs live in `scripts/tenantProjects.ts`.
 
 To use EAS in CI, configure an `EXPO_TOKEN` secret in the GitHub repo.
 
