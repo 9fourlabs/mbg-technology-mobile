@@ -37,6 +37,7 @@ jobs:
       - name: iOS production build
         run: |
           APP_TENANT="${{ inputs.tenant }}" \
+          NATIVE_ID_MODE="tenant" \
           eas build --profile production --platform ios --non-interactive \
           --project-id "${{ needs.prepare.outputs.project_id }}"
 
@@ -49,6 +50,7 @@ jobs:
       - name: iOS submit
         run: |
           APP_TENANT="${{ inputs.tenant }}" \
+          NATIVE_ID_MODE="tenant" \
           eas submit --profile production --platform ios --non-interactive \
           --project-id "${{ needs.prepare.outputs.project_id }}"
 
@@ -61,6 +63,7 @@ jobs:
       - name: Android production build
         run: |
           APP_TENANT="${{ inputs.tenant }}" \
+          NATIVE_ID_MODE="tenant" \
           eas build --profile production --platform android --non-interactive \
           --project-id "${{ needs.prepare.outputs.project_id }}"
 
@@ -73,6 +76,7 @@ jobs:
       - name: Android submit
         run: |
           APP_TENANT="${{ inputs.tenant }}" \
+          NATIVE_ID_MODE="tenant" \
           eas submit --profile production --platform android --non-interactive \
           --project-id "${{ needs.prepare.outputs.project_id }}"
 

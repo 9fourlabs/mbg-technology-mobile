@@ -166,6 +166,16 @@ This repo supports it via:
 - `APP_TENANT=<tenant>` environment variable
 - `app.config.ts` generating tenant-specific identifiers
 
+##### Preview credential strategy (recommended)
+
+For sales demos, preview builds reuse the MBG native iOS/Android identifiers across tenants.
+This avoids EAS needing new signing credentials for every tenant during preview.
+
+Implementation details:
+- EAS Workflow env: `NATIVE_ID_MODE="shared"` for `preview-tenant`
+- EAS Workflow env: `NATIVE_ID_MODE="tenant"` for `release-tenant` (production-style isolation)
+- `app.config.ts` uses `nativeIdMode` to switch identifiers
+
 #### Model B (single app, multiple tenants inside)
 
 One store listing, user selects tenant or logs in to load tenant content from a backend.
