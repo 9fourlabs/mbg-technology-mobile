@@ -37,7 +37,7 @@ jobs:
           echo "Detected tenants:"
           cat tenants.json
 
-          TENANTS_JSON=$(cat tenants.json)
+          TENANTS_JSON=$(jq -c . tenants.json)
           echo "tenants=$TENANTS_JSON" >> $GITHUB_OUTPUT
 
   preview:
