@@ -12,13 +12,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Detect changed tenant configs
         id: changed-tenants
         run: |
-          git fetch origin main
+          git fetch origin main:refs/remotes/origin/main
 
-          CHANGED_FILES=$(git diff --name-only origin/main...HEAD -- "configs/tenants/*.json" || true)
+          CHANGED_FILES=$(git diff --name-only origin/main -- "configs/tenants/*.json" || true)
 
           if [ -z "$CHANGED_FILES" ]; then
             echo "No tenant configs changed."
