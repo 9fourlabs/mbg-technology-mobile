@@ -114,12 +114,12 @@ function validateProjectIsolation(out: string[]) {
     }
   }
 
-  // Check for placeholders
+  // Warn about placeholders (hard failure is in validateProductionReady.ts)
   for (const [id, projectId] of Object.entries(tenantProjects)) {
     if (projectId.startsWith("PLACEHOLDER")) {
-      out.push(
-        `[project-isolation] Tenant "${id}" has a placeholder project ID. ` +
-          `Create a dedicated Expo project and update scripts/tenantProjects.ts.`
+      console.warn(
+        `⚠️  [project-isolation] Tenant "${id}" has a placeholder project ID. ` +
+          `Create a dedicated Expo project before production release.`
       );
     }
   }
