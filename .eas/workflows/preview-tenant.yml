@@ -24,6 +24,6 @@ jobs:
     params:
       platform: android
       profile: preview
-    environment:
+    env:
       APP_TENANT: ${{ inputs.tenant }}
       NATIVE_ID_MODE: shared
