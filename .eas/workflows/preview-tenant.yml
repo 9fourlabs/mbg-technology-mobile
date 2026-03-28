@@ -9,8 +9,6 @@ on:
 
 jobs:
   prepare:
-    outputs:
-      project_id: ${{ steps.project.outputs.project_id }}
     steps:
       - uses: eas/checkout
       - uses: eas/install_node_modules
@@ -20,33 +18,12 @@ jobs:
           npm run build:tenants
           npm run validate:tenants
 
-      - name: Resolve Expo project ID
-        id: project
-        run: |
-          PROJECT_ID=$(npx --yes tsx scripts/getProjectId.ts "${{ inputs.tenant }}")
-          set-output project_id "$PROJECT_ID"
-
-  build_ios:
-    needs: [prepare]
-    steps:
-      - uses: eas/checkout
-      - uses: eas/install_node_modules
-      - name: iOS preview build
-        run: |
-          APP_TENANT="${{ inputs.tenant }}" \
-          NATIVE_ID_MODE="shared" \
-          eas build --profile preview --platform ios --non-interactive \
-          --project-id "${{ needs.prepare.outputs.project_id }}"
-
   build_android:
     needs: [prepare]
-    steps:
-      - uses: eas/checkout
-      - uses: eas/install_node_modules
-      - name: Android preview build
-        run: |
-          APP_TENANT="${{ inputs.tenant }}" \
-          NATIVE_ID_MODE="shared" \
-          eas build --profile preview --platform android --non-interactive \
-          --project-id "${{ needs.prepare.outputs.project_id }}"
-
+    type: build
+    params:
+      platform: android
+      profile: preview
+    env:
+      APP_TENANT: ${{ inputs.tenant }}
+      NATIVE_ID_MODE: shared
