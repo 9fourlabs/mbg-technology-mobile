@@ -9,11 +9,13 @@
     "web": "expo start --web",
     "build:tenants": "tsx scripts/generateTenants.ts",
     "validate:tenants": "tsx scripts/validateTenants.ts",
-    "new-tenant": "tsx scripts/newTenant.ts"
+    "new-tenant": "tsx scripts/newTenant.ts",
+    "generate:keystore": "bash scripts/generateKeystore.sh",
+    "validate:production": "tsx scripts/validateProductionReady.ts"
   },
   "dependencies": {
-    "expo": "~55.0.6",
-    "expo-constants": "~18.0.7",
+    "expo": "~55.0.9",
+    "expo-constants": "~55.0.9",
     "expo-status-bar": "~55.0.4",
     "react": "19.2.0",
     "react-native": "0.83.2"

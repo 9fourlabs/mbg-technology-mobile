@@ -16,7 +16,7 @@ const sharedIosBundleId = "com.mbg.mbgtechnologymobile";
 
 const config: ExpoConfig = {
   name: tenant === "mbg" ? "MBG Technology" : "Informational App",
-  slug: tenant === "mbg" ? "mbg-technology-mobile" : `info-${tenant}`,
+  slug: tenant === "mbg" ? "mbg-technology" : `info-${tenant}`,
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/icon.png",
@@ -64,7 +64,7 @@ const config: ExpoConfig = {
     tenant,
     nativeIdMode,
     eas: {
-      projectId: "f1c6d7ea-a92f-47d2-931b-d7d6b957d5dd",
+      projectId: "8f0869f4-6354-4c29-956a-abf07a54c9b6",
     },
   },
 };

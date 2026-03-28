@@ -22,6 +22,9 @@ jobs:
         run: |
           npm run build:tenants
           npm run validate:tenants
+      - name: Validate production readiness
+        run: |
+          npx --yes tsx scripts/validateProductionReady.ts "${{ inputs.tenant }}"
       - name: Resolve Expo project ID
         id: project
         run: |

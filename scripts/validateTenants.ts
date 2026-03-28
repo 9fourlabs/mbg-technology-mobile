@@ -1,6 +1,7 @@
 import { mbgTemplate } from "../configs/tenants-src/mbg";
 import { acmeDentalTemplate } from "../configs/tenants-src/acme-dental";
 import type { InformationalTemplate } from "../src/templates/types";
+import { tenantProjects, MBG_PROJECT_ID } from "./tenantProjects";
 
 type TenantSource = {
   id: string;
@@ -18,6 +19,8 @@ function main() {
   for (const t of tenants) {
     validateTenant(t, errors);
   }
+
+  validateProjectIsolation(errors);
 
   if (errors.length > 0) {
     // eslint-disable-next-line no-console
@@ -89,6 +92,61 @@ function checkColor(
   }
   if (!/^#[0-9a-fA-F]{6}$/.test(value)) {
     out.push(`[${tenantId}] brand.${field} must be a 6-digit hex color, got "${value}".`);
+  }
+}
+
+/**
+ * Validates that tenant project IDs are properly isolated.
+ *
+ * Rules:
+ * 1. Every tenant in the tenants array must have a project ID mapping.
+ * 2. No project ID can be a placeholder.
+ * 3. No two tenants can share a project ID (except MBG owns the default).
+ */
+function validateProjectIsolation(out: string[]) {
+  // Check every tenant has a mapping
+  for (const t of tenants) {
+    if (!(t.id in tenantProjects)) {
+      out.push(
+        `[project-isolation] Tenant "${t.id}" has no entry in scripts/tenantProjects.ts. ` +
+          `Add a dedicated Expo project ID before building.`
+      );
+    }
+  }
+
+  // Check for placeholders
+  for (const [id, projectId] of Object.entries(tenantProjects)) {
+    if (projectId.startsWith("PLACEHOLDER")) {
+      out.push(
+        `[project-isolation] Tenant "${id}" has a placeholder project ID. ` +
+          `Create a dedicated Expo project and update scripts/tenantProjects.ts.`
+      );
+    }
+  }
+
+  // Check for duplicate project IDs (non-MBG tenants sharing with MBG or each other)
+  const seen = new Map<string, string>(); // projectId -> first tenant that claimed it
+  for (const [id, projectId] of Object.entries(tenantProjects)) {
+    if (projectId.startsWith("PLACEHOLDER")) continue;
+
+    const existing = seen.get(projectId);
+    if (existing) {
+      // MBG owns the default project — only MBG may use it
+      if (projectId === MBG_PROJECT_ID) {
+        const nonMbg = id === "mbg" ? existing : id;
+        out.push(
+          `[project-isolation] Tenant "${nonMbg}" shares the MBG project ID. ` +
+            `Each client tenant must have its own dedicated Expo project.`
+        );
+      } else {
+        out.push(
+          `[project-isolation] Tenants "${existing}" and "${id}" share project ID "${projectId}". ` +
+            `Each tenant must have a unique Expo project.`
+        );
+      }
+    } else {
+      seen.set(projectId, id);
+    }
   }
 }
 

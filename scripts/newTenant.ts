@@ -80,10 +80,14 @@ export const ${toConstName(
     `Next steps:\n` +
       `1) Add { id: "${tenantId}", template: ${toConstName(
         tenantId
-      )}Template } to the tenants array in scripts/generateTenants.ts.\n` +
-      `2) Run: npm run build:tenants\n` +
+      )}Template } to the tenants array in scripts/generateTenants.ts AND scripts/validateTenants.ts.\n` +
+      `2) Run: npm run build:tenants && npm run validate:tenants\n` +
       `3) Add an import + entry for "${tenantId}" in src/templates/informational/index.ts.\n` +
-      `4) Optionally add an Expo projectId mapping for "${tenantId}" in the CI workflows.`
+      `4) Add a project ID mapping for "${tenantId}" in scripts/tenantProjects.ts.\n` +
+      `   - For previews: a placeholder is fine (preview builds use shared credentials).\n` +
+      `   - For production: create a dedicated Expo project at https://expo.dev first.\n` +
+      `5) Generate a keystore: npm run generate:keystore -- ${tenantId}\n` +
+      `   Store the password in the team vault. See docs/KEYSTORE_SOP.md.`
   );
 }
 

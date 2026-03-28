@@ -75,19 +75,32 @@ Developer steps:
 
 ### After client approval
 
-1. **(Optional) Create a dedicated Expo project**
-   - In the Expo dashboard, create a new project for the client.
-   - Add its `projectId` to the mapping in:
-     - `.github/workflows/eas-preview.yml`
-     - `.github/workflows/eas-promote.yml`
+1. **Create a dedicated Expo project (required)**
+   - In the [Expo dashboard](https://expo.dev), create a new project for the client.
+   - Add its `projectId` to `scripts/tenantProjects.ts`.
+   - Run `npm run validate:tenants` to confirm no duplicates.
+   - **This is mandatory** — the release workflow will reject tenants without a dedicated project.
 
-2. **Run production build & submit**
+2. **Set up signing credentials**
+   - Generate an Android keystore:
+     ```bash
+     npm run generate:keystore -- <tenant-id>
+     ```
+   - Store the keystore password in the team vault (see `docs/KEYSTORE_SOP.md`).
+   - Register credentials with EAS:
+     ```bash
+     APP_TENANT=<tenant-id> NATIVE_ID_MODE=tenant eas credentials --platform android
+     APP_TENANT=<tenant-id> NATIVE_ID_MODE=tenant eas credentials --platform ios
+     ```
+
+3. **Run production build & submit**
    - Use the `EAS Promote to Production` workflow:
      - Input `tenant = <tenant-id>`
      - Input `platform = ios`, `android`, or `both`
+   - The workflow validates production readiness before building.
    - This runs `eas build --profile production` and `eas submit` for that tenant.
 
-3. **Communicate with the client**
+4. **Communicate with the client**
    - Share store links once the app is approved.
    - Provide guidance on how end users install and use the app.
 
