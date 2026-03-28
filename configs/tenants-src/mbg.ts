@@ -16,7 +16,7 @@ export const mbgTemplate: InformationalTemplate = {
       label: "Home",
       headerTitle: "Home",
       headerBody:
-        "A quick look at how we support your business with modern web, smart systems, and ongoing help.",
+        "See how we support your business with modern web, smart systems, and ongoing help.",
       cards: [
         {
           id: "hero",
