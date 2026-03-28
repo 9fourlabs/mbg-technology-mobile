@@ -23,7 +23,7 @@ export const mbgTemplate: InformationalTemplate = {
           imageUri:
             "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1200&q=80",
           title: "Innovate. Integrate. Elevate.",
-          body: "Smart, modern technology support for small and growing teams.",
+          body: "Smart, modern technology solutions for small and growing teams.",
           action: {
             type: "open_url",
             url: "https://mbgtechnology.com/appointment",
