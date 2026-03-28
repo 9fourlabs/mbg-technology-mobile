@@ -1,5 +1,5 @@
-import { mbgTemplate } from "../configs/tenants-src/mbg";
-import { acmeDentalTemplate } from "../configs/tenants-src/acme-dental";
+import { readdirSync } from "fs";
+import { resolve, basename } from "path";
 import type { InformationalTemplate } from "../src/templates/types";
 import { tenantProjects, MBG_PROJECT_ID } from "./tenantProjects";
 
@@ -8,19 +8,40 @@ type TenantSource = {
   template: InformationalTemplate;
 };
 
-const tenants: TenantSource[] = [
-  { id: "mbg", template: mbgTemplate },
-  { id: "acme-dental", template: acmeDentalTemplate },
-];
+const srcDir = resolve(__dirname, "../configs/tenants-src");
 
-function main() {
+async function main() {
+  const files = readdirSync(srcDir)
+    .filter((f) => f.endsWith(".ts") && !f.startsWith("_"))
+    .sort();
+
+  if (files.length === 0) {
+    console.error("No tenant source files found in configs/tenants-src/");
+    process.exit(1);
+  }
+
+  const tenants: TenantSource[] = [];
+
+  for (const file of files) {
+    const tenantId = basename(file, ".ts");
+    const mod = await import(resolve(srcDir, file));
+    const template = findTemplate(mod);
+    if (!template) {
+      console.error(
+        `No template export found in ${file}. Export a const of type InformationalTemplate.`
+      );
+      process.exit(1);
+    }
+    tenants.push({ id: tenantId, template: template as InformationalTemplate });
+  }
+
   const errors: string[] = [];
 
   for (const t of tenants) {
     validateTenant(t, errors);
   }
 
-  validateProjectIsolation(errors);
+  validateProjectIsolation(tenants, errors);
 
   if (errors.length > 0) {
     // eslint-disable-next-line no-console
@@ -30,6 +51,22 @@ function main() {
     // eslint-disable-next-line no-console
     console.log("All tenants validated successfully.");
   }
+}
+
+function findTemplate(mod: Record<string, unknown>): unknown | null {
+  for (const key of Object.keys(mod)) {
+    const val = mod[key];
+    if (
+      val &&
+      typeof val === "object" &&
+      "templateId" in val &&
+      "brand" in val &&
+      "tabs" in val
+    ) {
+      return val;
+    }
+  }
+  return null;
 }
 
 function validateTenant({ id, template }: TenantSource, out: string[]) {
@@ -97,14 +134,8 @@ function checkColor(
 
 /**
  * Validates that tenant project IDs are properly isolated.
- *
- * Rules:
- * 1. Every tenant in the tenants array must have a project ID mapping.
- * 2. No project ID can be a placeholder.
- * 3. No two tenants can share a project ID (except MBG owns the default).
  */
-function validateProjectIsolation(out: string[]) {
-  // Check every tenant has a mapping
+function validateProjectIsolation(tenants: TenantSource[], out: string[]) {
   for (const t of tenants) {
     if (!(t.id in tenantProjects)) {
       out.push(
@@ -114,7 +145,6 @@ function validateProjectIsolation(out: string[]) {
     }
   }
 
-  // Warn about placeholders (hard failure is in validateProductionReady.ts)
   for (const [id, projectId] of Object.entries(tenantProjects)) {
     if (projectId.startsWith("PLACEHOLDER")) {
       console.warn(
@@ -124,14 +154,12 @@ function validateProjectIsolation(out: string[]) {
     }
   }
 
-  // Check for duplicate project IDs (non-MBG tenants sharing with MBG or each other)
-  const seen = new Map<string, string>(); // projectId -> first tenant that claimed it
+  const seen = new Map<string, string>();
   for (const [id, projectId] of Object.entries(tenantProjects)) {
     if (projectId.startsWith("PLACEHOLDER")) continue;
 
     const existing = seen.get(projectId);
     if (existing) {
-      // MBG owns the default project — only MBG may use it
       if (projectId === MBG_PROJECT_ID) {
         const nonMbg = id === "mbg" ? existing : id;
         out.push(
@@ -151,4 +179,3 @@ function validateProjectIsolation(out: string[]) {
 }
 
 main();
-

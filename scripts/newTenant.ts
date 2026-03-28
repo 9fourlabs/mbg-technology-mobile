@@ -1,10 +1,9 @@
-import { mkdirSync, existsSync, writeFileSync } from "fs";
+import { mkdirSync, existsSync, writeFileSync, readFileSync } from "fs";
 import { resolve } from "path";
 
 const [, , rawTenantId] = process.argv;
 
 if (!rawTenantId) {
-  // eslint-disable-next-line no-console
   console.error("Usage: npm run new-tenant <tenant-id>");
   process.exit(1);
 }
@@ -12,18 +11,22 @@ if (!rawTenantId) {
 const tenantId = rawTenantId.trim();
 
 const srcDir = resolve(__dirname, "../configs/tenants-src");
-const templatePath = resolve(srcDir, "_template.ts");
 const tenantPath = resolve(srcDir, `${tenantId}.ts`);
+const projectsPath = resolve(__dirname, "tenantProjects.ts");
 
 function main() {
   mkdirSync(srcDir, { recursive: true });
 
-  if (!existsSync(templatePath)) {
-    const template = `import type { InformationalTemplate } from "../../src/templates/types";
+  // 1. Create the tenant source file
+  if (existsSync(tenantPath)) {
+    console.error(`Tenant source already exists: ${tenantPath}`);
+    process.exit(1);
+  }
 
-export const ${toConstName(
-      tenantId
-    )}Template: InformationalTemplate = {
+  const constName = toConstName(tenantId);
+  const template = `import type { InformationalTemplate } from "../../src/templates/types";
+
+export const ${constName}Template: InformationalTemplate = {
   templateId: "informational",
   brand: {
     logoUri: "https://example.com/logo.png",
@@ -56,39 +59,37 @@ export const ${toConstName(
   ],
 };
 `;
-    writeFileSync(templatePath, template, "utf8");
+
+  writeFileSync(tenantPath, template, "utf8");
+  console.log(`✅ Created tenant source: ${tenantPath}`);
+
+  // 2. Add placeholder entry to tenantProjects.ts
+  const projectsSource = readFileSync(projectsPath, "utf8");
+  if (projectsSource.includes(`"${tenantId}"`)) {
+    console.log(`ℹ️  Tenant "${tenantId}" already exists in tenantProjects.ts`);
+  } else {
+    const updatedSource = projectsSource.replace(
+      /};(\s*)$/,
+      `  "${tenantId}": "PLACEHOLDER_CREATE_EXPO_PROJECT",\n};$1`
+    );
+    writeFileSync(projectsPath, updatedSource, "utf8");
+    console.log(`✅ Added placeholder project ID to tenantProjects.ts`);
   }
 
-  if (existsSync(tenantPath)) {
-    // eslint-disable-next-line no-console
-    console.error(`Tenant source already exists: ${tenantPath}`);
+  // 3. Build and validate
+  console.log(`\n🔨 Building tenant configs...`);
+  const { execSync } = require("child_process");
+  try {
+    execSync("npm run build:tenants", { stdio: "inherit", cwd: resolve(__dirname, "..") });
+    console.log(`\n✅ Tenant "${tenantId}" is fully registered. No manual file edits needed.`);
+    console.log(`\nNext steps:`);
+    console.log(`  1) Edit configs/tenants-src/${tenantId}.ts with client branding`);
+    console.log(`  2) Run: APP_TENANT=${tenantId} npm run start`);
+    console.log(`  3) Open a PR to trigger a preview build`);
+  } catch {
+    console.error(`\n⚠️  Build failed. Check the error above and fix configs/tenants-src/${tenantId}.ts`);
     process.exit(1);
   }
-
-  const templateSource = readFileSyncSafe(templatePath);
-  const tenantSource = templateSource.replace(
-    /export const .*Template:/,
-    `export const ${toConstName(tenantId)}Template:`
-  );
-
-  writeFileSync(tenantPath, tenantSource, "utf8");
-
-  // eslint-disable-next-line no-console
-  console.log(`Created tenant source: ${tenantPath}`);
-  // eslint-disable-next-line no-console
-  console.log(
-    `Next steps:\n` +
-      `1) Add { id: "${tenantId}", template: ${toConstName(
-        tenantId
-      )}Template } to the tenants array in scripts/generateTenants.ts AND scripts/validateTenants.ts.\n` +
-      `2) Run: npm run build:tenants && npm run validate:tenants\n` +
-      `3) Add an import + entry for "${tenantId}" in src/templates/informational/index.ts.\n` +
-      `4) Add a project ID mapping for "${tenantId}" in scripts/tenantProjects.ts.\n` +
-      `   - For previews: a placeholder is fine (preview builds use shared credentials).\n` +
-      `   - For production: create a dedicated Expo project at https://expo.dev first.\n` +
-      `5) Generate a keystore: npm run generate:keystore -- ${tenantId}\n` +
-      `   Store the password in the team vault. See docs/KEYSTORE_SOP.md.`
-  );
 }
 
 function toConstName(id: string) {
@@ -98,16 +99,4 @@ function toConstName(id: string) {
     .replace(/^\d+/, "");
 }
 
-function readFileSyncSafe(path: string): string {
-  try {
-    const fs = require("fs") as typeof import("fs");
-    return fs.readFileSync(path, "utf8");
-  } catch (e) {
-    // eslint-disable-next-line no-console
-    console.error(`Failed to read ${path}`, e);
-    process.exit(1);
-  }
-}
-
 main();
-
