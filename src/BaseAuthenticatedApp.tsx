@@ -25,14 +25,10 @@ import { ProfileScreen } from "./screens/auth/ProfileScreen";
 import { PageHeader } from "./components/PageHeader";
 import { TabBar } from "./components/TabBar";
 import { TemplateCard } from "./components/TemplateCard";
+import { buildTheme } from "./utils/theme";
 import type { AuthConfig, BrandConfig, TemplateTab, TemplateAction } from "./templates/types";
 
-export type Theme = {
-  primary: string;
-  background: string;
-  text: string;
-  mutedText: string;
-};
+export type { Theme } from "./utils/theme";
 
 type Props = {
   brand: BrandConfig;
@@ -40,7 +36,7 @@ type Props = {
   tabs: TemplateTab[];
   protectedTabs?: string[];
   /** Render custom content for a tab. Return null to use default card rendering. */
-  renderTab?: (tabId: string, theme: Theme, navigation: any) => React.ReactNode | null;
+  renderTab?: (tabId: string, theme: ReturnType<typeof buildTheme>, navigation: any) => React.ReactNode | null;
   children?: React.ReactNode;
 };
 
@@ -61,12 +57,7 @@ function AppContent({ brand, tabs, protectedTabs, renderTab }: Omit<Props, "auth
   const [activeTabId, setActiveTabId] = useState(tabs[0]?.id ?? "home");
   const [pendingTab, setPendingTab] = useState<string | null>(null);
 
-  const theme: Theme = {
-    primary: brand.primaryColor,
-    background: brand.backgroundColor,
-    text: brand.textColor,
-    mutedText: brand.mutedTextColor,
-  };
+  const theme = buildTheme(brand);
 
   const protectedSet = new Set(protectedTabs ?? []);
 
@@ -128,7 +119,7 @@ function AppContent({ brand, tabs, protectedTabs, renderTab }: Omit<Props, "auth
 type MainContentProps = {
   brand: BrandConfig;
   tabs: TemplateTab[];
-  theme: Theme;
+  theme: ReturnType<typeof buildTheme>;
   activeTabId: string;
   onTabChange: (id: string) => void;
   renderTab?: (tabId: string) => React.ReactNode | null;
@@ -156,7 +147,7 @@ function MainContent({ brand, tabs, theme, activeTabId, onTabChange, renderTab }
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
       <StatusBar style="light" />
       <View style={[styles.root, { backgroundColor: theme.background }]}>
-        <View style={styles.nav}>
+        <View style={[styles.nav, { borderBottomColor: theme.border }]}>
           <Image source={{ uri: brand.logoUri }} style={styles.logo} resizeMode="contain" />
         </View>
 
@@ -238,7 +229,6 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#1a1a1a",
   },
   logo: { width: 56, height: 56, alignSelf: "flex-start" },
   scroll: { flex: 1 },

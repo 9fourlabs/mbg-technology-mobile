@@ -1,4 +1,6 @@
 import type { ExpoConfig } from "expo/config";
+import { existsSync, readFileSync } from "fs";
+import { resolve } from "path";
 
 // This repo supports multi-tenant / white-label builds.
 // Set APP_TENANT=mbg (or another tenant key) to swap branding/content.
@@ -14,17 +16,46 @@ const nativeIdMode = process.env.NATIVE_ID_MODE ?? "tenant";
 const sharedAndroidPackage = "com.mbg.mbgtechnologymobile";
 const sharedIosBundleId = "com.mbg.mbgtechnologymobile";
 
+/**
+ * Resolve an asset path for the current tenant, falling back to the default.
+ */
+function resolveAsset(tenantKey: string, filename: string): string {
+  const tenantPath = `./assets/${tenantKey}/${filename}`;
+  if (existsSync(resolve(__dirname, tenantPath))) {
+    return tenantPath;
+  }
+  return `./assets/default/${filename}`;
+}
+
+/**
+ * Try to load the tenant JSON config and pull splashBackgroundColor from brand.
+ */
+function loadSplashBackgroundColor(tenantKey: string): string {
+  const configPath = resolve(__dirname, `configs/tenants/${tenantKey}.json`);
+  try {
+    if (existsSync(configPath)) {
+      const raw = JSON.parse(readFileSync(configPath, "utf8"));
+      if (raw?.brand?.splashBackgroundColor) {
+        return raw.brand.splashBackgroundColor;
+      }
+    }
+  } catch {
+    // fall through to default
+  }
+  return "#ffffff";
+}
+
 const config: ExpoConfig = {
   name: tenant === "mbg" ? "MBG Technology" : "Informational App",
   slug: tenant === "mbg" ? "mbg-technology" : `info-${tenant}`,
   version: "1.0.0",
   orientation: "portrait",
-  icon: "./assets/icon.png",
+  icon: resolveAsset(tenant, "icon.png"),
   userInterfaceStyle: "light",
   splash: {
-    image: "./assets/splash-icon.png",
+    image: resolveAsset(tenant, "splash-icon.png"),
     resizeMode: "contain",
-    backgroundColor: "#ffffff",
+    backgroundColor: loadSplashBackgroundColor(tenant),
   },
   ios: {
     supportsTablet: true,
@@ -43,9 +74,9 @@ const config: ExpoConfig = {
   android: {
     adaptiveIcon: {
       backgroundColor: "#E6F4FE",
-      foregroundImage: "./assets/android-icon-foreground.png",
-      backgroundImage: "./assets/android-icon-background.png",
-      monochromeImage: "./assets/android-icon-monochrome.png",
+      foregroundImage: resolveAsset(tenant, "android-icon-foreground.png"),
+      backgroundImage: resolveAsset(tenant, "android-icon-background.png"),
+      monochromeImage: resolveAsset(tenant, "android-icon-monochrome.png"),
     },
     predictiveBackGestureEnabled: false,
     // For production-style isolation, each tenant should have a unique package.
@@ -59,7 +90,7 @@ const config: ExpoConfig = {
   },
   plugins: ["expo-secure-store"],
   web: {
-    favicon: "./assets/favicon.png",
+    favicon: resolveAsset(tenant, "favicon.png"),
   },
   extra: {
     tenant,
@@ -71,4 +102,3 @@ const config: ExpoConfig = {
 };
 
 export default config;
-

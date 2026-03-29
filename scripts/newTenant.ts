@@ -1,4 +1,4 @@
-import { mkdirSync, existsSync, writeFileSync, readFileSync } from "fs";
+import { mkdirSync, existsSync, writeFileSync, readFileSync, readdirSync, copyFileSync } from "fs";
 import { resolve } from "path";
 
 const TEMPLATE_FLAGS = [
@@ -44,6 +44,15 @@ function main() {
 
   writeFileSync(tenantPath, scaffold, "utf8");
   console.log(`✅ Created ${templateType} tenant: ${tenantPath}`);
+
+  // Copy default assets to tenant asset directory
+  const defaultAssetsDir = resolve(__dirname, "../assets/default");
+  const tenantAssetsDir = resolve(__dirname, `../assets/${tenantId}`);
+  mkdirSync(tenantAssetsDir, { recursive: true });
+  for (const file of readdirSync(defaultAssetsDir)) {
+    copyFileSync(resolve(defaultAssetsDir, file), resolve(tenantAssetsDir, file));
+  }
+  console.log(`✅ Created default assets in assets/${tenantId}/ — replace with client branding`);
 
   // Add placeholder entry to tenantProjects.ts
   const projectsSource = readFileSync(projectsPath, "utf8");

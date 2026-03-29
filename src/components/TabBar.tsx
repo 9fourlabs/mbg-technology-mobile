@@ -1,15 +1,16 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import type { Theme } from "../utils/theme";
 
 type Props = {
   tabs: { id: string; label: string }[];
   activeId: string;
   onChange: (id: string) => void;
-  theme: { primary: string; background: string; text: string; mutedText: string };
+  theme: Theme;
 };
 
 export function TabBar({ tabs, activeId, onChange, theme }: Props) {
   return (
-    <View style={[styles.tabBar, { backgroundColor: theme.background }]}>
+    <View style={[styles.tabBar, { backgroundColor: theme.tabBar, borderTopColor: theme.border }]}>
       {tabs.map((t) => {
         const active = t.id === activeId;
         return (
@@ -18,7 +19,7 @@ export function TabBar({ tabs, activeId, onChange, theme }: Props) {
             onPress={() => onChange(t.id)}
             style={({ pressed }) => [
               styles.tabButton,
-              active && styles.tabButtonActive,
+              active && [styles.tabButtonActive, { backgroundColor: theme.tabBarActive }],
               pressed && styles.tabButtonPressed,
             ]}
           >
@@ -46,8 +47,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderTopWidth: 1,
-    borderTopColor: "#1a1a1a",
-    backgroundColor: "#050505",
   },
   tabButton: {
     flex: 1,
@@ -58,15 +57,12 @@ const styles = StyleSheet.create({
   },
   tabButtonActive: {
     borderRadius: 999,
-    backgroundColor: "#111111",
   },
   tabButtonPressed: {
     opacity: 0.8,
   },
   tabButtonText: {
-    color: "#777",
     fontSize: 13,
     fontWeight: "600",
   },
 });
-

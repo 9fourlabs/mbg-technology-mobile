@@ -24,6 +24,7 @@ export type BrandConfig = {
   backgroundColor: string;
   textColor: string;
   mutedTextColor: string;
+  splashBackgroundColor?: string;
 };
 
 export type InformationalTemplate = {

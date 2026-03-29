@@ -1,14 +1,10 @@
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import type { Theme } from "../utils/theme";
 import type { TemplateAction, TemplateCard as TemplateCardType } from "../templates/types";
 
 type Props = {
   card: TemplateCardType;
-  theme: {
-    primary: string;
-    background: string;
-    text: string;
-    mutedText: string;
-  };
+  theme: Theme;
   onAction: (action: TemplateAction) => void;
 };
 
@@ -18,17 +14,17 @@ export function TemplateCard({ card, theme, onAction }: Props) {
   const isPrimary = actionVariant === "primary";
 
   return (
-    <View style={[styles.card, { borderColor: "#1a1a1a", backgroundColor: "#0d0d0d" }]}>
+    <View style={[styles.card, { borderColor: theme.border, backgroundColor: theme.card }]}>
       {card.imageUri ? (
         <Image source={{ uri: card.imageUri }} style={styles.image} />
       ) : (
-        <View style={styles.imagePlaceholder} />
+        <View style={[styles.imagePlaceholder, { backgroundColor: theme.placeholder }]} />
       )}
 
       <View style={styles.body}>
         <View>
           <Text style={[styles.title, { color: theme.text }]}>{card.title}</Text>
-          <Text style={[styles.text, { color: "#aaa" }]}>{card.body}</Text>
+          <Text style={[styles.text, { color: theme.mutedText }]}>{card.body}</Text>
         </View>
 
         {action ? (
@@ -66,7 +62,6 @@ const styles = StyleSheet.create({
   imagePlaceholder: {
     width: "100%",
     height: 120,
-    backgroundColor: "#111111",
   },
   body: {
     flex: 1,
@@ -97,4 +92,3 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 });
-

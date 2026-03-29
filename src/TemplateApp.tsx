@@ -6,6 +6,7 @@ import { PageHeader } from "./components/PageHeader";
 import { TabBar } from "./components/TabBar";
 import { TemplateCard } from "./components/TemplateCard";
 import { getInformationalTemplate } from "./templates/informational";
+import { buildTheme } from "./utils/theme";
 import type { TemplateAction } from "./templates/types";
 
 export default function TemplateApp() {
@@ -13,12 +14,7 @@ export default function TemplateApp() {
   const template = useMemo(() => getInformationalTemplate(String(tenant)), [tenant]);
   const [activeTabId, setActiveTabId] = useState(template.tabs[0]?.id ?? "home");
 
-  const theme = {
-    primary: template.brand.primaryColor,
-    background: template.brand.backgroundColor,
-    text: template.brand.textColor,
-    mutedText: template.brand.mutedTextColor,
-  };
+  const theme = buildTheme(template.brand);
 
   async function onAction(action: TemplateAction) {
     if (action.type !== "open_url") return;
@@ -37,7 +33,7 @@ export default function TemplateApp() {
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
       <StatusBar style="light" />
       <View style={[styles.root, { backgroundColor: theme.background }]}>
-        <View style={styles.nav}>
+        <View style={[styles.nav, { borderBottomColor: theme.border }]}>
           <Image source={{ uri: template.brand.logoUri }} style={styles.logo} resizeMode="contain" />
         </View>
 
@@ -80,7 +76,6 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#1a1a1a",
   },
   logo: { width: 56, height: 56, alignSelf: "flex-start" },
   scroll: { flex: 1 },
@@ -88,4 +83,3 @@ const styles = StyleSheet.create({
   cardGrid: { marginBottom: 16 },
   footerSpacer: { height: 16 },
 });
-
