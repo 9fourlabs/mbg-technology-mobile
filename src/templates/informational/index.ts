@@ -11,5 +11,5 @@ const jsonTenants: Record<string, InformationalTemplate> = {
 export function getInformationalTemplate(tenant: string): InformationalTemplate {
   const fromJson = jsonTenants[tenant];
   if (fromJson) return fromJson;
-  return jsonTenants.mbg;
+  return jsonTenants["mbg"];
 }

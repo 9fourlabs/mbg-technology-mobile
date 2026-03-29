@@ -18,15 +18,31 @@ export type TemplateTab = {
   cards: TemplateCard[];
 };
 
+export type BrandConfig = {
+  logoUri: string;
+  primaryColor: string;
+  backgroundColor: string;
+  textColor: string;
+  mutedTextColor: string;
+};
+
 export type InformationalTemplate = {
   templateId: "informational";
-  brand: {
-    logoUri: string;
-    primaryColor: string;
-    backgroundColor: string;
-    textColor: string;
-    mutedTextColor: string;
-  };
+  brand: BrandConfig;
   tabs: TemplateTab[];
 };
 
+export type AuthConfig = {
+  supabaseUrl: string;
+  supabaseAnonKey: string;
+};
+
+export type AuthenticatedTemplate = {
+  templateId: "authenticated";
+  brand: BrandConfig;
+  auth: AuthConfig;
+  tabs: TemplateTab[];
+  protectedTabs?: string[];
+};
+
+export type AppTemplate = InformationalTemplate | AuthenticatedTemplate;

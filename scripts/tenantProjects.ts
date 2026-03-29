@@ -24,5 +24,6 @@ export const tenantProjects: Record<string, string> = {
   // Client tenants — each MUST get a dedicated project ID before production release.
   // Replace the placeholder with a real Expo project ID when the client is approved.
   "acme-dental": "PLACEHOLDER_CREATE_EXPO_PROJECT",
+  "acme-portal": "PLACEHOLDER_CREATE_EXPO_PROJECT",
 };
 

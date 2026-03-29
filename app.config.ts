@@ -57,6 +57,7 @@ const config: ExpoConfig = {
           ? "com.mbg.mbgtechnologymobile"
           : `com.mbg.info.${tenant}`,
   },
+  plugins: ["expo-secure-store"],
   web: {
     favicon: "./assets/favicon.png",
   },

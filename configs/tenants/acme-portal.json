@@ -1,0 +1,101 @@
+{
+  "templateId": "authenticated",
+  "auth": {
+    "supabaseUrl": "https://cxevisfvppocyjpsapbm.supabase.co",
+    "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4ZXZpc2Z2cHBvY3lqcHNhcGJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3NDA3MDQsImV4cCI6MjA5MDMxNjcwNH0.NM44EFsVfkYVhnPnGJWOQHCh_WTTvGAMUxeemM9WgHw"
+  },
+  "brand": {
+    "logoUri": "https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=120&h=120&fit=crop",
+    "primaryColor": "#2563EB",
+    "backgroundColor": "#0F172A",
+    "textColor": "#F8FAFC",
+    "mutedTextColor": "#94A3B8"
+  },
+  "tabs": [
+    {
+      "id": "home",
+      "label": "Home",
+      "headerTitle": "Welcome to Acme Portal",
+      "headerBody": "Your client dashboard and resources — all in one place.",
+      "cards": [
+        {
+          "id": "hero",
+          "imageUri": "https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&h=400&fit=crop",
+          "title": "Your Business Hub",
+          "body": "Access reports, documents, and support all in one place."
+        },
+        {
+          "id": "news",
+          "title": "What's New",
+          "body": "Check out our latest features and service updates.",
+          "action": {
+            "type": "open_url",
+            "url": "https://example.com/news",
+            "label": "Read more",
+            "variant": "secondary"
+          }
+        }
+      ]
+    },
+    {
+      "id": "dashboard",
+      "label": "Dashboard",
+      "headerTitle": "Dashboard",
+      "headerBody": "View your account activity and reports.",
+      "cards": [
+        {
+          "id": "reports",
+          "title": "Monthly Reports",
+          "body": "View your latest performance reports and analytics.",
+          "action": {
+            "type": "open_url",
+            "url": "https://example.com/reports",
+            "label": "View reports",
+            "variant": "primary"
+          }
+        },
+        {
+          "id": "documents",
+          "title": "Documents",
+          "body": "Access contracts, invoices, and shared files.",
+          "action": {
+            "type": "open_url",
+            "url": "https://example.com/documents",
+            "label": "Browse files",
+            "variant": "secondary"
+          }
+        }
+      ]
+    },
+    {
+      "id": "support",
+      "label": "Support",
+      "headerTitle": "Get Help",
+      "headerBody": "Contact our team or browse the knowledge base.",
+      "cards": [
+        {
+          "id": "contact",
+          "title": "Contact Support",
+          "body": "Reach our team for help with your account or services.",
+          "action": {
+            "type": "open_url",
+            "url": "https://example.com/support",
+            "label": "Open a ticket",
+            "variant": "primary"
+          }
+        }
+      ]
+    },
+    {
+      "id": "profile",
+      "label": "Profile",
+      "headerTitle": "Your Account",
+      "headerBody": "Manage your profile and settings.",
+      "cards": []
+    }
+  ],
+  "protectedTabs": [
+    "dashboard",
+    "profile"
+  ]
+}

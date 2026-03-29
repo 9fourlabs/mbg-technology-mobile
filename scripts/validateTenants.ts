@@ -1,11 +1,11 @@
 import { readdirSync } from "fs";
 import { resolve, basename } from "path";
-import type { InformationalTemplate } from "../src/templates/types";
+import type { AppTemplate } from "../src/templates/types";
 import { tenantProjects, MBG_PROJECT_ID } from "./tenantProjects";
 
 type TenantSource = {
   id: string;
-  template: InformationalTemplate;
+  template: AppTemplate;
 };
 
 const srcDir = resolve(__dirname, "../configs/tenants-src");
@@ -28,11 +28,11 @@ async function main() {
     const template = findTemplate(mod);
     if (!template) {
       console.error(
-        `No template export found in ${file}. Export a const of type InformationalTemplate.`
+        `No template export found in ${file}. Export a const of type InformationalTemplate or AuthenticatedTemplate.`
       );
       process.exit(1);
     }
-    tenants.push({ id: tenantId, template: template as InformationalTemplate });
+    tenants.push({ id: tenantId, template: template as AppTemplate });
   }
 
   const errors: string[] = [];
@@ -44,11 +44,9 @@ async function main() {
   validateProjectIsolation(tenants, errors);
 
   if (errors.length > 0) {
-    // eslint-disable-next-line no-console
     console.error("Tenant validation failed:\n" + errors.join("\n"));
     process.exit(1);
   } else {
-    // eslint-disable-next-line no-console
     console.log("All tenants validated successfully.");
   }
 }
@@ -70,10 +68,12 @@ function findTemplate(mod: Record<string, unknown>): unknown | null {
 }
 
 function validateTenant({ id, template }: TenantSource, out: string[]) {
-  if (template.templateId !== "informational") {
-    out.push(`[${id}] templateId must be "informational".`);
+  const validTypes = ["informational", "authenticated"];
+  if (!validTypes.includes(template.templateId)) {
+    out.push(`[${id}] templateId must be one of: ${validTypes.join(", ")}. Got "${template.templateId}".`);
   }
 
+  // Brand validation (shared by all template types)
   if (!template.brand) {
     out.push(`[${id}] brand is missing.`);
   } else {
@@ -83,6 +83,31 @@ function validateTenant({ id, template }: TenantSource, out: string[]) {
     checkColor(id, "mutedTextColor", template.brand.mutedTextColor, out);
   }
 
+  // Auth validation (authenticated templates only)
+  if (template.templateId === "authenticated") {
+    const auth = (template as any).auth;
+    if (!auth) {
+      out.push(`[${id}] authenticated template missing "auth" config.`);
+    } else {
+      if (!auth.supabaseUrl || !auth.supabaseUrl.startsWith("https://")) {
+        out.push(`[${id}] auth.supabaseUrl must be a valid HTTPS URL.`);
+      }
+      if (!auth.supabaseAnonKey || typeof auth.supabaseAnonKey !== "string") {
+        out.push(`[${id}] auth.supabaseAnonKey must be a non-empty string.`);
+      }
+    }
+
+    // Validate protectedTabs reference actual tab IDs
+    const protectedTabs: string[] = (template as any).protectedTabs ?? [];
+    const tabIds = new Set(template.tabs.map((t) => t.id));
+    for (const pt of protectedTabs) {
+      if (!tabIds.has(pt)) {
+        out.push(`[${id}] protectedTabs references "${pt}" but no tab with that ID exists.`);
+      }
+    }
+  }
+
+  // Tab/card validation (shared by all template types)
   if (!Array.isArray(template.tabs) || template.tabs.length === 0) {
     out.push(`[${id}] tabs must be a non-empty array.`);
   } else {
@@ -91,6 +116,9 @@ function validateTenant({ id, template }: TenantSource, out: string[]) {
       if (!tab.label) out.push(`[${id}] tab "${tab.id}" missing label.`);
       if (!tab.headerTitle) out.push(`[${id}] tab "${tab.id}" missing headerTitle.`);
       if (!tab.headerBody) out.push(`[${id}] tab "${tab.id}" missing headerBody.`);
+
+      // Profile tab can have empty cards
+      if (tab.id === "profile") continue;
 
       if (!Array.isArray(tab.cards) || tab.cards.length === 0) {
         out.push(`[${id}] tab "${tab.id}" must have at least one card.`);
@@ -132,9 +160,6 @@ function checkColor(
   }
 }
 
-/**
- * Validates that tenant project IDs are properly isolated.
- */
 function validateProjectIsolation(tenants: TenantSource[], out: string[]) {
   for (const t of tenants) {
     if (!(t.id in tenantProjects)) {

@@ -1,1 +1,1 @@
-export { default } from "./src/TemplateApp";
+export { default } from "./src/AppRoot";
