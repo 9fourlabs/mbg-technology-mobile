@@ -1,7 +1,7 @@
 -- Tenants table (stores tenant records managed by admin panel)
 CREATE TABLE IF NOT EXISTS tenants (
   id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
+  business_name TEXT,
   template_type TEXT NOT NULL DEFAULT 'informational',
   status TEXT NOT NULL DEFAULT 'draft',
   config JSONB NOT NULL DEFAULT '{}',
@@ -24,13 +24,27 @@ CREATE TABLE IF NOT EXISTS builds (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Activity log table (tracks actions on tenants)
+CREATE TABLE IF NOT EXISTS activity_log (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id TEXT NOT NULL REFERENCES tenants(id),
+  action TEXT NOT NULL,
+  details TEXT,
+  user_email TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Enable RLS
 ALTER TABLE tenants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE builds ENABLE ROW LEVEL SECURITY;
+ALTER TABLE activity_log ENABLE ROW LEVEL SECURITY;
 
 -- Allow authenticated users (admin) full access
 CREATE POLICY "Admin full access to tenants" ON tenants
   FOR ALL USING (auth.role() = 'authenticated');
 
 CREATE POLICY "Admin full access to builds" ON builds
+  FOR ALL USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Admin full access to activity_log" ON activity_log
   FOR ALL USING (auth.role() = 'authenticated');
