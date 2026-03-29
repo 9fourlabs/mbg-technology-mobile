@@ -15,8 +15,13 @@ export default function ConfigEditorPage() {
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deploying, setDeploying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [prInfo, setPrInfo] = useState<{
+    url: string;
+    number: number;
+  } | null>(null);
 
   useEffect(() => {
     const loadConfig = async () => {
@@ -40,9 +45,10 @@ export default function ConfigEditorPage() {
     loadConfig();
   }, [id]);
 
-  const handleSave = async () => {
+  const handleSaveDraft = async () => {
     setError(null);
     setSuccess(false);
+    setPrInfo(null);
     setSaving(true);
 
     try {
@@ -64,6 +70,35 @@ export default function ConfigEditorPage() {
       setError("Invalid JSON. Please check your syntax.");
     }
     setSaving(false);
+  };
+
+  const handleSaveAndDeploy = async () => {
+    setError(null);
+    setSuccess(false);
+    setPrInfo(null);
+    setDeploying(true);
+
+    try {
+      const parsed = JSON.parse(configJson);
+
+      const res = await fetch(`/api/tenants/${id}/save-config`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ config: parsed }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error ?? "Failed to save and deploy config.");
+      } else {
+        setConfig(parsed);
+        setPrInfo({ url: data.pr_url, number: data.pr_number });
+      }
+    } catch {
+      setError("Invalid JSON or network error. Please check your syntax and try again.");
+    }
+    setDeploying(false);
   };
 
   if (loading) {
@@ -208,7 +243,7 @@ export default function ConfigEditorPage() {
         )}
       </div>
 
-      {/* Save */}
+      {/* Status banners */}
       {error && (
         <div className="rounded-lg bg-red-900/30 border border-red-800 px-3 py-2 text-sm text-red-400 mb-4">
           {error}
@@ -216,7 +251,20 @@ export default function ConfigEditorPage() {
       )}
       {success && (
         <div className="rounded-lg bg-green-900/30 border border-green-800 px-3 py-2 text-sm text-green-400 mb-4">
-          Config saved successfully.
+          Draft saved successfully.
+        </div>
+      )}
+      {prInfo && (
+        <div className="rounded-lg bg-green-900/30 border border-green-800 px-3 py-2 text-sm text-green-400 mb-4">
+          Config saved! PR opened:{" "}
+          <a
+            href={prInfo.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline font-medium hover:text-green-300"
+          >
+            #{prInfo.number}
+          </a>
         </div>
       )}
       <div className="flex justify-end gap-3">
@@ -227,11 +275,18 @@ export default function ConfigEditorPage() {
           Cancel
         </button>
         <button
-          onClick={handleSave}
-          disabled={saving}
+          onClick={handleSaveDraft}
+          disabled={saving || deploying}
+          className="px-6 py-2.5 rounded-lg border border-gray-700 hover:border-gray-600 text-sm font-medium text-gray-300 hover:text-white transition-colors disabled:opacity-50"
+        >
+          {saving ? "Saving..." : "Save Draft"}
+        </button>
+        <button
+          onClick={handleSaveAndDeploy}
+          disabled={saving || deploying}
           className="px-6 py-2.5 rounded-lg bg-[#2563EB] hover:bg-[#1d4ed8] text-sm font-medium text-white transition-colors disabled:opacity-50"
         >
-          {saving ? "Saving..." : "Save Config"}
+          {deploying ? "Saving & committing..." : "Save & Deploy"}
         </button>
       </div>
     </div>

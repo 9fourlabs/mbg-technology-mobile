@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import DeployButtons from "./deploy-buttons";
 
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
@@ -69,19 +70,7 @@ export default async function BuildsPage({
             {tenant.business_name || id}
           </p>
         </div>
-        <div className="flex gap-3">
-          <Link
-            href={`/tenants/${id}`}
-            className="px-4 py-2.5 rounded-lg bg-yellow-600 hover:bg-yellow-700 text-sm font-medium text-white transition-colors"
-          >
-            Deploy Preview
-          </Link>
-          <span
-            className={`px-4 py-2.5 rounded-lg text-sm font-medium text-white transition-colors ${hasExpoProject ? "bg-green-600" : "bg-green-600/40 cursor-not-allowed"}`}
-          >
-            Deploy Production
-          </span>
-        </div>
+        <DeployButtons tenantId={id} hasExpoProject={hasExpoProject} />
       </div>
 
       {!hasExpoProject && (

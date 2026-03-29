@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 
 const TEMPLATE_TYPES = [
   { id: "informational", label: "Informational", emoji: "\u{1F4CB}", color: "border-gray-500" },
@@ -65,34 +64,42 @@ export default function NewTenantPage() {
     return /^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(id) && id.length >= 3;
   };
 
+  const [successPrUrl, setSuccessPrUrl] = useState<string | null>(null);
+
   const handleCreate = async () => {
     setError(null);
     setCreating(true);
 
     try {
-      const supabase = createClient();
-      const { error: insertError } = await supabase.from("tenants").insert({
-        id: form.tenant_id,
-        template_type: form.template_type,
-        business_name: form.business_name,
-        status: "draft",
-        config: {
+      const res = await fetch("/api/tenants/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tenant_id: form.tenant_id,
+          template_type: form.template_type,
+          business_name: form.business_name,
           brand: {
             primaryColor: form.primary_color,
             backgroundColor: form.background_color,
             textColor: form.text_color,
             logoUrl: form.logo_url,
           },
-        },
+        }),
       });
 
-      if (insertError) {
-        setError(insertError.message);
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Failed to create tenant.");
         setCreating(false);
         return;
       }
 
-      router.push(`/tenants/${form.tenant_id}`);
+      // Show success banner with PR link, then redirect after a short delay
+      setSuccessPrUrl(data.pr_url);
+      setTimeout(() => {
+        router.push(`/tenants/${form.tenant_id}`);
+      }, 3000);
     } catch (err) {
       setError("Failed to create tenant. Please try again.");
       setCreating(false);
@@ -389,6 +396,23 @@ export default function NewTenantPage() {
                 {error}
               </div>
             )}
+
+            {successPrUrl && (
+              <div className="rounded-lg bg-green-900/30 border border-green-800 px-3 py-2 text-sm text-green-400">
+                Tenant created! PR opened:{" "}
+                <a
+                  href={successPrUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline font-medium text-green-300 hover:text-green-200"
+                >
+                  {successPrUrl}
+                </a>
+                <span className="block text-xs text-green-500 mt-1">
+                  Redirecting...
+                </span>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -416,7 +440,7 @@ export default function NewTenantPage() {
             disabled={creating}
             className="px-6 py-2.5 rounded-lg bg-[#2563EB] hover:bg-[#1d4ed8] text-sm font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {creating ? "Creating..." : "Create Tenant"}
+            {creating ? "Creating tenant & opening PR..." : "Create Tenant"}
           </button>
         )}
       </div>
