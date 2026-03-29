@@ -5,14 +5,14 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 const TEMPLATE_TYPES = [
-  { id: "restaurant", label: "Restaurant", emoji: "\u{1F354}", color: "border-orange-500" },
-  { id: "church", label: "Church", emoji: "\u{26EA}", color: "border-purple-500" },
-  { id: "barber", label: "Barber", emoji: "\u2702\uFE0F", color: "border-blue-500" },
-  { id: "beauty", label: "Beauty", emoji: "\u{1F484}", color: "border-pink-500" },
-  { id: "fitness", label: "Fitness", emoji: "\u{1F3CB}\uFE0F", color: "border-green-500" },
-  { id: "realestate", label: "Real Estate", emoji: "\u{1F3E0}", color: "border-teal-500" },
-  { id: "nonprofit", label: "Nonprofit", emoji: "\u{1F91D}", color: "border-indigo-500" },
-  { id: "retail", label: "Retail", emoji: "\u{1F6CD}\uFE0F", color: "border-yellow-500" },
+  { id: "informational", label: "Informational", emoji: "\u{1F4CB}", color: "border-gray-500" },
+  { id: "authenticated", label: "Authenticated", emoji: "\u{1F512}", color: "border-blue-500" },
+  { id: "booking", label: "Booking", emoji: "\u{1F4C5}", color: "border-green-500" },
+  { id: "commerce", label: "Commerce", emoji: "\u{1F6D2}", color: "border-yellow-500" },
+  { id: "loyalty", label: "Loyalty", emoji: "\u{2B50}", color: "border-purple-500" },
+  { id: "content", label: "Content", emoji: "\u{1F4F0}", color: "border-orange-500" },
+  { id: "forms", label: "Forms", emoji: "\u{1F4DD}", color: "border-teal-500" },
+  { id: "directory", label: "Directory", emoji: "\u{1F4D6}", color: "border-indigo-500" },
 ];
 
 const STEPS = ["Template", "Identity", "Brand", "Review"];

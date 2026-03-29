@@ -22,14 +22,14 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 const templateColors: Record<string, string> = {
-  restaurant: "bg-orange-900/50 text-orange-400",
-  church: "bg-purple-900/50 text-purple-400",
-  barber: "bg-blue-900/50 text-blue-400",
-  beauty: "bg-pink-900/50 text-pink-400",
-  fitness: "bg-green-900/50 text-green-400",
-  realestate: "bg-teal-900/50 text-teal-400",
-  nonprofit: "bg-indigo-900/50 text-indigo-400",
-  retail: "bg-yellow-900/50 text-yellow-400",
+  informational: "bg-gray-900/50 text-gray-400",
+  authenticated: "bg-blue-900/50 text-blue-400",
+  booking: "bg-green-900/50 text-green-400",
+  commerce: "bg-yellow-900/50 text-yellow-400",
+  loyalty: "bg-purple-900/50 text-purple-400",
+  content: "bg-orange-900/50 text-orange-400",
+  forms: "bg-teal-900/50 text-teal-400",
+  directory: "bg-indigo-900/50 text-indigo-400",
 };
 
 export default async function TenantDetailPage({

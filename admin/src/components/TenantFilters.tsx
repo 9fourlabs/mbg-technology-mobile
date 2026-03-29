@@ -4,14 +4,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 const TEMPLATE_TYPES = [
-  "restaurant",
-  "church",
-  "barber",
-  "beauty",
-  "fitness",
-  "realestate",
-  "nonprofit",
-  "retail",
+  "informational",
+  "authenticated",
+  "booking",
+  "commerce",
+  "loyalty",
+  "content",
+  "forms",
+  "directory",
 ];
 
 export default function TenantFilters({
