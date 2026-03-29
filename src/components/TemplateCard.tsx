@@ -13,8 +13,8 @@ type Props = {
 };
 
 export function TemplateCard({ card, theme, onAction }: Props) {
-  const hasAction = card.action && card.action.type !== "none";
-  const actionVariant = hasAction ? card.action?.variant ?? "secondary" : "secondary";
+  const action = card.action?.type === "open_url" ? card.action : null;
+  const actionVariant = action?.variant ?? "secondary";
   const isPrimary = actionVariant === "primary";
 
   return (
@@ -31,10 +31,10 @@ export function TemplateCard({ card, theme, onAction }: Props) {
           <Text style={[styles.text, { color: "#aaa" }]}>{card.body}</Text>
         </View>
 
-        {hasAction && card.action ? (
+        {action ? (
           <TouchableOpacity
             activeOpacity={0.85}
-            onPress={() => onAction(card.action!)}
+            onPress={() => onAction(action)}
             style={[
               styles.cta,
               isPrimary
@@ -43,7 +43,7 @@ export function TemplateCard({ card, theme, onAction }: Props) {
             ]}
           >
             <Text style={[styles.ctaText, isPrimary ? { color: theme.background } : { color: theme.primary }]}>
-              {card.action.label}
+              {action.label}
             </Text>
           </TouchableOpacity>
         ) : null}

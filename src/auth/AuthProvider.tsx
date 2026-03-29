@@ -7,6 +7,7 @@ type AuthState = {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  supabase: SupabaseClient;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signUp: (email: string, password: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
@@ -17,6 +18,7 @@ const AuthContext = createContext<AuthState>({
   user: null,
   session: null,
   loading: true,
+  supabase: null as unknown as SupabaseClient,
   signIn: async () => ({}),
   signUp: async () => ({}),
   signOut: async () => {},
@@ -71,6 +73,7 @@ export function AuthProvider({ config, children }: Props) {
       user: session?.user ?? null,
       session,
       loading,
+      supabase,
 
       signIn: async (email: string, password: string) => {
         const { error } = await supabase.auth.signInWithPassword({ email, password });

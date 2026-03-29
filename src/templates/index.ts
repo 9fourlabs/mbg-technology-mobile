@@ -2,9 +2,25 @@
 import type { AppTemplate } from "./types";
 import { getInformationalTemplate } from "./informational";
 import { getAuthenticatedTemplate } from "./authenticated";
+import { getBookingTemplate } from "./booking";
+import { getCommerceTemplate } from "./commerce";
+import { getLoyaltyTemplate } from "./loyalty";
+import { getContentTemplate } from "./content";
+import { getFormsTemplate } from "./forms";
+import { getDirectoryTemplate } from "./directory";
 
 export function getTemplate(tenant: string): AppTemplate {
-  const auth = getAuthenticatedTemplate(tenant);
-  if (auth) return auth;
+  for (const getter of [
+    getAuthenticatedTemplate,
+    getBookingTemplate,
+    getCommerceTemplate,
+    getLoyaltyTemplate,
+    getContentTemplate,
+    getFormsTemplate,
+    getDirectoryTemplate,
+  ]) {
+    const t = getter(tenant);
+    if (t) return t;
+  }
   return getInformationalTemplate(tenant);
 }

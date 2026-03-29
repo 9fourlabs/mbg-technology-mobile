@@ -68,7 +68,7 @@ function findTemplate(mod: Record<string, unknown>): unknown | null {
 }
 
 function validateTenant({ id, template }: TenantSource, out: string[]) {
-  const validTypes = ["informational", "authenticated"];
+  const validTypes = ["informational", "authenticated", "booking", "commerce", "loyalty", "content", "forms", "directory"];
   if (!validTypes.includes(template.templateId)) {
     out.push(`[${id}] templateId must be one of: ${validTypes.join(", ")}. Got "${template.templateId}".`);
   }
@@ -83,11 +83,12 @@ function validateTenant({ id, template }: TenantSource, out: string[]) {
     checkColor(id, "mutedTextColor", template.brand.mutedTextColor, out);
   }
 
-  // Auth validation (authenticated templates only)
-  if (template.templateId === "authenticated") {
+  // Auth validation (all templates except informational)
+  const authTemplates = ["authenticated", "booking", "commerce", "loyalty", "content", "forms", "directory"];
+  if (authTemplates.includes(template.templateId)) {
     const auth = (template as any).auth;
     if (!auth) {
-      out.push(`[${id}] authenticated template missing "auth" config.`);
+      out.push(`[${id}] ${template.templateId} template missing "auth" config.`);
     } else {
       if (!auth.supabaseUrl || !auth.supabaseUrl.startsWith("https://")) {
         out.push(`[${id}] auth.supabaseUrl must be a valid HTTPS URL.`);
@@ -107,6 +108,58 @@ function validateTenant({ id, template }: TenantSource, out: string[]) {
     }
   }
 
+  // Per-template config validation
+  if (template.templateId === "booking") {
+    const cfg = (template as any).booking;
+    if (!cfg) { out.push(`[${id}] booking template missing "booking" config.`); }
+    else {
+      if (!Array.isArray(cfg.services) || cfg.services.length === 0) out.push(`[${id}] booking.services must be non-empty.`);
+      if (!cfg.slotDuration || cfg.slotDuration <= 0) out.push(`[${id}] booking.slotDuration must be > 0.`);
+      if (!Array.isArray(cfg.businessHours) || cfg.businessHours.length === 0) out.push(`[${id}] booking.businessHours must be non-empty.`);
+    }
+  }
+  if (template.templateId === "commerce") {
+    const cfg = (template as any).commerce;
+    if (!cfg) { out.push(`[${id}] commerce template missing "commerce" config.`); }
+    else {
+      if (!cfg.stripePublishableKey) out.push(`[${id}] commerce.stripePublishableKey is required.`);
+      if (!cfg.currency) out.push(`[${id}] commerce.currency is required.`);
+    }
+  }
+  if (template.templateId === "loyalty") {
+    const cfg = (template as any).loyalty;
+    if (!cfg) { out.push(`[${id}] loyalty template missing "loyalty" config.`); }
+    else {
+      if (!cfg.pointsPerVisit || cfg.pointsPerVisit <= 0) out.push(`[${id}] loyalty.pointsPerVisit must be > 0.`);
+      if (!Array.isArray(cfg.tiers) || cfg.tiers.length === 0) out.push(`[${id}] loyalty.tiers must be non-empty.`);
+    }
+  }
+  if (template.templateId === "content") {
+    const cfg = (template as any).content;
+    if (!cfg) { out.push(`[${id}] content template missing "content" config.`); }
+    else {
+      if (!Array.isArray(cfg.categories)) out.push(`[${id}] content.categories must be an array.`);
+    }
+  }
+  if (template.templateId === "forms") {
+    const cfg = (template as any).forms;
+    if (!cfg) { out.push(`[${id}] forms template missing "forms" config.`); }
+    else {
+      if (!Array.isArray(cfg.forms) || cfg.forms.length === 0) out.push(`[${id}] forms.forms must have at least one form.`);
+      for (const form of (cfg.forms ?? [])) {
+        if (!Array.isArray(form.fields) || form.fields.length === 0) out.push(`[${id}] form "${form.id}" must have at least one field.`);
+      }
+    }
+  }
+  if (template.templateId === "directory") {
+    const cfg = (template as any).directory;
+    if (!cfg) { out.push(`[${id}] directory template missing "directory" config.`); }
+    else {
+      if (!cfg.itemLabel) out.push(`[${id}] directory.itemLabel is required.`);
+      if (!Array.isArray(cfg.fields) || cfg.fields.length === 0) out.push(`[${id}] directory.fields must be non-empty.`);
+    }
+  }
+
   // Tab/card validation (shared by all template types)
   if (!Array.isArray(template.tabs) || template.tabs.length === 0) {
     out.push(`[${id}] tabs must be a non-empty array.`);
@@ -117,8 +170,9 @@ function validateTenant({ id, template }: TenantSource, out: string[]) {
       if (!tab.headerTitle) out.push(`[${id}] tab "${tab.id}" missing headerTitle.`);
       if (!tab.headerBody) out.push(`[${id}] tab "${tab.id}" missing headerBody.`);
 
-      // Profile tab can have empty cards
-      if (tab.id === "profile") continue;
+      // Template-specific tabs can have empty cards (custom screens render instead)
+      const customTabIds = ["profile", "book", "appointments", "shop", "cart", "orders", "feed", "bookmarks", "browse", "card", "rewards", "history", "forms", "submissions", "dashboard"];
+      if (customTabIds.includes(tab.id)) continue;
 
       if (!Array.isArray(tab.cards) || tab.cards.length === 0) {
         out.push(`[${id}] tab "${tab.id}" must have at least one card.`);
