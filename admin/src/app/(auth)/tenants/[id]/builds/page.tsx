@@ -70,24 +70,17 @@ export default async function BuildsPage({
           </p>
         </div>
         <div className="flex gap-3">
-          <button
-            onClick={() => alert("Coming soon: Deploy Preview")}
+          <Link
+            href={`/tenants/${id}`}
             className="px-4 py-2.5 rounded-lg bg-yellow-600 hover:bg-yellow-700 text-sm font-medium text-white transition-colors"
           >
             Deploy Preview
-          </button>
-          <button
-            disabled={!hasExpoProject}
-            onClick={() => alert("Coming soon: Deploy Production")}
-            className="px-4 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-sm font-medium text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            title={
-              !hasExpoProject
-                ? "Set up Expo project first"
-                : "Deploy to production"
-            }
+          </Link>
+          <span
+            className={`px-4 py-2.5 rounded-lg text-sm font-medium text-white transition-colors ${hasExpoProject ? "bg-green-600" : "bg-green-600/40 cursor-not-allowed"}`}
           >
             Deploy Production
-          </button>
+          </span>
         </div>
       </div>
 
@@ -132,13 +125,7 @@ export default async function BuildsPage({
                     {new Date(build.created_at).toLocaleString()}
                   </td>
                   <td className="px-6 py-3 text-gray-500">
-                    {build.completed_at
-                      ? `${Math.round(
-                          (new Date(build.completed_at).getTime() -
-                            new Date(build.created_at).getTime()) /
-                            60000
-                        )}m`
-                      : "---"}
+                    ---
                   </td>
                 </tr>
               ))}
