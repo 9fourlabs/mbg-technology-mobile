@@ -3,6 +3,12 @@ name: EAS Preview Builds
 on:
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      tenant:
+        description: "Tenant key (e.g. mbg, acme-dental)"
+        required: true
+        type: string
 
 permissions:
   pull-requests: write
@@ -21,20 +27,26 @@ jobs:
       - name: Detect changed tenant configs
         id: changed-tenants
         run: |
-          git fetch origin main:refs/remotes/origin/main
-
-          CHANGED_FILES=$(git diff --name-only origin/main -- "configs/tenants/*.json" || true)
-
-          if [ -z "$CHANGED_FILES" ]; then
-            echo "No tenant configs changed."
-            echo '[]' > tenants.json
+          # If triggered manually via workflow_dispatch, use the input tenant
+          if [ -n "${{ inputs.tenant }}" ]; then
+            echo "Manual dispatch for tenant: ${{ inputs.tenant }}"
+            echo '["${{ inputs.tenant }}"]' > tenants.json
           else
-            echo "Changed tenant config files:"
-            echo "$CHANGED_FILES"
-            echo "$CHANGED_FILES" \
-              | xargs -n1 basename \
-              | sed 's/.json$//' \
-              | jq -R . | jq -s . > tenants.json
+            git fetch origin main:refs/remotes/origin/main
+
+            CHANGED_FILES=$(git diff --name-only origin/main -- "configs/tenants/*.json" || true)
+
+            if [ -z "$CHANGED_FILES" ]; then
+              echo "No tenant configs changed."
+              echo '[]' > tenants.json
+            else
+              echo "Changed tenant config files:"
+              echo "$CHANGED_FILES"
+              echo "$CHANGED_FILES" \
+                | xargs -n1 basename \
+                | sed 's/.json$//' \
+                | jq -R . | jq -s . > tenants.json
+            fi
           fi
 
           echo "Detected tenants:"
@@ -80,6 +92,7 @@ jobs:
           echo "workflow_url=$WORKFLOW_URL" >> $GITHUB_OUTPUT
 
       - name: Comment PR with build link
+        if: github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
