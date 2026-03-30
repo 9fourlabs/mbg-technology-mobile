@@ -85,8 +85,8 @@ export default async function BuildsPage({
             </div>
             <p className="text-xs text-gray-400 leading-relaxed">
               Creates a test version of the app that can be installed directly on
-              Android phones. Use this to demo the app to your client before going
-              live. Share the install link or scan the QR code.
+              Android and iOS devices. Use this to demo the app to your client
+              before going live. Share the install link or scan the QR code.
             </p>
           </div>
           <div className="rounded-lg bg-gray-800/50 border border-gray-700 p-4">

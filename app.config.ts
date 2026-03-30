@@ -47,7 +47,7 @@ function loadSplashBackgroundColor(tenantKey: string): string {
 
 const config: ExpoConfig = {
   name: tenant === "mbg" ? "MBG Technology" : "Informational App",
-  slug: tenant === "mbg" ? "mbg-technology" : `info-${tenant}`,
+  slug: nativeIdMode === "shared" || tenant === "mbg" ? "mbg-technology" : `info-${tenant}`,
   version: "1.0.0",
   orientation: "portrait",
   icon: resolveAsset(tenant, "icon.png"),

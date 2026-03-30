@@ -123,72 +123,94 @@ export type EASBuild = {
 };
 
 /**
- * List recent builds for the Expo project.
+ * List recent builds for the Expo project via GraphQL API.
  */
 export async function getEASBuilds(limit = 10): Promise<EASBuild[]> {
-  const res = await fetch(
-    `${EAS_API}/v2/projects/${EXPO_PROJECT_ID}/builds?limit=${limit}`,
-    { method: "GET", headers: headers() }
-  );
+  const res = await fetch(`${EAS_API}/graphql`, {
+    method: "POST",
+    headers: headers(),
+    body: JSON.stringify({
+      query: `query ($appId: String!, $limit: Int!) {
+        app {
+          byId(appId: $appId) {
+            builds(limit: $limit, offset: 0) {
+              id
+              status
+              platform
+              artifacts {
+                buildUrl
+                applicationArchiveUrl
+              }
+              createdAt
+            }
+          }
+        }
+      }`,
+      variables: { appId: EXPO_PROJECT_ID, limit },
+    }),
+  });
 
   if (!res.ok) {
     const body = await res.text();
     throw new Error(`EAS API error (${res.status}): ${body}`);
   }
 
-  const data = await res.json();
-  console.log("[EAS] Raw response keys:", Object.keys(data));
+  const json = await res.json();
+  const builds = json.data?.app?.byId?.builds;
+  if (!Array.isArray(builds)) return [];
 
-  // The Expo REST API may return builds under different keys
-  let builds: unknown[];
-  if (Array.isArray(data.data)) {
-    builds = data.data;
-  } else if (Array.isArray(data.builds)) {
-    builds = data.builds;
-  } else if (Array.isArray(data)) {
-    builds = data;
-  } else {
-    console.warn("[EAS] Unexpected response structure:", JSON.stringify(data).slice(0, 500));
-    return [];
-  }
-
-  return builds.map((b) => {
-    const item = b as Record<string, unknown>;
-    const artifacts = item.artifacts as Record<string, unknown> | undefined;
-    // Expo uses different field names across API versions
-    const downloadUrl =
-      (artifacts?.buildUrl as string) ??
-      (artifacts?.applicationArchiveUrl as string) ??
-      null;
+  return builds.map((b: Record<string, unknown>) => {
+    const artifacts = b.artifacts as Record<string, string | null> | undefined;
     return {
-      id: (item.id as string) ?? "unknown",
-      status: (item.status as string) ?? "unknown",
-      platform: (item.platform as string) ?? "unknown",
-      downloadUrl,
-      createdAt: (item.createdAt as string) ?? new Date().toISOString(),
+      id: (b.id as string) ?? "unknown",
+      status: ((b.status as string) ?? "unknown").toLowerCase(),
+      platform: ((b.platform as string) ?? "unknown").toLowerCase(),
+      downloadUrl: artifacts?.buildUrl ?? artifacts?.applicationArchiveUrl ?? null,
+      createdAt: (b.createdAt as string) ?? new Date().toISOString(),
     };
   });
 }
 
 /**
- * Get a single EAS build by ID.
+ * Get a single EAS build by ID via GraphQL.
  */
 export async function getEASBuildById(
   buildId: string
 ): Promise<EASBuild | null> {
-  const res = await fetch(`${EAS_API}/v2/builds/${buildId}`, {
-    method: "GET",
+  const res = await fetch(`${EAS_API}/graphql`, {
+    method: "POST",
     headers: headers(),
+    body: JSON.stringify({
+      query: `query ($buildId: ID!) {
+        builds {
+          byId(buildId: $buildId) {
+            id
+            status
+            platform
+            artifacts {
+              buildUrl
+              applicationArchiveUrl
+            }
+            createdAt
+          }
+        }
+      }`,
+      variables: { buildId },
+    }),
   });
 
   if (!res.ok) return null;
 
-  const b = await res.json();
+  const json = await res.json();
+  const b = json.data?.builds?.byId;
+  if (!b) return null;
+
+  const artifacts = b.artifacts as Record<string, string | null> | undefined;
   return {
     id: b.id ?? buildId,
-    status: b.status ?? "unknown",
-    platform: b.platform ?? "unknown",
-    downloadUrl: b.artifacts?.buildUrl ?? b.artifacts?.applicationArchiveUrl ?? null,
+    status: (b.status ?? "unknown").toLowerCase(),
+    platform: (b.platform ?? "unknown").toLowerCase(),
+    downloadUrl: artifacts?.buildUrl ?? artifacts?.applicationArchiveUrl ?? null,
     createdAt: b.createdAt ?? new Date().toISOString(),
   };
 }
