@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getWorkflowRun } from "@/lib/github";
+import { getExpoBuildPageUrl } from "@/lib/eas";
 
 function mapGitHubStatus(
   status: string,
@@ -86,7 +87,9 @@ export async function GET(
       }
     }
 
-    return NextResponse.json({ status, conclusion, build_url: buildUrl, updated });
+    const easBuildsUrl = status === "completed" ? getExpoBuildPageUrl() : null;
+
+    return NextResponse.json({ status, conclusion, build_url: buildUrl, eas_builds_url: easBuildsUrl, updated });
   } catch (error) {
     console.error("build-status error:", error);
     const message =

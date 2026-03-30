@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getExpoBuildPageUrl } from "@/lib/eas";
 import DeployButtons from "./deploy-buttons";
 import BuildStatusPoller from "./build-status-poller";
 
@@ -29,6 +30,7 @@ export default async function BuildsPage({
     .order("created_at", { ascending: false });
 
   const hasExpoProject = !!tenant.expo_project_id;
+  const expoBuildsUrl = getExpoBuildPageUrl();
 
   return (
     <div>
@@ -55,7 +57,22 @@ export default async function BuildsPage({
             {tenant.business_name || id}
           </p>
         </div>
-        <DeployButtons tenantId={id} hasExpoProject={hasExpoProject} />
+        <div className="flex items-center gap-3">
+          <a
+            href={expoBuildsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            View All Builds on Expo &rarr;
+          </a>
+          <DeployButtons tenantId={id} hasExpoProject={hasExpoProject} />
+        </div>
+      </div>
+
+      {/* Install info banner */}
+      <div className="rounded-lg bg-green-900/20 border border-green-800/50 px-4 py-3 text-sm text-green-400 mb-6">
+        Preview builds are available for install on Android. Open the Expo link on your device or scan the QR code.
       </div>
 
       {!hasExpoProject && (
@@ -77,6 +94,7 @@ export default async function BuildsPage({
                 <th className="px-6 py-3 font-medium">Build ID</th>
                 <th className="px-6 py-3 font-medium">Profile</th>
                 <th className="px-6 py-3 font-medium">Status</th>
+                <th className="px-6 py-3 font-medium">Artifacts</th>
                 <th className="px-6 py-3 font-medium">Platform</th>
                 <th className="px-6 py-3 font-medium">Started</th>
                 <th className="px-6 py-3 font-medium">Duration</th>
@@ -109,6 +127,20 @@ export default async function BuildsPage({
                       }}
                       tenantId={id}
                     />
+                  </td>
+                  <td className="px-6 py-3">
+                    {build.status === "completed" ? (
+                      <a
+                        href={expoBuildsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-green-400 hover:text-green-300 transition-colors"
+                      >
+                        📱 Install
+                      </a>
+                    ) : (
+                      <span className="text-gray-600">---</span>
+                    )}
                   </td>
                   <td className="px-6 py-3 text-gray-400">
                     {build.platform ?? "android"}

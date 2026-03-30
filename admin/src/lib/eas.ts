@@ -87,6 +87,27 @@ export async function triggerWorkflow(
  *
  * @param buildId - The EAS build UUID
  */
+// ---------------------------------------------------------------------------
+// Expo URL helpers
+// ---------------------------------------------------------------------------
+
+const EXPO_ACCOUNT = "ninefour-labs";
+const EXPO_PROJECT = "mbg-technology";
+
+/** URL to the builds list on Expo dashboard. */
+export function getExpoBuildPageUrl(): string {
+  return `https://expo.dev/accounts/${EXPO_ACCOUNT}/projects/${EXPO_PROJECT}/builds`;
+}
+
+/** URL to a specific build's install / detail page on Expo. */
+export function getExpoInstallUrl(buildId: string): string {
+  return `https://expo.dev/accounts/${EXPO_ACCOUNT}/projects/${EXPO_PROJECT}/builds/${buildId}`;
+}
+
+// ---------------------------------------------------------------------------
+// API functions
+// ---------------------------------------------------------------------------
+
 export async function getBuildStatus(
   buildId: string
 ): Promise<BuildStatus> {

@@ -59,6 +59,7 @@ export default function BuildStatusPoller({
   tenantId: string;
 }) {
   const [status, setStatus] = useState(build.status);
+  const [easBuildsUrl, setEasBuildsUrl] = useState<string | null>(null);
 
   useEffect(() => {
     // Don't poll if already in a terminal state
@@ -76,6 +77,9 @@ export default function BuildStatusPoller({
         if (active && data.status) {
           setStatus(data.status);
         }
+        if (active && data.eas_builds_url) {
+          setEasBuildsUrl(data.eas_builds_url);
+        }
       } catch {
         // Silently ignore polling errors
       }
@@ -91,5 +95,19 @@ export default function BuildStatusPoller({
     };
   }, [status, build.id, tenantId]);
 
-  return <StatusDot status={status} />;
+  return (
+    <span className="inline-flex items-center gap-2">
+      <StatusDot status={status} />
+      {status === "completed" && easBuildsUrl && (
+        <a
+          href={easBuildsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-green-400 hover:text-green-300 transition-colors"
+        >
+          📱 View on Expo
+        </a>
+      )}
+    </span>
+  );
 }
