@@ -2,22 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import DeployButtons from "./deploy-buttons";
-
-function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    pending: "bg-blue-900/50 text-blue-400",
-    building: "bg-yellow-900/50 text-yellow-400",
-    completed: "bg-green-900/50 text-green-400",
-    failed: "bg-red-900/50 text-red-400",
-  };
-  return (
-    <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${colors[status] ?? "bg-gray-700 text-gray-300"}`}
-    >
-      {status}
-    </span>
-  );
-}
+import BuildStatusPoller from "./build-status-poller";
 
 export default async function BuildsPage({
   params,
@@ -100,12 +85,30 @@ export default async function BuildsPage({
             <tbody className="divide-y divide-gray-800">
               {builds.map((build) => (
                 <tr key={build.id} className="text-sm">
-                  <td className="px-6 py-3 text-white font-mono text-xs">
-                    {build.id.slice(0, 8)}
+                  <td className="px-6 py-3 font-mono text-xs">
+                    {build.build_url ? (
+                      <a
+                        href={build.build_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-400 hover:text-blue-300 underline"
+                      >
+                        {build.id.slice(0, 8)}
+                      </a>
+                    ) : (
+                      <span className="text-white">{build.id.slice(0, 8)}</span>
+                    )}
                   </td>
                   <td className="px-6 py-3 text-gray-300">{build.profile}</td>
                   <td className="px-6 py-3">
-                    <StatusBadge status={build.status} />
+                    <BuildStatusPoller
+                      build={{
+                        id: build.id,
+                        status: build.status,
+                        workflow_run_id: build.workflow_run_id,
+                      }}
+                      tenantId={id}
+                    />
                   </td>
                   <td className="px-6 py-3 text-gray-400">
                     {build.platform ?? "android"}

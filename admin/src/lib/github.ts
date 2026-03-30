@@ -263,6 +263,41 @@ export const tenantProjects: Record<string, string> = {
   );
 }
 
+/**
+ * Get a specific workflow run by its run ID.
+ */
+export async function getWorkflowRun(runId: string) {
+  const repo = getRepo();
+  const res = await fetch(`${API}/repos/${repo}/actions/runs/${runId}`, {
+    method: "GET",
+    headers: headers(),
+  });
+  return handleResponse<{
+    id: number;
+    status: string;
+    conclusion: string | null;
+    html_url: string;
+  }>(res);
+}
+
+/**
+ * Get the most recent workflow run for a given workflow file.
+ */
+export async function getLatestWorkflowRun(workflowFile: string) {
+  const repo = getRepo();
+  const res = await fetch(
+    `${API}/repos/${repo}/actions/workflows/${workflowFile}/runs?per_page=1&branch=main`,
+    {
+      method: "GET",
+      headers: headers(),
+    }
+  );
+  const data = await handleResponse<{
+    workflow_runs: Array<{ id: number; html_url: string; status: string }>;
+  }>(res);
+  return data.workflow_runs[0] ?? null;
+}
+
 function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

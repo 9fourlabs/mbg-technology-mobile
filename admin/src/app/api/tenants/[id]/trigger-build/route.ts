@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { triggerWorkflowDispatch } from "@/lib/github";
+import { triggerWorkflowDispatch, getLatestWorkflowRun } from "@/lib/github";
 
 export async function POST(
   request: NextRequest,
@@ -54,15 +54,35 @@ export async function POST(
     }
 
     // Trigger the appropriate GitHub Actions workflow
+    const workflowFile =
+      profile === "preview" ? "eas-preview.yml" : "eas-promote.yml";
+
     if (profile === "preview") {
-      await triggerWorkflowDispatch("eas-preview.yml", "main", {
+      await triggerWorkflowDispatch(workflowFile, "main", {
         tenant: tenantId,
       });
     } else {
-      await triggerWorkflowDispatch("eas-promote.yml", "main", {
+      await triggerWorkflowDispatch(workflowFile, "main", {
         tenant: tenantId,
         platform: "all",
       });
+    }
+
+    // Wait briefly for GitHub to register the run, then capture it
+    let workflowRunId: string | null = null;
+    let buildUrl: string | null = null;
+
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    try {
+      const latestRun = await getLatestWorkflowRun(workflowFile);
+      if (latestRun) {
+        workflowRunId = String(latestRun.id);
+        buildUrl = latestRun.html_url;
+      }
+    } catch (err) {
+      console.warn("Failed to capture workflow run ID:", err);
+      // Non-fatal: build record will still be created without the run ID
     }
 
     // Insert build record
@@ -73,6 +93,8 @@ export async function POST(
         profile,
         status: "pending",
         platform: "all",
+        workflow_run_id: workflowRunId,
+        build_url: buildUrl,
       })
       .select("id")
       .single();
