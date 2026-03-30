@@ -1,4 +1,5 @@
-import type { BrandConfig } from "../templates/types";
+import type { BrandConfig, DesignConfig } from "../templates/types";
+import { resolveDesign, type ResolvedDesign } from "./presets";
 
 export type Theme = {
   primary: string;
@@ -11,6 +12,14 @@ export type Theme = {
   tabBarActive: string;
   placeholder: string;
   danger: string;
+  cardRadius: number;
+  buttonRadius: number;
+  headerAlign: "center" | "flex-start";
+  cardColumns: number;
+  tabBarVariant: "pills" | "underline";
+  headingSize: number;
+  bodySize: number;
+  secondary: string;
 };
 
 /**
@@ -35,12 +44,33 @@ export function hexToLuminance(hex: string): number {
 }
 
 /**
- * Build a full Theme object from a BrandConfig.
+ * Derive a secondary color from a primary hex color.
+ * Lightens on dark backgrounds, darkens on light backgrounds.
+ */
+function deriveSecondary(primary: string, isLight: boolean): string {
+  const { r, g, b } = hexToRgb(primary);
+  const factor = isLight ? 0.7 : 1.3;
+  const clamp = (v: number) => Math.min(255, Math.max(0, Math.round(v * factor)));
+  const toHex = (v: number) => clamp(v).toString(16).padStart(2, "0");
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+/**
+ * Build a full Theme object from a BrandConfig and optional DesignConfig.
  * Derives light/dark adaptive tokens from the background color luminance.
  */
-export function buildTheme(brand: BrandConfig): Theme {
+export function buildTheme(brand: BrandConfig, design?: DesignConfig): Theme {
   const luminance = hexToLuminance(brand.backgroundColor);
   const isLight = luminance > 0.5;
+
+  const resolved: ResolvedDesign = resolveDesign(design);
+
+  const CARD_RADIUS_MAP: Record<string, number> = { rounded: 16, sharp: 2, flat: 0 };
+  const cardRadius = CARD_RADIUS_MAP[resolved.cardStyle] ?? 16;
+
+  const headerAlign: "center" | "flex-start" = resolved.headerStyle === "centered" ? "center" : "flex-start";
+
+  const secondary = resolved.secondaryColor ?? deriveSecondary(brand.primaryColor, isLight);
 
   return {
     primary: brand.primaryColor,
@@ -53,5 +83,13 @@ export function buildTheme(brand: BrandConfig): Theme {
     tabBarActive: isLight ? "#F1F5F9" : "#111111",
     placeholder: isLight ? "#E2E8F0" : "#111111",
     danger: isLight ? "#DC2626" : "#dc2626",
+    cardRadius,
+    buttonRadius: resolved.buttonRadius,
+    headerAlign,
+    cardColumns: resolved.cardColumns,
+    tabBarVariant: resolved.tabBarStyle,
+    headingSize: resolved.headingSize,
+    bodySize: resolved.bodySize,
+    secondary,
   };
 }

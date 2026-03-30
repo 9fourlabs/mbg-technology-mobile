@@ -27,9 +27,26 @@ export type BrandConfig = {
   splashBackgroundColor?: string;
 };
 
+export type ThemePreset = "modern" | "classic" | "minimal" | "bold" | "elegant";
+
+export type DesignConfig = {
+  preset?: ThemePreset;
+  cardStyle?: "rounded" | "sharp" | "flat";
+  cardColumns?: 1 | 2;
+  buttonRadius?: number;
+  headerStyle?: "centered" | "left";
+  tabBarStyle?: "pills" | "underline";
+  typography?: {
+    headingSize?: "small" | "medium" | "large";
+    bodySize?: "small" | "medium" | "large";
+  };
+  secondaryColor?: string;
+};
+
 export type InformationalTemplate = {
   templateId: "informational";
   brand: BrandConfig;
+  design?: DesignConfig;
   tabs: TemplateTab[];
 };
 
@@ -41,6 +58,7 @@ export type AuthConfig = {
 export type AuthenticatedTemplate = {
   templateId: "authenticated";
   brand: BrandConfig;
+  design?: DesignConfig;
   auth: AuthConfig;
   tabs: TemplateTab[];
   protectedTabs?: string[];
@@ -66,6 +84,7 @@ export type BookingConfig = {
 export type BookingTemplate = {
   templateId: "booking";
   brand: BrandConfig;
+  design?: DesignConfig;
   auth: AuthConfig;
   booking: BookingConfig;
   tabs: TemplateTab[];
@@ -85,6 +104,7 @@ export type CommerceConfig = {
 export type CommerceTemplate = {
   templateId: "commerce";
   brand: BrandConfig;
+  design?: DesignConfig;
   auth: AuthConfig;
   commerce: CommerceConfig;
   tabs: TemplateTab[];
@@ -118,6 +138,7 @@ export type LoyaltyConfig = {
 export type LoyaltyTemplate = {
   templateId: "loyalty";
   brand: BrandConfig;
+  design?: DesignConfig;
   auth: AuthConfig;
   loyalty: LoyaltyConfig;
   tabs: TemplateTab[];
@@ -134,6 +155,7 @@ export type ContentConfig = {
 export type ContentTemplate = {
   templateId: "content";
   brand: BrandConfig;
+  design?: DesignConfig;
   auth: AuthConfig;
   content: ContentConfig;
   tabs: TemplateTab[];
@@ -169,6 +191,7 @@ export type FormsConfig = {
 export type FormsTemplate = {
   templateId: "forms";
   brand: BrandConfig;
+  design?: DesignConfig;
   auth: AuthConfig;
   forms: FormsConfig;
   tabs: TemplateTab[];
@@ -194,6 +217,7 @@ export type DirectoryConfig = {
 export type DirectoryTemplate = {
   templateId: "directory";
   brand: BrandConfig;
+  design?: DesignConfig;
   auth: AuthConfig;
   directory: DirectoryConfig;
   tabs: TemplateTab[];

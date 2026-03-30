@@ -37,6 +37,52 @@ export function validateConfig(
     checkColor(tenantId, "mutedTextColor", config.brand.mutedTextColor, errors);
   }
 
+  // Design validation (optional block)
+  const design = (config as Record<string, unknown>).design as
+    | Record<string, unknown>
+    | undefined;
+  if (design) {
+    const validPresets = ["modern", "classic", "minimal", "bold", "elegant"];
+    if (design.preset && !validPresets.includes(design.preset as string)) {
+      errors.push(
+        `[${tenantId}] design.preset must be one of: ${validPresets.join(", ")}. Got "${design.preset}".`
+      );
+    }
+    const validCardStyles = ["rounded", "sharp", "flat"];
+    if (design.cardStyle && !validCardStyles.includes(design.cardStyle as string)) {
+      errors.push(
+        `[${tenantId}] design.cardStyle must be one of: ${validCardStyles.join(", ")}. Got "${design.cardStyle}".`
+      );
+    }
+    if (design.cardColumns !== undefined && design.cardColumns !== 1 && design.cardColumns !== 2) {
+      errors.push(
+        `[${tenantId}] design.cardColumns must be 1 or 2. Got "${design.cardColumns}".`
+      );
+    }
+    if (
+      design.buttonRadius !== undefined &&
+      (typeof design.buttonRadius !== "number" ||
+        design.buttonRadius < 0 ||
+        design.buttonRadius > 999)
+    ) {
+      errors.push(
+        `[${tenantId}] design.buttonRadius must be a number between 0 and 999. Got "${design.buttonRadius}".`
+      );
+    }
+    const validHeaderStyles = ["centered", "left"];
+    if (design.headerStyle && !validHeaderStyles.includes(design.headerStyle as string)) {
+      errors.push(
+        `[${tenantId}] design.headerStyle must be one of: ${validHeaderStyles.join(", ")}. Got "${design.headerStyle}".`
+      );
+    }
+    const validTabBarStyles = ["pills", "underline"];
+    if (design.tabBarStyle && !validTabBarStyles.includes(design.tabBarStyle as string)) {
+      errors.push(
+        `[${tenantId}] design.tabBarStyle must be one of: ${validTabBarStyles.join(", ")}. Got "${design.tabBarStyle}".`
+      );
+    }
+  }
+
   // Auth validation (all templates except informational)
   const authTemplates = [
     "authenticated",

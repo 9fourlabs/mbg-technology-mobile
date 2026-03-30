@@ -13,8 +13,20 @@ export function TemplateCard({ card, theme, onAction }: Props) {
   const actionVariant = action?.variant ?? "secondary";
   const isPrimary = actionVariant === "primary";
 
+  // Derive card style from cardRadius token:
+  //   0  = flat (no border, no shadow, just background)
+  //   2  = sharp (thin border, no rounding)
+  //   16 = rounded (border + borderRadius)
+  const isFlat = theme.cardRadius === 0;
+  const cardStyle = {
+    borderRadius: theme.cardRadius,
+    borderWidth: isFlat ? 0 : 1,
+    borderColor: isFlat ? undefined : theme.border,
+    backgroundColor: theme.card,
+  };
+
   return (
-    <View style={[styles.card, { borderColor: theme.border, backgroundColor: theme.card }]}>
+    <View style={[styles.card, cardStyle]}>
       {card.imageUri ? (
         <Image source={{ uri: card.imageUri }} style={styles.image} />
       ) : (
@@ -24,7 +36,7 @@ export function TemplateCard({ card, theme, onAction }: Props) {
       <View style={styles.body}>
         <View>
           <Text style={[styles.title, { color: theme.text }]}>{card.title}</Text>
-          <Text style={[styles.text, { color: theme.mutedText }]}>{card.body}</Text>
+          <Text style={[styles.text, { color: theme.mutedText, fontSize: theme.bodySize }]}>{card.body}</Text>
         </View>
 
         {action ? (
@@ -33,6 +45,7 @@ export function TemplateCard({ card, theme, onAction }: Props) {
             onPress={() => onAction(action)}
             style={[
               styles.cta,
+              { borderRadius: theme.buttonRadius },
               isPrimary
                 ? { backgroundColor: theme.primary }
                 : { borderColor: theme.primary, borderWidth: 1, backgroundColor: "transparent" },
@@ -50,8 +63,6 @@ export function TemplateCard({ card, theme, onAction }: Props) {
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 16,
-    borderWidth: 1,
     overflow: "hidden",
     minHeight: 260,
   },
@@ -82,7 +93,6 @@ const styles = StyleSheet.create({
   cta: {
     paddingVertical: 12,
     paddingHorizontal: 18,
-    borderRadius: 8,
     alignSelf: "flex-start",
     minHeight: 44,
     justifyContent: "center",

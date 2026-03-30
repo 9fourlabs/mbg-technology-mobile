@@ -7,13 +7,34 @@ type Props = {
     text: string;
     muted: string;
   };
+  headerAlign?: "center" | "flex-start";
+  headingSize?: number;
+  bodySize?: number;
 };
 
-export function PageHeader({ title, body, colors }: Props) {
+export function PageHeader({ title, body, colors, headerAlign, headingSize, bodySize }: Props) {
   return (
     <View style={styles.section}>
-      <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
-      <Text style={[styles.body, { color: colors.muted }]}>{body}</Text>
+      <Text
+        style={[
+          styles.title,
+          { color: colors.text },
+          headerAlign != null && { textAlign: headerAlign === "center" ? "center" : "left" },
+          headingSize != null && { fontSize: headingSize },
+        ]}
+      >
+        {title}
+      </Text>
+      <Text
+        style={[
+          styles.body,
+          { color: colors.muted },
+          headerAlign != null && { textAlign: headerAlign === "center" ? "center" : "left" },
+          bodySize != null && { fontSize: bodySize },
+        ]}
+      >
+        {body}
+      </Text>
     </View>
   );
 }

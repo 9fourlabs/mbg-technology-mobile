@@ -9,8 +9,16 @@ type Props = {
 };
 
 export function TabBar({ tabs, activeId, onChange, theme }: Props) {
+  const isUnderline = theme.tabBarVariant === "underline";
+
   return (
-    <View style={[styles.tabBar, { backgroundColor: theme.tabBar, borderTopColor: theme.border }]}>
+    <View
+      style={[
+        styles.tabBar,
+        { backgroundColor: theme.tabBar, borderTopColor: theme.border },
+        isUnderline && styles.tabBarUnderline,
+      ]}
+    >
       {tabs.map((t) => {
         const active = t.id === activeId;
         return (
@@ -19,7 +27,10 @@ export function TabBar({ tabs, activeId, onChange, theme }: Props) {
             onPress={() => onChange(t.id)}
             style={({ pressed }) => [
               styles.tabButton,
-              active && [styles.tabButtonActive, { backgroundColor: theme.tabBarActive }],
+              // Pills variant: rounded background fill on active tab
+              !isUnderline && active && [styles.tabButtonActivePills, { backgroundColor: theme.tabBarActive }],
+              // Underline variant: 2px bottom border on active tab
+              isUnderline && active && { borderBottomWidth: 2, borderBottomColor: theme.primary },
               pressed && styles.tabButtonPressed,
             ]}
           >
@@ -48,6 +59,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderTopWidth: 1,
   },
+  tabBarUnderline: {
+    borderBottomWidth: 0,
+  },
   tabButton: {
     flex: 1,
     paddingVertical: 8,
@@ -55,7 +69,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     minHeight: 40,
   },
-  tabButtonActive: {
+  tabButtonActivePills: {
     borderRadius: 999,
   },
   tabButtonPressed: {

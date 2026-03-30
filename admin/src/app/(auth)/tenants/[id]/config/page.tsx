@@ -5,7 +5,23 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
-const TABS = ["Brand", "Tabs", "Template Config"];
+const TABS = ["Brand", "Design", "Tabs", "Template Config"];
+
+const DESIGN_PRESETS = [
+  { id: "modern", label: "Modern", desc: "Clean & fresh", accent: "#2563EB" },
+  { id: "classic", label: "Classic", desc: "Timeless & structured", accent: "#854D0E" },
+  { id: "minimal", label: "Minimal", desc: "Less is more", accent: "#6B7280" },
+  { id: "bold", label: "Bold", desc: "Big & impactful", accent: "#DC2626" },
+  { id: "elegant", label: "Elegant", desc: "Refined & polished", accent: "#7C3AED" },
+] as const;
+
+const PRESET_DEFAULTS: Record<string, { cardStyle: string; cardColumns: number; buttonRadius: number; headerStyle: string; tabBarStyle: string; typography: { headingSize: string; bodySize: string } }> = {
+  modern: { cardStyle: "rounded", cardColumns: 2, buttonRadius: 999, headerStyle: "left", tabBarStyle: "pills", typography: { headingSize: "medium", bodySize: "medium" } },
+  classic: { cardStyle: "sharp", cardColumns: 1, buttonRadius: 4, headerStyle: "left", tabBarStyle: "underline", typography: { headingSize: "large", bodySize: "medium" } },
+  minimal: { cardStyle: "flat", cardColumns: 1, buttonRadius: 0, headerStyle: "centered", tabBarStyle: "underline", typography: { headingSize: "small", bodySize: "small" } },
+  bold: { cardStyle: "rounded", cardColumns: 2, buttonRadius: 12, headerStyle: "centered", tabBarStyle: "pills", typography: { headingSize: "large", bodySize: "large" } },
+  elegant: { cardStyle: "rounded", cardColumns: 2, buttonRadius: 8, headerStyle: "centered", tabBarStyle: "underline", typography: { headingSize: "medium", bodySize: "small" } },
+};
 
 export default function ConfigEditorPage() {
   const { id } = useParams<{ id: string }>();
@@ -111,6 +127,21 @@ export default function ConfigEditorPage() {
 
   const brandConfig = config?.brand as Record<string, string> | undefined;
   const tabsConfig = config?.tabs as unknown[] | undefined;
+  const designConfig = (config?.design ?? {}) as Record<string, unknown>;
+
+  const updateDesign = (field: string, value: unknown) => {
+    const updated = { ...config, design: { ...designConfig, [field]: value } };
+    setConfig(updated);
+    setConfigJson(JSON.stringify(updated, null, 2));
+  };
+
+  const applyPreset = (presetId: string) => {
+    const defaults = PRESET_DEFAULTS[presetId];
+    if (!defaults) return;
+    const updated = { ...config, design: { preset: presetId, ...defaults } };
+    setConfig(updated);
+    setConfigJson(JSON.stringify(updated, null, 2));
+  };
 
   return (
     <div>
@@ -190,6 +221,218 @@ export default function ConfigEditorPage() {
         )}
 
         {activeTab === 1 && (
+          <div className="space-y-8">
+            {/* Preset Picker */}
+            <div>
+              <h2 className="text-base font-semibold text-white mb-4">Design Preset</h2>
+              <div className="grid grid-cols-5 gap-3">
+                {DESIGN_PRESETS.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => applyPreset(p.id)}
+                    className={`relative flex flex-col items-center p-4 rounded-xl border-2 transition-colors ${
+                      designConfig.preset === p.id
+                        ? "border-[#2563EB] bg-gray-800"
+                        : "border-gray-800 hover:border-gray-700"
+                    }`}
+                  >
+                    <div className="w-full h-1 rounded-full mb-3" style={{ backgroundColor: p.accent }} />
+                    <span className="text-sm font-medium text-white">{p.label}</span>
+                    <span className="text-xs text-gray-500 mt-1">{p.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Card Style */}
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-3">Card Style</label>
+              <div className="grid grid-cols-3 gap-3">
+                {([
+                  { id: "rounded", label: "Rounded", preview: "rounded-xl" },
+                  { id: "sharp", label: "Sharp", preview: "rounded-none" },
+                  { id: "flat", label: "Flat", preview: "rounded-lg" },
+                ] as const).map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => updateDesign("cardStyle", s.id)}
+                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-colors ${
+                      designConfig.cardStyle === s.id
+                        ? "border-[#2563EB] bg-gray-800"
+                        : "border-gray-800 hover:border-gray-700"
+                    }`}
+                  >
+                    <div className={`w-16 h-10 ${s.preview} ${s.id === "flat" ? "bg-gray-700" : "bg-gray-700 border border-gray-600"}`} />
+                    <span className="text-sm text-white">{s.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Button Shape */}
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-3">Button Shape</label>
+              <div className="flex items-center gap-4">
+                <span className="text-xs text-gray-500">Square</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={24}
+                  value={typeof designConfig.buttonRadius === "number" ? designConfig.buttonRadius > 24 ? 24 : designConfig.buttonRadius : 12}
+                  onChange={(e) => {
+                    const v = Number(e.target.value);
+                    updateDesign("buttonRadius", v === 24 ? 999 : v);
+                  }}
+                  className="flex-1 accent-[#2563EB]"
+                />
+                <span className="text-xs text-gray-500">Pill</span>
+              </div>
+              <div className="mt-3 flex justify-center">
+                <div
+                  className="px-6 py-2 bg-[#2563EB] text-white text-sm font-medium"
+                  style={{ borderRadius: typeof designConfig.buttonRadius === "number" ? Math.min(designConfig.buttonRadius as number, 24) : 12 }}
+                >
+                  Preview Button
+                </div>
+              </div>
+            </div>
+
+            {/* Card Layout */}
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-3">Card Layout</label>
+              <div className="grid grid-cols-2 gap-3">
+                {([
+                  { cols: 1, label: "List (1 column)", icon: (
+                    <div className="flex flex-col gap-1 w-8">
+                      <div className="h-2 bg-gray-500 rounded-sm" />
+                      <div className="h-2 bg-gray-500 rounded-sm" />
+                      <div className="h-2 bg-gray-500 rounded-sm" />
+                    </div>
+                  )},
+                  { cols: 2, label: "Grid (2 columns)", icon: (
+                    <div className="grid grid-cols-2 gap-1 w-8">
+                      <div className="h-3 bg-gray-500 rounded-sm" />
+                      <div className="h-3 bg-gray-500 rounded-sm" />
+                      <div className="h-3 bg-gray-500 rounded-sm" />
+                      <div className="h-3 bg-gray-500 rounded-sm" />
+                    </div>
+                  )},
+                ] as const).map((opt) => (
+                  <button
+                    key={opt.cols}
+                    onClick={() => updateDesign("cardColumns", opt.cols)}
+                    className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-colors ${
+                      designConfig.cardColumns === opt.cols
+                        ? "bg-[#2563EB] border-[#2563EB] text-white"
+                        : "border-gray-800 hover:border-gray-700 text-gray-300"
+                    }`}
+                  >
+                    {opt.icon}
+                    <span className="text-sm font-medium">{opt.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Header Alignment */}
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-3">Header Style</label>
+              <div className="grid grid-cols-2 gap-3">
+                {(["left", "centered"] as const).map((style) => (
+                  <button
+                    key={style}
+                    onClick={() => updateDesign("headerStyle", style)}
+                    className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-colors ${
+                      designConfig.headerStyle === style
+                        ? "bg-[#2563EB] border-[#2563EB] text-white"
+                        : "border-gray-800 hover:border-gray-700 text-gray-300"
+                    }`}
+                  >
+                    <span className="text-sm font-medium capitalize">{style === "left" ? "Left aligned" : "Centered"}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Tab Bar Style */}
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-3">Tab Bar</label>
+              <div className="grid grid-cols-2 gap-3">
+                {([
+                  { id: "pills", label: "Pills", preview: (
+                    <div className="flex gap-1">
+                      <div className="px-2 py-0.5 rounded-full bg-[#2563EB] text-[10px] text-white">Tab</div>
+                      <div className="px-2 py-0.5 rounded-full bg-gray-700 text-[10px] text-gray-400">Tab</div>
+                    </div>
+                  )},
+                  { id: "underline", label: "Underline", preview: (
+                    <div className="flex gap-2">
+                      <div className="border-b-2 border-[#2563EB] text-[10px] text-white pb-0.5">Tab</div>
+                      <div className="border-b-2 border-transparent text-[10px] text-gray-400 pb-0.5">Tab</div>
+                    </div>
+                  )},
+                ] as const).map((opt) => (
+                  <button
+                    key={opt.id}
+                    onClick={() => updateDesign("tabBarStyle", opt.id)}
+                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-colors ${
+                      designConfig.tabBarStyle === opt.id
+                        ? "border-[#2563EB] bg-gray-800"
+                        : "border-gray-800 hover:border-gray-700"
+                    }`}
+                  >
+                    {opt.preview}
+                    <span className="text-sm text-white">{opt.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Typography */}
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-3">Heading Size</label>
+              <div className="flex gap-2">
+                {(["small", "medium", "large"] as const).map((size) => {
+                  const typo = designConfig.typography as { headingSize?: string; bodySize?: string } | undefined;
+                  return (
+                    <button
+                      key={size}
+                      onClick={() => updateDesign("typography", { ...(typo ?? { headingSize: "medium", bodySize: "medium" }), headingSize: size })}
+                      className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        (typo?.headingSize ?? "medium") === size
+                          ? "bg-[#2563EB] text-white"
+                          : "bg-gray-800 text-gray-400 hover:text-white"
+                      }`}
+                    >
+                      {size === "small" ? "S" : size === "medium" ? "M" : "L"}
+                    </button>
+                  );
+                })}
+              </div>
+              <label className="block text-sm font-medium text-gray-400 mb-3 mt-4">Body Size</label>
+              <div className="flex gap-2">
+                {(["small", "medium", "large"] as const).map((size) => {
+                  const typo = designConfig.typography as { headingSize?: string; bodySize?: string } | undefined;
+                  return (
+                    <button
+                      key={size}
+                      onClick={() => updateDesign("typography", { ...(typo ?? { headingSize: "medium", bodySize: "medium" }), bodySize: size })}
+                      className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        (typo?.bodySize ?? "medium") === size
+                          ? "bg-[#2563EB] text-white"
+                          : "bg-gray-800 text-gray-400 hover:text-white"
+                      }`}
+                    >
+                      {size === "small" ? "S" : size === "medium" ? "M" : "L"}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 2 && (
           <div>
             <h2 className="text-base font-semibold text-white mb-4">
               Tab Configuration
@@ -224,7 +467,7 @@ export default function ConfigEditorPage() {
           </div>
         )}
 
-        {activeTab === 2 && (
+        {activeTab === 3 && (
           <div>
             <h2 className="text-base font-semibold text-white mb-4">
               Raw JSON Config

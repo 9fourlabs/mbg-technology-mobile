@@ -14,7 +14,7 @@ export default function TemplateApp() {
   const template = useMemo(() => getInformationalTemplate(String(tenant)), [tenant]);
   const [activeTabId, setActiveTabId] = useState(template.tabs[0]?.id ?? "home");
 
-  const theme = buildTheme(template.brand);
+  const theme = buildTheme(template.brand, template.design);
 
   async function onAction(action: TemplateAction) {
     if (action.type !== "open_url") return;
@@ -46,13 +46,26 @@ export default function TemplateApp() {
             title={activeTab.headerTitle}
             body={activeTab.headerBody}
             colors={{ text: theme.text, muted: theme.mutedText }}
+            headerAlign={theme.headerAlign}
+            headingSize={theme.headingSize}
+            bodySize={theme.bodySize}
           />
 
-          {activeTab.cards.map((card) => (
-            <View key={card.id} style={styles.cardGrid}>
-              <TemplateCard card={card} theme={theme} onAction={onAction} />
+          {theme.cardColumns === 2 ? (
+            <View style={styles.cardRow}>
+              {activeTab.cards.map((card) => (
+                <View key={card.id} style={styles.cardHalf}>
+                  <TemplateCard card={card} theme={theme} onAction={onAction} />
+                </View>
+              ))}
             </View>
-          ))}
+          ) : (
+            activeTab.cards.map((card) => (
+              <View key={card.id} style={styles.cardGrid}>
+                <TemplateCard card={card} theme={theme} onAction={onAction} />
+              </View>
+            ))
+          )}
 
           <View style={styles.footerSpacer} />
         </ScrollView>
@@ -81,5 +94,7 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 96 },
   cardGrid: { marginBottom: 16 },
+  cardRow: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" } as const,
+  cardHalf: { width: "48%", marginBottom: 16 } as const,
   footerSpacer: { height: 16 },
 });

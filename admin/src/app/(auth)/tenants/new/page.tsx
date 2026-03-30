@@ -14,7 +14,33 @@ const TEMPLATE_TYPES = [
   { id: "directory", label: "Directory", emoji: "\u{1F4D6}", color: "border-indigo-500" },
 ];
 
-const STEPS = ["Template", "Identity", "Brand", "Review"];
+const STEPS = ["Template", "Identity", "Brand", "Design", "Review"];
+
+const DESIGN_PRESETS = [
+  { id: "modern", label: "Modern", desc: "Clean & fresh", accent: "#2563EB" },
+  { id: "classic", label: "Classic", desc: "Timeless & structured", accent: "#854D0E" },
+  { id: "minimal", label: "Minimal", desc: "Less is more", accent: "#6B7280" },
+  { id: "bold", label: "Bold", desc: "Big & impactful", accent: "#DC2626" },
+  { id: "elegant", label: "Elegant", desc: "Refined & polished", accent: "#7C3AED" },
+] as const;
+
+const PRESET_DEFAULTS: Record<string, { cardStyle: string; cardColumns: number; buttonRadius: number; headerStyle: string; tabBarStyle: string; typography: { headingSize: string; bodySize: string } }> = {
+  modern: { cardStyle: "rounded", cardColumns: 2, buttonRadius: 999, headerStyle: "left", tabBarStyle: "pills", typography: { headingSize: "medium", bodySize: "medium" } },
+  classic: { cardStyle: "sharp", cardColumns: 1, buttonRadius: 4, headerStyle: "left", tabBarStyle: "underline", typography: { headingSize: "large", bodySize: "medium" } },
+  minimal: { cardStyle: "flat", cardColumns: 1, buttonRadius: 0, headerStyle: "centered", tabBarStyle: "underline", typography: { headingSize: "small", bodySize: "small" } },
+  bold: { cardStyle: "rounded", cardColumns: 2, buttonRadius: 12, headerStyle: "centered", tabBarStyle: "pills", typography: { headingSize: "large", bodySize: "large" } },
+  elegant: { cardStyle: "rounded", cardColumns: 2, buttonRadius: 8, headerStyle: "centered", tabBarStyle: "underline", typography: { headingSize: "medium", bodySize: "small" } },
+};
+
+interface DesignData {
+  preset: string;
+  cardStyle: string;
+  cardColumns: number;
+  buttonRadius: number;
+  headerStyle: string;
+  tabBarStyle: string;
+  typography: { headingSize: string; bodySize: string };
+}
 
 interface FormData {
   template_type: string;
@@ -24,6 +50,7 @@ interface FormData {
   background_color: string;
   text_color: string;
   logo_url: string;
+  design: DesignData;
 }
 
 export default function NewTenantPage() {
@@ -39,6 +66,15 @@ export default function NewTenantPage() {
     background_color: "#030712",
     text_color: "#FFFFFF",
     logo_url: "",
+    design: {
+      preset: "modern",
+      cardStyle: "rounded",
+      cardColumns: 2,
+      buttonRadius: 999,
+      headerStyle: "left",
+      tabBarStyle: "pills",
+      typography: { headingSize: "medium", bodySize: "medium" },
+    },
   });
 
   const updateForm = (updates: Partial<FormData>) => {
@@ -54,10 +90,28 @@ export default function NewTenantPage() {
       case 2:
         return form.primary_color !== "";
       case 3:
+        return form.design.preset !== "";
+      case 4:
         return true;
       default:
         return false;
     }
+  };
+
+  const updateDesign = (field: string, value: unknown) => {
+    setForm((prev) => ({
+      ...prev,
+      design: { ...prev.design, [field]: value } as DesignData,
+    }));
+  };
+
+  const applyPreset = (presetId: string) => {
+    const defaults = PRESET_DEFAULTS[presetId];
+    if (!defaults) return;
+    setForm((prev) => ({
+      ...prev,
+      design: { preset: presetId, ...defaults },
+    }));
   };
 
   const validateTenantId = (id: string) => {
@@ -84,6 +138,7 @@ export default function NewTenantPage() {
             textColor: form.text_color,
             logoUrl: form.logo_url,
           },
+          design: form.design,
         }),
       });
 
@@ -338,8 +393,129 @@ export default function NewTenantPage() {
           </div>
         )}
 
-        {/* Step 4: Review */}
+        {/* Step 4: Design */}
         {step === 3 && (
+          <div className="space-y-6">
+            <h2 className="text-lg font-semibold text-white mb-4">
+              Design customization
+            </h2>
+
+            {/* Preset Picker */}
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-3">Preset</label>
+              <div className="grid grid-cols-5 gap-3">
+                {DESIGN_PRESETS.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => applyPreset(p.id)}
+                    className={`relative flex flex-col items-center p-4 rounded-xl border-2 transition-colors ${
+                      form.design.preset === p.id
+                        ? "border-[#2563EB] bg-gray-800"
+                        : "border-gray-800 hover:border-gray-700"
+                    }`}
+                  >
+                    <div className="w-full h-1 rounded-full mb-3" style={{ backgroundColor: p.accent }} />
+                    <span className="text-sm font-medium text-white">{p.label}</span>
+                    <span className="text-xs text-gray-500 mt-1">{p.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Card Style */}
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-3">Card Style</label>
+              <div className="grid grid-cols-3 gap-3">
+                {([
+                  { id: "rounded", label: "Rounded", preview: "rounded-xl" },
+                  { id: "sharp", label: "Sharp", preview: "rounded-none" },
+                  { id: "flat", label: "Flat", preview: "rounded-lg" },
+                ] as const).map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => updateDesign("cardStyle", s.id)}
+                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-colors ${
+                      form.design.cardStyle === s.id
+                        ? "border-[#2563EB] bg-gray-800"
+                        : "border-gray-800 hover:border-gray-700"
+                    }`}
+                  >
+                    <div className={`w-16 h-10 ${s.preview} ${s.id === "flat" ? "bg-gray-700" : "bg-gray-700 border border-gray-600"}`} />
+                    <span className="text-sm text-white">{s.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Button Shape */}
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-3">Button Shape</label>
+              <div className="flex items-center gap-4">
+                <span className="text-xs text-gray-500">Square</span>
+                <input
+                  type="range"
+                  min={0}
+                  max={24}
+                  value={form.design.buttonRadius > 24 ? 24 : form.design.buttonRadius}
+                  onChange={(e) => {
+                    const v = Number(e.target.value);
+                    updateDesign("buttonRadius", v === 24 ? 999 : v);
+                  }}
+                  className="flex-1 accent-[#2563EB]"
+                />
+                <span className="text-xs text-gray-500">Pill</span>
+              </div>
+              <div className="mt-3 flex justify-center">
+                <div
+                  className="px-6 py-2 bg-[#2563EB] text-white text-sm font-medium"
+                  style={{ borderRadius: Math.min(form.design.buttonRadius, 24) }}
+                >
+                  Preview Button
+                </div>
+              </div>
+            </div>
+
+            {/* Card Layout */}
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-3">Card Layout</label>
+              <div className="grid grid-cols-2 gap-3">
+                {([
+                  { cols: 1, label: "List (1 column)", icon: (
+                    <div className="flex flex-col gap-1 w-8">
+                      <div className="h-2 bg-gray-500 rounded-sm" />
+                      <div className="h-2 bg-gray-500 rounded-sm" />
+                      <div className="h-2 bg-gray-500 rounded-sm" />
+                    </div>
+                  )},
+                  { cols: 2, label: "Grid (2 columns)", icon: (
+                    <div className="grid grid-cols-2 gap-1 w-8">
+                      <div className="h-3 bg-gray-500 rounded-sm" />
+                      <div className="h-3 bg-gray-500 rounded-sm" />
+                      <div className="h-3 bg-gray-500 rounded-sm" />
+                      <div className="h-3 bg-gray-500 rounded-sm" />
+                    </div>
+                  )},
+                ] as const).map((opt) => (
+                  <button
+                    key={opt.cols}
+                    onClick={() => updateDesign("cardColumns", opt.cols)}
+                    className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-colors ${
+                      form.design.cardColumns === opt.cols
+                        ? "bg-[#2563EB] border-[#2563EB] text-white"
+                        : "border-gray-800 hover:border-gray-700 text-gray-300"
+                    }`}
+                  >
+                    {opt.icon}
+                    <span className="text-sm font-medium">{opt.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 5: Review */}
+        {step === 4 && (
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-white mb-4">
               Review & Create
@@ -389,6 +565,12 @@ export default function NewTenantPage() {
                   </span>
                 </div>
               )}
+              <div className="flex justify-between py-2 border-b border-gray-800">
+                <span className="text-sm text-gray-400">Design Preset</span>
+                <span className="text-sm text-white capitalize">
+                  {form.design.preset}
+                </span>
+              </div>
             </div>
 
             {error && (

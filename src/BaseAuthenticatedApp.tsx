@@ -26,12 +26,13 @@ import { PageHeader } from "./components/PageHeader";
 import { TabBar } from "./components/TabBar";
 import { TemplateCard } from "./components/TemplateCard";
 import { buildTheme } from "./utils/theme";
-import type { AuthConfig, BrandConfig, TemplateTab, TemplateAction } from "./templates/types";
+import type { AuthConfig, BrandConfig, DesignConfig, TemplateTab, TemplateAction } from "./templates/types";
 
 export type { Theme } from "./utils/theme";
 
 type Props = {
   brand: BrandConfig;
+  design?: DesignConfig;
   auth: AuthConfig;
   tabs: TemplateTab[];
   protectedTabs?: string[];
@@ -42,22 +43,22 @@ type Props = {
 
 const Stack = createNativeStackNavigator();
 
-export default function BaseAuthenticatedApp({ brand, auth, tabs, protectedTabs, renderTab }: Props) {
+export default function BaseAuthenticatedApp({ brand, design, auth, tabs, protectedTabs, renderTab }: Props) {
   return (
     <AuthProvider config={auth}>
       <NavigationContainer>
-        <AppContent brand={brand} tabs={tabs} protectedTabs={protectedTabs} renderTab={renderTab} />
+        <AppContent brand={brand} design={design} tabs={tabs} protectedTabs={protectedTabs} renderTab={renderTab} />
       </NavigationContainer>
     </AuthProvider>
   );
 }
 
-function AppContent({ brand, tabs, protectedTabs, renderTab }: Omit<Props, "auth">) {
+function AppContent({ brand, design, tabs, protectedTabs, renderTab }: Omit<Props, "auth">) {
   const { user, loading } = useAuth();
   const [activeTabId, setActiveTabId] = useState(tabs[0]?.id ?? "home");
   const [pendingTab, setPendingTab] = useState<string | null>(null);
 
-  const theme = buildTheme(brand);
+  const theme = buildTheme(brand, design);
 
   const protectedSet = new Set(protectedTabs ?? []);
 
@@ -169,12 +170,25 @@ function MainContent({ brand, tabs, theme, activeTabId, onTabChange, renderTab }
                   title={activeTab.headerTitle}
                   body={activeTab.headerBody}
                   colors={{ text: theme.text, muted: theme.mutedText }}
+                  headerAlign={theme.headerAlign}
+                  headingSize={theme.headingSize}
+                  bodySize={theme.bodySize}
                 />
-                {activeTab.cards.map((card) => (
-                  <View key={card.id} style={styles.cardGrid}>
-                    <TemplateCard card={card} theme={theme} onAction={onAction} />
+                {theme.cardColumns === 2 ? (
+                  <View style={styles.cardRow}>
+                    {activeTab.cards.map((card) => (
+                      <View key={card.id} style={styles.cardHalf}>
+                        <TemplateCard card={card} theme={theme} onAction={onAction} />
+                      </View>
+                    ))}
                   </View>
-                ))}
+                ) : (
+                  activeTab.cards.map((card) => (
+                    <View key={card.id} style={styles.cardGrid}>
+                      <TemplateCard card={card} theme={theme} onAction={onAction} />
+                    </View>
+                  ))
+                )}
               </>
             )}
             <View style={styles.footerSpacer} />
@@ -235,5 +249,7 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 96 },
   customContent: { flex: 1 },
   cardGrid: { marginBottom: 16 },
+  cardRow: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between" },
+  cardHalf: { width: "48%", marginBottom: 16 },
   footerSpacer: { height: 16 },
 });

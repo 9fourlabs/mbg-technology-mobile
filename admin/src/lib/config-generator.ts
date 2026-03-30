@@ -55,6 +55,7 @@ export function generateDefaultConfig(templateType: TemplateId): AppTemplate {
       return {
         templateId: "informational",
         brand: { ...defaultBrand, primaryColor: "#FF9900", backgroundColor: "#000000", textColor: "#FFFFFF", mutedTextColor: "#999999" },
+        design: { preset: "modern" },
         tabs: [homeTab],
       };
 
@@ -63,6 +64,7 @@ export function generateDefaultConfig(templateType: TemplateId): AppTemplate {
         templateId: "authenticated",
         auth: { ...authBlock },
         brand: { ...defaultBrand },
+        design: { preset: "modern" },
         tabs: [
           homeTab,
           {
@@ -82,6 +84,7 @@ export function generateDefaultConfig(templateType: TemplateId): AppTemplate {
         templateId: "booking",
         auth: { ...authBlock },
         brand: { ...defaultBrand },
+        design: { preset: "modern" },
         booking: {
           services: [
             { id: "service-1", name: "Standard Service", duration: 30, price: 50 },
@@ -112,6 +115,7 @@ export function generateDefaultConfig(templateType: TemplateId): AppTemplate {
         templateId: "commerce",
         auth: { ...authBlock },
         brand: { ...defaultBrand },
+        design: { preset: "modern" },
         commerce: {
           stripePublishableKey: "pk_test_YOUR_KEY",
           currency: "usd",
@@ -138,6 +142,7 @@ export function generateDefaultConfig(templateType: TemplateId): AppTemplate {
         templateId: "loyalty",
         auth: { ...authBlock },
         brand: { ...defaultBrand },
+        design: { preset: "modern" },
         loyalty: {
           pointsPerVisit: 10,
           programName: "Rewards Program",
@@ -166,6 +171,7 @@ export function generateDefaultConfig(templateType: TemplateId): AppTemplate {
         templateId: "content",
         auth: { ...authBlock },
         brand: { ...defaultBrand },
+        design: { preset: "modern" },
         content: {
           categories: [
             { id: "news", name: "News" },
@@ -189,6 +195,7 @@ export function generateDefaultConfig(templateType: TemplateId): AppTemplate {
         templateId: "forms",
         auth: { ...authBlock },
         brand: { ...defaultBrand },
+        design: { preset: "modern" },
         forms: {
           forms: [
             {
@@ -218,6 +225,7 @@ export function generateDefaultConfig(templateType: TemplateId): AppTemplate {
         templateId: "directory",
         auth: { ...authBlock },
         brand: { ...defaultBrand },
+        design: { preset: "modern" },
         directory: {
           itemLabel: "Member",
           itemLabelPlural: "Members",
