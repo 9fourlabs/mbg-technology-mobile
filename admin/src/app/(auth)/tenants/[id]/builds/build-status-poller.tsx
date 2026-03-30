@@ -63,7 +63,9 @@ export default function BuildStatusPoller({
 }) {
   const [status, setStatus] = useState(build.status);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [expoInstallUrl, setExpoInstallUrl] = useState<string | null>(null);
   const [showQR, setShowQR] = useState(false);
+  const [pollCount, setPollCount] = useState(0);
 
   useEffect(() => {
     // For artifactsOnly mode on completed builds, keep polling until we get a download URL
@@ -85,6 +87,12 @@ export default function BuildStatusPoller({
         }
         if (active && data.download_url) {
           setDownloadUrl(data.download_url);
+        }
+        if (active && data.expo_install_url) {
+          setExpoInstallUrl(data.expo_install_url);
+        }
+        if (active && artifactsOnly) {
+          setPollCount((c) => c + 1);
         }
       } catch {
         // Silently ignore polling errors
@@ -126,6 +134,19 @@ export default function BuildStatusPoller({
             </div>
           )}
         </div>
+      );
+    }
+    // After 3 poll attempts with no download URL, show Expo fallback link
+    if (pollCount >= 3 && expoInstallUrl) {
+      return (
+        <a
+          href={expoInstallUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors"
+        >
+          View on Expo
+        </a>
       );
     }
     return (

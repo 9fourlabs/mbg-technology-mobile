@@ -137,20 +137,36 @@ export async function getEASBuilds(limit = 10): Promise<EASBuild[]> {
   }
 
   const data = await res.json();
-  const builds: unknown[] = data.builds ?? data.data ?? data ?? [];
+  console.log("[EAS] Raw response keys:", Object.keys(data));
 
-  if (!Array.isArray(builds)) return [];
+  // The Expo REST API may return builds under different keys
+  let builds: unknown[];
+  if (Array.isArray(data.data)) {
+    builds = data.data;
+  } else if (Array.isArray(data.builds)) {
+    builds = data.builds;
+  } else if (Array.isArray(data)) {
+    builds = data;
+  } else {
+    console.warn("[EAS] Unexpected response structure:", JSON.stringify(data).slice(0, 500));
+    return [];
+  }
 
   return builds.map((b) => {
     const item = b as Record<string, unknown>;
+    const artifacts = item.artifacts as Record<string, unknown> | undefined;
+    // Expo uses different field names across API versions
+    const downloadUrl =
+      (artifacts?.buildUrl as string) ??
+      (artifacts?.applicationArchiveUrl as string) ??
+      null;
     return {
-    id: (item.id as string) ?? "unknown",
-    status: (item.status as string) ?? "unknown",
-    platform: (item.platform as string) ?? "unknown",
-    downloadUrl:
-      ((item.artifacts as Record<string, unknown>)?.buildUrl as string) ?? null,
-    createdAt: (item.createdAt as string) ?? new Date().toISOString(),
-  };
+      id: (item.id as string) ?? "unknown",
+      status: (item.status as string) ?? "unknown",
+      platform: (item.platform as string) ?? "unknown",
+      downloadUrl,
+      createdAt: (item.createdAt as string) ?? new Date().toISOString(),
+    };
   });
 }
 
@@ -172,7 +188,7 @@ export async function getEASBuildById(
     id: b.id ?? buildId,
     status: b.status ?? "unknown",
     platform: b.platform ?? "unknown",
-    downloadUrl: b.artifacts?.buildUrl ?? null,
+    downloadUrl: b.artifacts?.buildUrl ?? b.artifacts?.applicationArchiveUrl ?? null,
     createdAt: b.createdAt ?? new Date().toISOString(),
   };
 }
@@ -196,7 +212,7 @@ export async function getBuildStatus(
     id: data.id ?? buildId,
     status: data.status ?? "in-queue",
     platform: data.platform ?? null,
-    downloadUrl: data.artifacts?.buildUrl ?? null,
+    downloadUrl: data.artifacts?.buildUrl ?? data.artifacts?.applicationArchiveUrl ?? null,
     error: data.error?.message ?? null,
   };
 }

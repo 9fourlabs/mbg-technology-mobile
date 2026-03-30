@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS builds (
   profile TEXT,
   status TEXT NOT NULL DEFAULT 'pending',
   build_url TEXT,
+  download_url TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

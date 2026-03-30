@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getWorkflowRun } from "@/lib/github";
-import { getExpoBuildPageUrl, getEASBuilds } from "@/lib/eas";
+import { getExpoBuildPageUrl, getExpoInstallUrl, getEASBuilds } from "@/lib/eas";
 
 function mapGitHubStatus(
   status: string,
@@ -121,7 +121,20 @@ export async function GET(
       }
     }
 
-    return NextResponse.json({ status, conclusion, build_url: buildUrl, eas_builds_url: easBuildsUrl, download_url: downloadUrl, updated });
+    // Fallback: if completed but still no download URL, provide the Expo install page
+    const expoInstallUrl = status === "completed"
+      ? getExpoInstallUrl(buildId)
+      : null;
+
+    return NextResponse.json({
+      status,
+      conclusion,
+      build_url: buildUrl,
+      eas_builds_url: easBuildsUrl,
+      download_url: downloadUrl,
+      expo_install_url: expoInstallUrl,
+      updated,
+    });
   } catch (error) {
     console.error("build-status error:", error);
     const message =

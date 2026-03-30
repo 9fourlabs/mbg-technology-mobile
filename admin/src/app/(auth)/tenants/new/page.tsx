@@ -5,14 +5,14 @@ import { useRouter } from "next/navigation";
 import ImageUploader from "@/components/ImageUploader";
 
 const TEMPLATE_TYPES = [
-  { id: "informational", label: "Informational", emoji: "\u{1F4CB}", color: "border-gray-500" },
-  { id: "authenticated", label: "Authenticated", emoji: "\u{1F512}", color: "border-blue-500" },
-  { id: "booking", label: "Booking", emoji: "\u{1F4C5}", color: "border-green-500" },
-  { id: "commerce", label: "Commerce", emoji: "\u{1F6D2}", color: "border-yellow-500" },
-  { id: "loyalty", label: "Loyalty", emoji: "\u{2B50}", color: "border-purple-500" },
-  { id: "content", label: "Content", emoji: "\u{1F4F0}", color: "border-orange-500" },
-  { id: "forms", label: "Forms", emoji: "\u{1F4DD}", color: "border-teal-500" },
-  { id: "directory", label: "Directory", emoji: "\u{1F4D6}", color: "border-indigo-500" },
+  { id: "informational", label: "Informational", emoji: "\u{1F4CB}", color: "border-gray-500", description: "A simple branded app with pages of content. Perfect for businesses that want a mobile presence." },
+  { id: "authenticated", label: "Authenticated", emoji: "\u{1F512}", color: "border-blue-500", description: "Like Informational, but users can create accounts and log in. Good for membership organizations." },
+  { id: "booking", label: "Booking", emoji: "\u{1F4C5}", color: "border-green-500", description: "Lets customers book appointments and manage their schedule. Ideal for salons, consultants, trainers." },
+  { id: "commerce", label: "Commerce", emoji: "\u{1F6D2}", color: "border-yellow-500", description: "An online store with product catalog, shopping cart, and checkout. For retail, food, merchandise." },
+  { id: "loyalty", label: "Loyalty", emoji: "\u{2B50}", color: "border-purple-500", description: "A digital loyalty card with points, rewards, and tier progression. Great for coffee shops, restaurants." },
+  { id: "content", label: "Content", emoji: "\u{1F4F0}", color: "border-orange-500", description: "A content feed with articles, categories, and bookmarks. For newsletters, blogs, training content." },
+  { id: "forms", label: "Forms", emoji: "\u{1F4DD}", color: "border-teal-500", description: "Custom forms for collecting information from users. Insurance intake, surveys, applications." },
+  { id: "directory", label: "Directory", emoji: "\u{1F4D6}", color: "border-indigo-500", description: "A searchable directory with categories and detail pages. Member directories, location finders." },
 ];
 
 const STEPS = ["Template", "Identity", "Brand", "Design", "Review"];
@@ -166,9 +166,9 @@ export default function NewTenantPage() {
     <div className="max-w-3xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-white">New Tenant</h1>
+        <h1 className="text-2xl font-semibold text-white">Create a New Client App</h1>
         <p className="text-sm text-gray-400 mt-1">
-          Set up a new tenant configuration in {STEPS.length} steps
+          Set up a branded mobile app for your client in {STEPS.length} easy steps. No coding needed.
         </p>
       </div>
 
@@ -206,24 +206,32 @@ export default function NewTenantPage() {
         {/* Step 1: Template */}
         {step === 0 && (
           <div>
-            <h2 className="text-lg font-semibold text-white mb-4">
+            <h2 className="text-lg font-semibold text-white mb-1">
               Choose a template
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <p className="text-sm text-gray-400 mb-4">
+              Each template is a different type of app. Pick the one that best matches what your client needs.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {TEMPLATE_TYPES.map((template) => (
                 <button
                   key={template.id}
                   onClick={() => updateForm({ template_type: template.id })}
-                  className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-colors ${
+                  className={`flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-colors ${
                     form.template_type === template.id
                       ? `${template.color} bg-gray-800`
                       : "border-gray-800 hover:border-gray-700"
                   }`}
                 >
-                  <span className="text-3xl">{template.emoji}</span>
-                  <span className="text-sm font-medium text-white">
-                    {template.label}
-                  </span>
+                  <span className="text-2xl mt-0.5">{template.emoji}</span>
+                  <div>
+                    <span className="text-sm font-medium text-white block">
+                      {template.label}
+                    </span>
+                    <span className="text-xs text-gray-400 mt-1 block leading-relaxed">
+                      {template.description}
+                    </span>
+                  </div>
                 </button>
               ))}
             </div>
@@ -233,12 +241,15 @@ export default function NewTenantPage() {
         {/* Step 2: Identity */}
         {step === 1 && (
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-white mb-4">
-              Tenant identity
+            <h2 className="text-lg font-semibold text-white mb-1">
+              Client details
             </h2>
+            <p className="text-sm text-gray-400 mb-4">
+              Tell us about your client. This information is used to set up their app.
+            </p>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1.5">
-                Tenant ID
+                App ID
               </label>
               <input
                 type="text"
@@ -248,11 +259,11 @@ export default function NewTenantPage() {
                     tenant_id: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""),
                   })
                 }
-                placeholder="my-business-name"
+                placeholder="acme-dental"
                 className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Lowercase letters, numbers, and hyphens only. Min 3 characters.
+                This is the internal identifier for this app. Use something like &quot;acme-dental&quot; or &quot;toms-burgers&quot;. Lowercase, hyphens only. Min 3 characters.
               </p>
               {form.tenant_id.length > 0 && !validateTenantId(form.tenant_id) && (
                 <p className="text-xs text-red-400 mt-1">
@@ -278,9 +289,12 @@ export default function NewTenantPage() {
         {/* Step 3: Brand */}
         {step === 2 && (
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-white mb-4">
+            <h2 className="text-lg font-semibold text-white mb-1">
               Brand basics
             </h2>
+            <p className="text-sm text-gray-400 mb-4">
+              These colors define how your client&apos;s app looks. The primary color is used for buttons and highlights. Background and text colors set the overall theme.
+            </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1.5">

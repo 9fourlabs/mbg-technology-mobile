@@ -115,6 +115,50 @@ export default async function TenantDetailPage({
         </div>
       </div>
 
+      {/* What's Next? Guidance Card */}
+      <div className="rounded-xl border border-gray-800 bg-[#2563EB]/5 p-5 mb-8">
+        <h2 className="text-sm font-semibold text-[#2563EB] mb-2">
+          What&apos;s Next?
+        </h2>
+        {tenant.status === "draft" && (
+          <p className="text-sm text-gray-300 leading-relaxed">
+            This app hasn&apos;t been built yet. Click{" "}
+            <strong className="text-white">Edit Config</strong> to customize the
+            branding, then{" "}
+            <strong className="text-white">Trigger Build</strong> to create a
+            preview version your client can install and try.
+          </p>
+        )}
+        {tenant.status === "preview" && (
+          <p className="text-sm text-gray-300 leading-relaxed">
+            A preview build is available! Share the install link with your
+            client for approval. Once they&apos;re happy, go to{" "}
+            <Link
+              href={`/tenants/${id}/builds`}
+              className="text-[#2563EB] hover:underline font-medium"
+            >
+              Builds
+            </Link>{" "}
+            and deploy to production to submit it to the app stores.
+          </p>
+        )}
+        {tenant.status === "production" && (
+          <p className="text-sm text-gray-300 leading-relaxed">
+            This app is live in the app stores. Any config changes will need a
+            new build to take effect. Use{" "}
+            <strong className="text-white">Edit Config</strong> to make
+            updates, then trigger a new build when ready.
+          </p>
+        )}
+        {tenant.status !== "draft" &&
+          tenant.status !== "preview" &&
+          tenant.status !== "production" && (
+            <p className="text-sm text-gray-300 leading-relaxed">
+              Use the buttons above to configure and build this app.
+            </p>
+          )}
+      </div>
+
       {/* Brand Preview + Config Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Brand Preview */}

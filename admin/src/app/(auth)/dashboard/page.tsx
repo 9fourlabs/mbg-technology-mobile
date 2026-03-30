@@ -53,17 +53,20 @@ export default async function DashboardPage() {
 
   const stats = [
     {
-      label: "Total Tenants",
+      label: "Client Apps",
+      subtitle: "Each one is a separate branded app for a client",
       value: totalTenants,
       detail: `${draftCount} draft, ${previewCount} preview`,
     },
     {
-      label: "Active Builds",
+      label: "Builds in Progress",
+      subtitle: "Apps currently being compiled and packaged",
       value: builds?.filter((b) => b.status === "building").length ?? 0,
       detail: `${builds?.filter((b) => b.status === "completed").length ?? 0} completed today`,
     },
     {
-      label: "Production Apps",
+      label: "Live in App Stores",
+      subtitle: "Apps published to Apple App Store or Google Play",
       value: productionCount,
       detail: `${totalTenants - productionCount} in development`,
     },
@@ -71,20 +74,24 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-semibold text-white">Dashboard</h1>
-          <p className="text-sm text-gray-400 mt-1">
-            Overview of your mobile platform
-          </p>
+      {/* Welcome Section */}
+      <div className="rounded-xl bg-gradient-to-r from-[#2563EB]/10 to-gray-900 border border-gray-800 p-6 mb-8">
+        <h1 className="text-2xl font-semibold text-white">
+          Welcome to MBG App Platform
+        </h1>
+        <p className="text-sm text-gray-400 mt-2 max-w-2xl">
+          Create branded mobile apps for your clients in minutes — no coding
+          required. Each app is fully customized with your client&apos;s branding,
+          colors, and content.
+        </p>
+        <div className="mt-4">
+          <Link
+            href="/tenants/new"
+            className="inline-flex items-center px-4 py-2.5 rounded-lg bg-[#2563EB] hover:bg-[#1d4ed8] text-sm font-medium text-white transition-colors"
+          >
+            + Create New Client App
+          </Link>
         </div>
-        <Link
-          href="/tenants/new"
-          className="inline-flex items-center px-4 py-2.5 rounded-lg bg-[#2563EB] hover:bg-[#1d4ed8] text-sm font-medium text-white transition-colors"
-        >
-          + New Tenant
-        </Link>
       </div>
 
       {/* Stat Cards */}
@@ -99,9 +106,68 @@ export default async function DashboardPage() {
               {stat.value}
             </p>
             <p className="text-xs text-gray-500 mt-2">{stat.detail}</p>
+            <p className="text-xs text-gray-600 mt-1">{stat.subtitle}</p>
           </div>
         ))}
       </div>
+
+      {/* Getting Started — shown when no tenants exist */}
+      {totalTenants === 0 && (
+        <div className="rounded-xl bg-gray-900 border border-gray-800 p-6 mb-8">
+          <h2 className="text-base font-semibold text-white mb-1">
+            Getting Started
+          </h2>
+          <p className="text-sm text-gray-400 mb-6">
+            Follow these three steps to launch your first client app.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Step 1 */}
+            <Link
+              href="/tenants/new"
+              className="group rounded-xl border border-gray-800 hover:border-[#2563EB]/50 p-5 transition-colors"
+            >
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#2563EB]/20 text-[#2563EB] font-bold text-sm mb-4">
+                1
+              </div>
+              <h3 className="text-sm font-semibold text-white mb-2 group-hover:text-[#2563EB] transition-colors">
+                Create a Client App
+              </h3>
+              <p className="text-xs text-gray-400 leading-relaxed">
+                Choose a template type and fill in your client&apos;s branding.
+                Each template comes pre-built with features your clients need.
+              </p>
+            </Link>
+
+            {/* Step 2 */}
+            <div className="rounded-xl border border-gray-800 p-5">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 text-gray-400 font-bold text-sm mb-4">
+                2
+              </div>
+              <h3 className="text-sm font-semibold text-white mb-2">
+                Preview &amp; Share
+              </h3>
+              <p className="text-xs text-gray-400 leading-relaxed">
+                Once created, deploy a preview build. Share the install link or
+                QR code with your client so they can try the app on their phone.
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="rounded-xl border border-gray-800 p-5">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 text-gray-400 font-bold text-sm mb-4">
+                3
+              </div>
+              <h3 className="text-sm font-semibold text-white mb-2">
+                Go Live
+              </h3>
+              <p className="text-xs text-gray-400 leading-relaxed">
+                After client approval, deploy to production. The app will be
+                submitted to the App Store and Google Play.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Recent Builds */}
       <div className="rounded-xl bg-gray-900 border border-gray-800 mb-8">
@@ -143,7 +209,7 @@ export default async function DashboardPage() {
             </table>
           ) : (
             <div className="px-6 py-8 text-center text-sm text-gray-500">
-              No builds yet. Create a tenant and trigger your first build.
+              No builds yet. Create a client app and trigger your first build.
             </div>
           )}
         </div>

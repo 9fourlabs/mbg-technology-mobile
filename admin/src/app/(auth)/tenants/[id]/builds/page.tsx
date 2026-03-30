@@ -71,9 +71,37 @@ export default async function BuildsPage({
         </div>
       </div>
 
-      {/* Install info banner */}
-      <div className="rounded-lg bg-green-900/20 border border-green-800/50 px-4 py-3 text-sm text-green-400 mb-6">
-        Preview builds are available for install on Android. Open the Expo link on your device or scan the QR code.
+      {/* Build types explainer */}
+      <div className="rounded-xl bg-gray-900 border border-gray-800 p-5 mb-6">
+        <h3 className="text-sm font-semibold text-white mb-3">
+          Understanding Build Types
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="rounded-lg bg-gray-800/50 border border-gray-700 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-900/50 text-yellow-400">
+                Preview
+              </span>
+            </div>
+            <p className="text-xs text-gray-400 leading-relaxed">
+              Creates a test version of the app that can be installed directly on
+              Android phones. Use this to demo the app to your client before going
+              live. Share the install link or scan the QR code.
+            </p>
+          </div>
+          <div className="rounded-lg bg-gray-800/50 border border-gray-700 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-900/50 text-green-400">
+                Production
+              </span>
+            </div>
+            <p className="text-xs text-gray-400 leading-relaxed">
+              Submits the app to the App Store (iOS) and Google Play (Android).
+              This is the final step — only do this after your client has approved
+              the preview.
+            </p>
+          </div>
+        </div>
       </div>
 
       {!hasExpoProject && (
@@ -144,17 +172,39 @@ export default async function BuildsPage({
                           downloadUrl={build.download_url}
                           buildId={build.id}
                         />
+                        {build.build_url && (
+                          <a
+                            href={build.build_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                          >
+                            Build Log
+                          </a>
+                        )}
                       </div>
                     ) : build.status === "completed" ? (
-                      <BuildStatusPoller
-                        build={{
-                          id: build.id,
-                          status: build.status,
-                          workflow_run_id: build.workflow_run_id,
-                        }}
-                        tenantId={id}
-                        artifactsOnly
-                      />
+                      <div className="flex items-center gap-2">
+                        <BuildStatusPoller
+                          build={{
+                            id: build.id,
+                            status: build.status,
+                            workflow_run_id: build.workflow_run_id,
+                          }}
+                          tenantId={id}
+                          artifactsOnly
+                        />
+                        {build.build_url && (
+                          <a
+                            href={build.build_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                          >
+                            Build Log
+                          </a>
+                        )}
+                      </div>
                     ) : (
                       <span className="text-gray-600">---</span>
                     )}
