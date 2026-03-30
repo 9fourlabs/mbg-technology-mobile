@@ -27,3 +27,13 @@ jobs:
     env:
       APP_TENANT: ${{ inputs.tenant }}
       NATIVE_ID_MODE: shared
+
+  build_ios:
+    needs: [prepare]
+    type: build
+    params:
+      platform: ios
+      profile: preview
+    env:
+      APP_TENANT: ${{ inputs.tenant }}
+      NATIVE_ID_MODE: shared
