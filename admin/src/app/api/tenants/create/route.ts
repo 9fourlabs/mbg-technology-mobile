@@ -60,7 +60,6 @@ export async function POST(request: NextRequest) {
       template_type,
       status: "draft",
       config,
-      created_by: user.id,
     });
 
     if (insertError) {
