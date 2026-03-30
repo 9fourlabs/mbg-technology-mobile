@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import ImageUploader from "@/components/ImageUploader";
 
 type ColumnDef = {
   key: string;
@@ -16,12 +17,15 @@ type Props = {
   value: unknown;
   onChange: (key: string, value: unknown) => void;
   error?: string;
+  tenantId?: string;
 };
+
+const IMAGE_KEY_PATTERN = /image|logo|photo|avatar|thumbnail|banner|icon/i;
 
 const inputClass =
   "bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none w-full";
 
-export default function FormField({ column, value, onChange, error }: Props) {
+export default function FormField({ column, value, onChange, error, tenantId }: Props) {
   const [jsonError, setJsonError] = useState<string | null>(null);
 
   const handleJsonChange = (raw: string) => {
@@ -35,7 +39,41 @@ export default function FormField({ column, value, onChange, error }: Props) {
     }
   };
 
+  const isImageField =
+    IMAGE_KEY_PATTERN.test(column.key) &&
+    (column.type === "text" || column.type === "date" || column.type === "datetime" || !column.type);
+
   const renderInput = () => {
+    // Render image uploader for image-related text columns
+    if (isImageField && tenantId) {
+      const cat = column.key.includes("logo")
+        ? "logo"
+        : column.key.includes("product")
+          ? "product"
+          : column.key.includes("post")
+            ? "post"
+            : column.key.includes("directory")
+              ? "directory"
+              : "card";
+      return (
+        <div className="space-y-2">
+          <ImageUploader
+            tenantId={tenantId}
+            category={cat}
+            currentUrl={(value as string) || undefined}
+            onUpload={(url) => onChange(column.key, url)}
+          />
+          <input
+            type="text"
+            className={inputClass}
+            placeholder={column.placeholder ?? "Or enter URL directly"}
+            value={(value as string) ?? ""}
+            onChange={(e) => onChange(column.key, e.target.value)}
+          />
+        </div>
+      );
+    }
+
     switch (column.type) {
       case "text":
       case "date":

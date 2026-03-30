@@ -20,6 +20,7 @@ type Props = {
   onSave: (values: Record<string, unknown>) => Promise<void>;
   onClose: () => void;
   saving?: boolean;
+  tenantId?: string;
 };
 
 export default function FormModal({
@@ -29,6 +30,7 @@ export default function FormModal({
   onSave,
   onClose,
   saving,
+  tenantId,
 }: Props) {
   const visibleColumns = columns.filter((c) => c.formVisible);
 
@@ -91,6 +93,7 @@ export default function FormModal({
               value={values[col.key]}
               onChange={handleChange}
               error={errors[col.key]}
+              tenantId={tenantId}
             />
           ))}
         </div>

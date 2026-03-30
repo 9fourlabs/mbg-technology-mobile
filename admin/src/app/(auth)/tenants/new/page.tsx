@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import ImageUploader from "@/components/ImageUploader";
 
 const TEMPLATE_TYPES = [
   { id: "informational", label: "Informational", emoji: "\u{1F4CB}", color: "border-gray-500" },
@@ -351,9 +352,23 @@ export default function NewTenantPage() {
                 </div>
               </div>
             </div>
+            {/* Logo upload */}
+            {form.tenant_id ? (
+              <ImageUploader
+                tenantId={form.tenant_id}
+                category="logo"
+                label="Logo (optional)"
+                currentUrl={form.logo_url || undefined}
+                onUpload={(url) => updateForm({ logo_url: url })}
+              />
+            ) : (
+              <p className="text-sm text-gray-500">
+                Enter a Tenant ID in the previous step to enable logo upload.
+              </p>
+            )}
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1.5">
-                Logo URL (optional)
+                Or enter URL directly
               </label>
               <input
                 type="url"

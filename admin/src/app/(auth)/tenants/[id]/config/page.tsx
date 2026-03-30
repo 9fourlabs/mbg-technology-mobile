@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import ImageUploader from "@/components/ImageUploader";
 
 const TABS = ["Brand", "Design", "Tabs", "Template Config"];
 
@@ -191,28 +192,51 @@ export default function ConfigEditorPage() {
             <h2 className="text-base font-semibold text-white mb-4">
               Brand Settings
             </h2>
+
+            {/* Logo uploader */}
+            <div className="mb-6">
+              <ImageUploader
+                tenantId={id}
+                category="logo"
+                label="Logo"
+                currentUrl={brandConfig?.logoUri ?? brandConfig?.logoUrl}
+                onUpload={(url) => {
+                  const updated = {
+                    ...config,
+                    brand: { ...(brandConfig ?? {}), logoUri: url },
+                  };
+                  setConfig(updated);
+                  setConfigJson(JSON.stringify(updated, null, 2));
+                }}
+              />
+            </div>
+
             {brandConfig ? (
               <div className="space-y-3">
-                {Object.entries(brandConfig).map(([key, value]) => (
-                  <div key={key} className="flex items-center gap-3">
-                    <span className="text-sm text-gray-400 w-36 capitalize">
-                      {key.replace(/([A-Z])/g, " $1").trim()}
-                    </span>
-                    {key.toLowerCase().includes("color") ? (
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-6 h-6 rounded border border-gray-700"
-                          style={{ backgroundColor: value }}
-                        />
-                        <span className="text-sm text-gray-300 font-mono">
-                          {value}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-sm text-gray-300">{value}</span>
-                    )}
-                  </div>
-                ))}
+                {Object.entries(brandConfig).map(([key, value]) => {
+                  // Skip logoUri/logoUrl since we show the uploader above
+                  if (key === "logoUri" || key === "logoUrl") return null;
+                  return (
+                    <div key={key} className="flex items-center gap-3">
+                      <span className="text-sm text-gray-400 w-36 capitalize">
+                        {key.replace(/([A-Z])/g, " $1").trim()}
+                      </span>
+                      {key.toLowerCase().includes("color") ? (
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-6 h-6 rounded border border-gray-700"
+                            style={{ backgroundColor: value }}
+                          />
+                          <span className="text-sm text-gray-300 font-mono">
+                            {value}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-300">{value}</span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <p className="text-sm text-gray-500">No brand config set.</p>

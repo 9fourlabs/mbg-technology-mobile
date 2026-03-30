@@ -48,3 +48,23 @@ CREATE POLICY "Admin full access to builds" ON builds
 
 CREATE POLICY "Admin full access to activity_log" ON activity_log
   FOR ALL USING (auth.role() = 'authenticated');
+
+-- ── Storage ──────────────────────────────────────────────────────────────────
+
+-- Create a public storage bucket for tenant assets
+INSERT INTO storage.buckets (id, name, public) VALUES ('tenant-assets', 'tenant-assets', true) ON CONFLICT DO NOTHING;
+
+-- Allow authenticated users to upload
+CREATE POLICY "Admin upload tenant assets" ON storage.objects
+  FOR INSERT TO authenticated
+  WITH CHECK (bucket_id = 'tenant-assets');
+
+-- Allow authenticated users to update/delete their uploads
+CREATE POLICY "Admin manage tenant assets" ON storage.objects
+  FOR ALL TO authenticated
+  USING (bucket_id = 'tenant-assets');
+
+-- Allow public read access (images need to be publicly accessible in the mobile app)
+CREATE POLICY "Public read tenant assets" ON storage.objects
+  FOR SELECT TO public
+  USING (bucket_id = 'tenant-assets');

@@ -108,6 +108,75 @@ export function getExpoInstallUrl(buildId: string): string {
 // API functions
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Project builds list
+// ---------------------------------------------------------------------------
+
+const EXPO_PROJECT_ID = "8f0869f4-6354-4c29-956a-abf07a54c9b6";
+
+export type EASBuild = {
+  id: string;
+  status: string;
+  platform: string;
+  downloadUrl: string | null;
+  createdAt: string;
+};
+
+/**
+ * List recent builds for the Expo project.
+ */
+export async function getEASBuilds(limit = 10): Promise<EASBuild[]> {
+  const res = await fetch(
+    `${EAS_API}/v2/projects/${EXPO_PROJECT_ID}/builds?limit=${limit}`,
+    { method: "GET", headers: headers() }
+  );
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`EAS API error (${res.status}): ${body}`);
+  }
+
+  const data = await res.json();
+  const builds: unknown[] = data.builds ?? data.data ?? data ?? [];
+
+  if (!Array.isArray(builds)) return [];
+
+  return builds.map((b) => {
+    const item = b as Record<string, unknown>;
+    return {
+    id: (item.id as string) ?? "unknown",
+    status: (item.status as string) ?? "unknown",
+    platform: (item.platform as string) ?? "unknown",
+    downloadUrl:
+      ((item.artifacts as Record<string, unknown>)?.buildUrl as string) ?? null,
+    createdAt: (item.createdAt as string) ?? new Date().toISOString(),
+  };
+  });
+}
+
+/**
+ * Get a single EAS build by ID.
+ */
+export async function getEASBuildById(
+  buildId: string
+): Promise<EASBuild | null> {
+  const res = await fetch(`${EAS_API}/v2/builds/${buildId}`, {
+    method: "GET",
+    headers: headers(),
+  });
+
+  if (!res.ok) return null;
+
+  const b = await res.json();
+  return {
+    id: b.id ?? buildId,
+    status: b.status ?? "unknown",
+    platform: b.platform ?? "unknown",
+    downloadUrl: b.artifacts?.buildUrl ?? null,
+    createdAt: b.createdAt ?? new Date().toISOString(),
+  };
+}
+
 export async function getBuildStatus(
   buildId: string
 ): Promise<BuildStatus> {

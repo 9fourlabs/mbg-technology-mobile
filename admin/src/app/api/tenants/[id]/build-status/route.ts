@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getWorkflowRun } from "@/lib/github";
-import { getExpoBuildPageUrl } from "@/lib/eas";
+import { getExpoBuildPageUrl, getEASBuilds } from "@/lib/eas";
 
 function mapGitHubStatus(
   status: string,
@@ -89,7 +89,39 @@ export async function GET(
 
     const easBuildsUrl = status === "completed" ? getExpoBuildPageUrl() : null;
 
-    return NextResponse.json({ status, conclusion, build_url: buildUrl, eas_builds_url: easBuildsUrl, updated });
+    // Try to find a download URL from EAS when the build is completed
+    let downloadUrl: string | null = null;
+
+    // First check the DB record
+    const { data: freshBuild } = await supabase
+      .from("builds")
+      .select("download_url")
+      .eq("id", buildId)
+      .single();
+    downloadUrl = freshBuild?.download_url ?? null;
+
+    // If completed and no download_url yet, try fetching from EAS
+    if (status === "completed" && !downloadUrl) {
+      try {
+        const easBuilds = await getEASBuilds(10);
+        // Find a recent finished build (EAS uses "finished" for completed)
+        const match = easBuilds.find(
+          (b) => b.status === "finished" && b.downloadUrl
+        );
+        if (match?.downloadUrl) {
+          downloadUrl = match.downloadUrl;
+          // Persist the download_url for future lookups
+          await supabase
+            .from("builds")
+            .update({ download_url: downloadUrl })
+            .eq("id", buildId);
+        }
+      } catch (err) {
+        console.warn("Failed to fetch EAS builds for download URL:", err);
+      }
+    }
+
+    return NextResponse.json({ status, conclusion, build_url: buildUrl, eas_builds_url: easBuildsUrl, download_url: downloadUrl, updated });
   } catch (error) {
     console.error("build-status error:", error);
     const message =

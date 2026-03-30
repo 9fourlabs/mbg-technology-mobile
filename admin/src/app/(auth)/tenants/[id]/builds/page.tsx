@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getExpoBuildPageUrl } from "@/lib/eas";
 import DeployButtons from "./deploy-buttons";
 import BuildStatusPoller from "./build-status-poller";
+import BuildArtifacts from "./build-artifacts";
 
 export default async function BuildsPage({
   params,
@@ -129,15 +130,31 @@ export default async function BuildsPage({
                     />
                   </td>
                   <td className="px-6 py-3">
-                    {build.status === "completed" ? (
-                      <a
-                        href={expoBuildsUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-green-400 hover:text-green-300 transition-colors"
-                      >
-                        📱 Install
-                      </a>
+                    {build.status === "completed" && build.download_url ? (
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={build.download_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-[#2563EB] hover:text-blue-400 transition-colors"
+                        >
+                          Download APK
+                        </a>
+                        <BuildArtifacts
+                          downloadUrl={build.download_url}
+                          buildId={build.id}
+                        />
+                      </div>
+                    ) : build.status === "completed" ? (
+                      <BuildStatusPoller
+                        build={{
+                          id: build.id,
+                          status: build.status,
+                          workflow_run_id: build.workflow_run_id,
+                        }}
+                        tenantId={id}
+                        artifactsOnly
+                      />
                     ) : (
                       <span className="text-gray-600">---</span>
                     )}

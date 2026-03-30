@@ -328,6 +328,7 @@ export function DataTable({ tenantId, schema }: Props) {
           onSave={handleSave}
           onClose={() => setShowModal(false)}
           saving={saving}
+          tenantId={tenantId}
         />
       )}
     </div>
