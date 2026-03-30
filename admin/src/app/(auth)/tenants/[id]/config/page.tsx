@@ -189,9 +189,12 @@ export default function ConfigEditorPage() {
       <div className="rounded-xl bg-gray-900 border border-gray-800 p-6 mb-6">
         {activeTab === 0 && (
           <div>
-            <h2 className="text-base font-semibold text-white mb-4">
+            <h2 className="text-base font-semibold text-white mb-1">
               Brand Settings
             </h2>
+            <p className="text-sm text-gray-400 mb-4">
+              These colors define how your client&apos;s app looks. The primary color is used for buttons and highlights. Background and text colors set the overall theme.
+            </p>
 
             {/* Logo uploader */}
             <div className="mb-6">
@@ -246,6 +249,9 @@ export default function ConfigEditorPage() {
 
         {activeTab === 1 && (
           <div className="space-y-8">
+            <p className="text-sm text-gray-400">
+              Choose a visual style for the app. Presets give you a starting point — you can customize individual settings after selecting one.
+            </p>
             {/* Preset Picker */}
             <div>
               <h2 className="text-base font-semibold text-white mb-4">Design Preset</h2>
@@ -458,9 +464,12 @@ export default function ConfigEditorPage() {
 
         {activeTab === 2 && (
           <div>
-            <h2 className="text-base font-semibold text-white mb-4">
+            <h2 className="text-base font-semibold text-white mb-1">
               Tab Configuration
             </h2>
+            <p className="text-sm text-gray-400 mb-4">
+              Tabs are the main navigation at the bottom of the app. Each tab is a page with its own content.
+            </p>
             {tabsConfig && tabsConfig.length > 0 ? (
               <div className="space-y-2">
                 {tabsConfig.map((tab, i) => {
@@ -534,6 +543,13 @@ export default function ConfigEditorPage() {
           </a>
         </div>
       )}
+      {/* Save actions explanation */}
+      <div className="rounded-lg bg-gray-800/50 border border-gray-700 px-4 py-3 mb-4">
+        <p className="text-xs text-gray-400 leading-relaxed">
+          <strong className="text-gray-300">Save Draft</strong> saves your changes to the database without building a new version of the app.{" "}
+          <strong className="text-gray-300">Save &amp; Deploy</strong> saves your changes and creates a new version of the app with the updated config.
+        </p>
+      </div>
       <div className="flex justify-end gap-3">
         <button
           onClick={() => router.push(`/tenants/${id}`)}
@@ -545,6 +561,7 @@ export default function ConfigEditorPage() {
           onClick={handleSaveDraft}
           disabled={saving || deploying}
           className="px-6 py-2.5 rounded-lg border border-gray-700 hover:border-gray-600 text-sm font-medium text-gray-300 hover:text-white transition-colors disabled:opacity-50"
+          title="Saves your changes without building a new app version"
         >
           {saving ? "Saving..." : "Save Draft"}
         </button>
@@ -552,6 +569,7 @@ export default function ConfigEditorPage() {
           onClick={handleSaveAndDeploy}
           disabled={saving || deploying}
           className="px-6 py-2.5 rounded-lg bg-[#2563EB] hover:bg-[#1d4ed8] text-sm font-medium text-white transition-colors disabled:opacity-50"
+          title="Saves changes and creates a new build with updated config"
         >
           {deploying ? "Saving & committing..." : "Save & Deploy"}
         </button>
