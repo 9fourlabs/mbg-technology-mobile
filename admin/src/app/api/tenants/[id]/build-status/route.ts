@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getWorkflowRun } from "@/lib/github";
+import { getWorkflowRun, getFailureReason } from "@/lib/github";
 import { getExpoBuildPageUrl, getExpoInstallUrl, getEASBuilds } from "@/lib/eas";
 
 function mapGitHubStatus(
@@ -51,7 +51,7 @@ export async function GET(
     // Load build record
     const { data: build, error: buildError } = await supabase
       .from("builds")
-      .select("id, tenant_id, status, workflow_run_id, build_url")
+      .select("id, tenant_id, status, workflow_run_id, build_url, error_message")
       .eq("id", buildId)
       .eq("tenant_id", tenantId)
       .single();
@@ -63,6 +63,7 @@ export async function GET(
     let status = build.status;
     let conclusion: string | null = null;
     let buildUrl = build.build_url;
+    let errorMessage: string | null = build.error_message ?? null;
     let updated = false;
 
     // If the build has a workflow_run_id, fetch live status from GitHub
@@ -74,9 +75,29 @@ export async function GET(
         buildUrl = run.html_url;
 
         if (newStatus !== build.status || buildUrl !== build.build_url) {
+          const updateFields: Record<string, unknown> = {
+            status: newStatus,
+            build_url: buildUrl,
+          };
+
+          // Persist updated_at when reaching a terminal state
+          const isTerminal = ["completed", "failed", "cancelled"].includes(newStatus);
+          if (isTerminal) {
+            updateFields.updated_at = new Date().toISOString();
+          }
+
+          // Fetch failure reason when build fails
+          if (newStatus === "failed" && !errorMessage) {
+            const reason = await getFailureReason(build.workflow_run_id);
+            if (reason) {
+              errorMessage = reason;
+              updateFields.error_message = reason;
+            }
+          }
+
           await supabase
             .from("builds")
-            .update({ status: newStatus, build_url: buildUrl })
+            .update(updateFields)
             .eq("id", buildId);
           status = newStatus;
           updated = true;
@@ -133,6 +154,7 @@ export async function GET(
       eas_builds_url: easBuildsUrl,
       download_url: downloadUrl,
       expo_install_url: expoInstallUrl,
+      error_message: errorMessage,
       updated,
     });
   } catch (error) {

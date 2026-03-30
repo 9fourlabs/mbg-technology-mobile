@@ -11,8 +11,9 @@ export default function LayoutShell({
 }) {
   const pathname = usePathname();
   const isLoginPage = pathname === "/login";
+  const isSharePage = pathname.startsWith("/share");
 
-  if (isLoginPage) {
+  if (isLoginPage || isSharePage) {
     return <>{children}</>;
   }
 

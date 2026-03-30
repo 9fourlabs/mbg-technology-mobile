@@ -5,6 +5,20 @@ import { getExpoBuildPageUrl } from "@/lib/eas";
 import DeployButtons from "./deploy-buttons";
 import BuildStatusPoller from "./build-status-poller";
 import BuildArtifacts from "./build-artifacts";
+import RetryBuildButton from "./retry-build-button";
+import SharePreviewLink from "../share-preview-link";
+
+function formatDuration(created: string, updated: string | null) {
+  if (!updated) return "-";
+  const start = new Date(created).getTime();
+  const end = new Date(updated).getTime();
+  const diffMs = end - start;
+  if (diffMs < 0) return "-";
+  const mins = Math.floor(diffMs / 60000);
+  const secs = Math.floor((diffMs % 60000) / 1000);
+  if (mins > 0) return `${mins}m ${secs}s`;
+  return `${secs}s`;
+}
 
 export default async function BuildsPage({
   params,
@@ -16,7 +30,7 @@ export default async function BuildsPage({
 
   const { data: tenant } = await supabase
     .from("tenants")
-    .select("id, business_name, expo_project_id, status")
+    .select("id, business_name, expo_project_id, status, config")
     .eq("id", id)
     .single();
 
@@ -24,9 +38,27 @@ export default async function BuildsPage({
     notFound();
   }
 
+  // Compute production readiness
+  const config = tenant.config as Record<string, unknown> | null;
+  const brand = (config?.brand ?? {}) as Record<string, string>;
+  const tabs = (config?.tabs ?? []) as unknown[];
+
+  const { count: successfulPreviews } = await supabase
+    .from("builds")
+    .select("id", { count: "exact", head: true })
+    .eq("tenant_id", id)
+    .eq("profile", "preview")
+    .eq("status", "completed");
+
+  const missingRequirements: string[] = [];
+  if (!config || tabs.length === 0) missingRequirements.push("Config not saved");
+  if (!brand.primaryColor) missingRequirements.push("Brand not configured");
+  if (!tenant.expo_project_id) missingRequirements.push("Expo Project ID not set");
+  if ((successfulPreviews ?? 0) === 0) missingRequirements.push("No successful preview build");
+
   const { data: builds } = await supabase
     .from("builds")
-    .select("*")
+    .select("*, updated_at, error_message")
     .eq("tenant_id", id)
     .order("created_at", { ascending: false });
 
@@ -67,7 +99,12 @@ export default async function BuildsPage({
           >
             View All Builds on Expo &rarr;
           </a>
-          <DeployButtons tenantId={id} hasExpoProject={hasExpoProject} />
+          <SharePreviewLink tenantId={id} />
+          <DeployButtons
+            tenantId={id}
+            hasExpoProject={hasExpoProject}
+            missingRequirements={missingRequirements}
+          />
         </div>
       </div>
 
@@ -125,6 +162,7 @@ export default async function BuildsPage({
                 <th className="px-6 py-3 font-medium">Status</th>
                 <th className="px-6 py-3 font-medium">Artifacts</th>
                 <th className="px-6 py-3 font-medium">Platform</th>
+                <th className="px-6 py-3 font-medium">Version</th>
                 <th className="px-6 py-3 font-medium">Started</th>
                 <th className="px-6 py-3 font-medium">Duration</th>
               </tr>
@@ -205,6 +243,21 @@ export default async function BuildsPage({
                           </a>
                         )}
                       </div>
+                    ) : build.status === "failed" ? (
+                      <div className="flex items-center gap-2">
+                        <RetryBuildButton
+                          tenantId={id}
+                          profile={build.profile}
+                        />
+                        {build.error_message && (
+                          <span
+                            className="text-xs text-red-400 truncate max-w-[200px]"
+                            title={build.error_message}
+                          >
+                            {build.error_message}
+                          </span>
+                        )}
+                      </div>
                     ) : (
                       <span className="text-gray-600">---</span>
                     )}
@@ -212,11 +265,14 @@ export default async function BuildsPage({
                   <td className="px-6 py-3 text-gray-400">
                     {build.platform ?? "android"}
                   </td>
+                  <td className="px-6 py-3 text-gray-400 font-mono text-xs">
+                    {build.app_version ?? "-"}
+                  </td>
                   <td className="px-6 py-3 text-gray-500">
                     {new Date(build.created_at).toLocaleString()}
                   </td>
                   <td className="px-6 py-3 text-gray-500">
-                    ---
+                    {formatDuration(build.created_at, build.updated_at)}
                   </td>
                 </tr>
               ))}

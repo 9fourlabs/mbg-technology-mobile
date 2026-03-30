@@ -6,10 +6,13 @@ import { useRouter } from "next/navigation";
 export default function DeployButtons({
   tenantId,
   hasExpoProject,
+  missingRequirements = [],
 }: {
   tenantId: string;
   hasExpoProject: boolean;
+  missingRequirements?: string[];
 }) {
+  const productionReady = hasExpoProject && missingRequirements.length === 0;
   const router = useRouter();
   const [loading, setLoading] = useState<"preview" | "production" | null>(null);
   const [banner, setBanner] = useState<{
@@ -73,17 +76,33 @@ export default function DeployButtons({
         >
           {loading === "preview" ? "Deploying..." : "Deploy Preview"}
         </button>
-        <button
-          onClick={() => triggerBuild("production")}
-          disabled={loading !== null || !hasExpoProject}
-          className={`px-4 py-2.5 rounded-lg text-sm font-medium text-white transition-colors ${
-            hasExpoProject
-              ? "bg-green-600 hover:bg-green-700 disabled:opacity-50"
-              : "bg-green-600/40 cursor-not-allowed"
-          }`}
-        >
-          {loading === "production" ? "Deploying..." : "Deploy Production"}
-        </button>
+        <div className="relative group">
+          <button
+            onClick={() => triggerBuild("production")}
+            disabled={loading !== null || !productionReady}
+            className={`px-4 py-2.5 rounded-lg text-sm font-medium text-white transition-colors ${
+              productionReady
+                ? "bg-green-600 hover:bg-green-700 disabled:opacity-50"
+                : "bg-green-600/40 cursor-not-allowed"
+            }`}
+          >
+            {loading === "production" ? "Deploying..." : "Deploy Production"}
+          </button>
+          {!productionReady && missingRequirements.length > 0 && (
+            <div className="hidden group-hover:block absolute z-50 bottom-full left-0 mb-2 w-64 p-3 rounded-lg bg-gray-800 border border-gray-700 shadow-xl">
+              <p className="text-xs font-medium text-white mb-1.5">
+                Not ready for production:
+              </p>
+              <ul className="space-y-1">
+                {missingRequirements.map((req) => (
+                  <li key={req} className="text-xs text-red-400 flex items-center gap-1.5">
+                    <span className="text-red-500">✗</span> {req}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       </div>
     </>
   );

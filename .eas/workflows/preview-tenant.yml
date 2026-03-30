@@ -6,6 +6,10 @@ on:
       tenant:
         type: string
         required: true
+      version:
+        type: string
+        required: false
+        default: "1.0.0"
 
 jobs:
   prepare:
@@ -27,6 +31,7 @@ jobs:
     env:
       APP_TENANT: ${{ inputs.tenant }}
       NATIVE_ID_MODE: shared
+      APP_VERSION: ${{ inputs.version }}
 
   build_ios:
     needs: [prepare]
@@ -37,3 +42,4 @@ jobs:
     env:
       APP_TENANT: ${{ inputs.tenant }}
       NATIVE_ID_MODE: shared
+      APP_VERSION: ${{ inputs.version }}

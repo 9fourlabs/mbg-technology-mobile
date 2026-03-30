@@ -9,6 +9,11 @@ on:
         description: "Tenant key (e.g. mbg, acme-dental)"
         required: true
         type: string
+      version:
+        description: "App version (semver)"
+        required: false
+        default: "1.0.0"
+        type: string
 
 permissions:
   pull-requests: write
@@ -84,7 +89,8 @@ jobs:
       - name: Run EAS preview workflow (tenant)
         id: eas-workflow
         run: |
-          OUTPUT=$(eas workflow:run .eas/workflows/preview-tenant.yml --input tenant=${{ matrix.tenant }} --non-interactive 2>&1)
+          VERSION="${{ inputs.version || '1.0.0' }}"
+          OUTPUT=$(eas workflow:run .eas/workflows/preview-tenant.yml --input tenant=${{ matrix.tenant }} --input version=$VERSION --non-interactive 2>&1)
           echo "$OUTPUT"
 
           # Extract the workflow URL from output

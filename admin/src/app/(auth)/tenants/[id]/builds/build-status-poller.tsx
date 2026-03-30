@@ -64,6 +64,7 @@ export default function BuildStatusPoller({
   const [status, setStatus] = useState(build.status);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [expoInstallUrl, setExpoInstallUrl] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [showQR, setShowQR] = useState(false);
   const [pollCount, setPollCount] = useState(0);
 
@@ -90,6 +91,9 @@ export default function BuildStatusPoller({
         }
         if (active && data.expo_install_url) {
           setExpoInstallUrl(data.expo_install_url);
+        }
+        if (active && data.error_message) {
+          setErrorMessage(data.error_message);
         }
         if (active && artifactsOnly) {
           setPollCount((c) => c + 1);
@@ -160,6 +164,14 @@ export default function BuildStatusPoller({
   return (
     <span className="inline-flex items-center gap-2">
       <StatusDot status={status} />
+      {status === "failed" && errorMessage && (
+        <span
+          className="text-xs text-red-400 truncate max-w-[180px]"
+          title={errorMessage}
+        >
+          {errorMessage}
+        </span>
+      )}
       {status === "completed" && downloadUrl && (
         <span className="inline-flex items-center gap-1.5">
           <a

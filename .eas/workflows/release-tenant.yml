@@ -10,6 +10,10 @@ on:
         type: string
         required: true
         default: both
+      version:
+        type: string
+        required: false
+        default: "1.0.0"
 
 jobs:
   prepare:
@@ -41,6 +45,7 @@ jobs:
         run: |
           APP_TENANT="${{ inputs.tenant }}" \
           NATIVE_ID_MODE="tenant" \
+          APP_VERSION="${{ inputs.version }}" \
           eas build --profile production --platform ios --non-interactive \
           --project-id "${{ needs.prepare.outputs.project_id }}"
 
@@ -54,6 +59,7 @@ jobs:
         run: |
           APP_TENANT="${{ inputs.tenant }}" \
           NATIVE_ID_MODE="tenant" \
+          APP_VERSION="${{ inputs.version }}" \
           eas submit --profile production --platform ios --non-interactive \
           --project-id "${{ needs.prepare.outputs.project_id }}"
 
@@ -67,6 +73,7 @@ jobs:
         run: |
           APP_TENANT="${{ inputs.tenant }}" \
           NATIVE_ID_MODE="tenant" \
+          APP_VERSION="${{ inputs.version }}" \
           eas build --profile production --platform android --non-interactive \
           --project-id "${{ needs.prepare.outputs.project_id }}"
 
@@ -80,6 +87,7 @@ jobs:
         run: |
           APP_TENANT="${{ inputs.tenant }}" \
           NATIVE_ID_MODE="tenant" \
+          APP_VERSION="${{ inputs.version }}" \
           eas submit --profile production --platform android --non-interactive \
           --project-id "${{ needs.prepare.outputs.project_id }}"
 

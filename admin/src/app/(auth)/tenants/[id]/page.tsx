@@ -3,6 +3,9 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import BuildStatusPoller from "./builds/build-status-poller";
 import DeployPreviewButton from "./deploy-preview-button";
+import SharePreviewLink from "./share-preview-link";
+import ReadinessChecklist from "./readiness-checklist";
+import VersionBump from "./version-bump";
 
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
@@ -111,6 +114,14 @@ export default async function TenantDetailPage({
         </div>
       </div>
 
+      {/* Version */}
+      <div className="mb-4">
+        <VersionBump
+          tenantId={id}
+          currentVersion={(tenant as Record<string, unknown>).app_version as string ?? "1.0.0"}
+        />
+      </div>
+
       {/* Quick Actions Bar */}
       <div className="flex flex-wrap items-center gap-3 mb-8 p-4 rounded-xl bg-gray-900 border border-gray-800">
         <Link
@@ -132,6 +143,7 @@ export default async function TenantDetailPage({
           View Builds
         </Link>
         <DeployPreviewButton tenantId={id} />
+        <SharePreviewLink tenantId={id} />
       </div>
 
       {/* What's Next? Guidance Card */}
@@ -177,6 +189,9 @@ export default async function TenantDetailPage({
             </p>
           )}
       </div>
+
+      {/* Production Readiness Checklist */}
+      <ReadinessChecklist tenantId={id} />
 
       {/* App Overview: Brand + Config Summary */}
       <h2 className="text-lg font-semibold text-white mb-4">App Overview</h2>

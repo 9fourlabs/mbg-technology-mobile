@@ -34,7 +34,7 @@ export async function POST(
     // Load tenant
     const { data: tenant, error: tenantError } = await supabase
       .from("tenants")
-      .select("id, expo_project_id, template_type")
+      .select("id, expo_project_id, template_type, app_version")
       .eq("id", tenantId)
       .single();
 
@@ -57,14 +57,18 @@ export async function POST(
     const workflowFile =
       profile === "preview" ? "eas-preview.yml" : "eas-promote.yml";
 
+    const appVersion = (tenant as Record<string, unknown>).app_version as string ?? "1.0.0";
+
     if (profile === "preview") {
       await triggerWorkflowDispatch(workflowFile, "main", {
         tenant: tenantId,
+        version: appVersion,
       });
     } else {
       await triggerWorkflowDispatch(workflowFile, "main", {
         tenant: tenantId,
         platform: "all",
+        version: appVersion,
       });
     }
 
@@ -95,6 +99,7 @@ export async function POST(
         platform: "all",
         workflow_run_id: workflowRunId,
         build_url: buildUrl,
+        app_version: appVersion,
       })
       .select("id")
       .single();

@@ -298,6 +298,50 @@ export async function getLatestWorkflowRun(workflowFile: string) {
   return data.workflow_runs[0] ?? null;
 }
 
+/**
+ * Get jobs for a workflow run. Used to extract failure reasons.
+ */
+export async function getWorkflowRunJobs(runId: string) {
+  const repo = getRepo();
+  const res = await fetch(
+    `${API}/repos/${repo}/actions/runs/${runId}/jobs`,
+    { method: "GET", headers: headers() }
+  );
+  return handleResponse<{
+    jobs: Array<{
+      name: string;
+      status: string;
+      conclusion: string | null;
+      steps?: Array<{
+        name: string;
+        status: string;
+        conclusion: string | null;
+      }>;
+    }>;
+  }>(res);
+}
+
+/**
+ * Extract a human-readable error message from a failed workflow run's jobs.
+ */
+export async function getFailureReason(runId: string): Promise<string | null> {
+  try {
+    const { jobs } = await getWorkflowRunJobs(runId);
+    const failedJob = jobs.find((j) => j.conclusion === "failure");
+    if (!failedJob) return null;
+
+    const failedStep = failedJob.steps?.find(
+      (s) => s.conclusion === "failure"
+    );
+    if (failedStep) {
+      return `${failedJob.name}: ${failedStep.name} failed`;
+    }
+    return `${failedJob.name} failed`;
+  } catch {
+    return null;
+  }
+}
+
 function escapeRegex(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

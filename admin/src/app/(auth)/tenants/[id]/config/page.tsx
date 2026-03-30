@@ -4,25 +4,13 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import ImageUploader from "@/components/ImageUploader";
+import BrandEditor from "./brand-editor";
+import DesignEditor from "./design-editor";
+import TabsEditor from "./tabs-editor";
+import TemplateSettingsEditor from "./template-settings-editor";
+import PhoneMockup from "./phone-mockup";
 
-const TABS = ["Brand", "Design", "Tabs", "Template Config"];
-
-const DESIGN_PRESETS = [
-  { id: "modern", label: "Modern", desc: "Clean & fresh", accent: "#2563EB" },
-  { id: "classic", label: "Classic", desc: "Timeless & structured", accent: "#854D0E" },
-  { id: "minimal", label: "Minimal", desc: "Less is more", accent: "#6B7280" },
-  { id: "bold", label: "Bold", desc: "Big & impactful", accent: "#DC2626" },
-  { id: "elegant", label: "Elegant", desc: "Refined & polished", accent: "#7C3AED" },
-] as const;
-
-const PRESET_DEFAULTS: Record<string, { cardStyle: string; cardColumns: number; buttonRadius: number; headerStyle: string; tabBarStyle: string; typography: { headingSize: string; bodySize: string } }> = {
-  modern: { cardStyle: "rounded", cardColumns: 2, buttonRadius: 999, headerStyle: "left", tabBarStyle: "pills", typography: { headingSize: "medium", bodySize: "medium" } },
-  classic: { cardStyle: "sharp", cardColumns: 1, buttonRadius: 4, headerStyle: "left", tabBarStyle: "underline", typography: { headingSize: "large", bodySize: "medium" } },
-  minimal: { cardStyle: "flat", cardColumns: 1, buttonRadius: 0, headerStyle: "centered", tabBarStyle: "underline", typography: { headingSize: "small", bodySize: "small" } },
-  bold: { cardStyle: "rounded", cardColumns: 2, buttonRadius: 12, headerStyle: "centered", tabBarStyle: "pills", typography: { headingSize: "large", bodySize: "large" } },
-  elegant: { cardStyle: "rounded", cardColumns: 2, buttonRadius: 8, headerStyle: "centered", tabBarStyle: "underline", typography: { headingSize: "medium", bodySize: "small" } },
-};
+const TABS = ["Brand", "Design", "Tabs & Content", "Template Settings", "Raw JSON"];
 
 export default function ConfigEditorPage() {
   const { id } = useParams<{ id: string }>();
@@ -35,10 +23,7 @@ export default function ConfigEditorPage() {
   const [deploying, setDeploying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [prInfo, setPrInfo] = useState<{
-    url: string;
-    number: number;
-  } | null>(null);
+  const [prInfo, setPrInfo] = useState<{ url: string; number: number } | null>(null);
 
   useEffect(() => {
     const loadConfig = async () => {
@@ -62,6 +47,12 @@ export default function ConfigEditorPage() {
     loadConfig();
   }, [id]);
 
+  // Keep JSON in sync when config changes from editors
+  function handleConfigChange(updated: Record<string, unknown>) {
+    setConfig(updated);
+    setConfigJson(JSON.stringify(updated, null, 2));
+  }
+
   const handleSaveDraft = async () => {
     setError(null);
     setSuccess(false);
@@ -69,7 +60,7 @@ export default function ConfigEditorPage() {
     setSaving(true);
 
     try {
-      const parsed = JSON.parse(configJson);
+      const parsed = activeTab === 4 ? JSON.parse(configJson) : config;
       const supabase = createClient();
       const { error: updateError } = await supabase
         .from("tenants")
@@ -80,6 +71,7 @@ export default function ConfigEditorPage() {
         setError(updateError.message);
       } else {
         setConfig(parsed);
+        setConfigJson(JSON.stringify(parsed, null, 2));
         setSuccess(true);
         setTimeout(() => setSuccess(false), 3000);
       }
@@ -96,7 +88,7 @@ export default function ConfigEditorPage() {
     setDeploying(true);
 
     try {
-      const parsed = JSON.parse(configJson);
+      const parsed = activeTab === 4 ? JSON.parse(configJson) : config;
 
       const res = await fetch(`/api/tenants/${id}/save-config`, {
         method: "POST",
@@ -110,10 +102,11 @@ export default function ConfigEditorPage() {
         setError(data.error ?? "Failed to save and deploy config.");
       } else {
         setConfig(parsed);
+        setConfigJson(JSON.stringify(parsed, null, 2));
         setPrInfo({ url: data.pr_url, number: data.pr_number });
       }
     } catch {
-      setError("Invalid JSON or network error. Please check your syntax and try again.");
+      setError("Invalid JSON or network error.");
     }
     setDeploying(false);
   };
@@ -126,453 +119,136 @@ export default function ConfigEditorPage() {
     );
   }
 
-  const brandConfig = config?.brand as Record<string, string> | undefined;
-  const tabsConfig = config?.tabs as unknown[] | undefined;
-  const designConfig = (config?.design ?? {}) as Record<string, unknown>;
-
-  const updateDesign = (field: string, value: unknown) => {
-    const updated = { ...config, design: { ...designConfig, [field]: value } };
-    setConfig(updated);
-    setConfigJson(JSON.stringify(updated, null, 2));
-  };
-
-  const applyPreset = (presetId: string) => {
-    const defaults = PRESET_DEFAULTS[presetId];
-    if (!defaults) return;
-    const updated = { ...config, design: { preset: presetId, ...defaults } };
-    setConfig(updated);
-    setConfigJson(JSON.stringify(updated, null, 2));
-  };
-
   return (
     <div>
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-        <Link href="/tenants" className="hover:text-white transition-colors">
-          Tenants
-        </Link>
+        <Link href="/tenants" className="hover:text-white transition-colors">Tenants</Link>
         <span>/</span>
-        <Link
-          href={`/tenants/${id}`}
-          className="hover:text-white transition-colors"
-        >
-          {id}
-        </Link>
+        <Link href={`/tenants/${id}`} className="hover:text-white transition-colors">{id}</Link>
         <span>/</span>
         <span className="text-white">Config</span>
       </div>
 
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold text-white">
-          Configuration Editor
-        </h1>
+        <h1 className="text-2xl font-semibold text-white">Configuration Editor</h1>
       </div>
 
-      {/* Tab Bar */}
-      <div className="flex gap-1 mb-6 border-b border-gray-800">
-        {TABS.map((tab, i) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(i)}
-            className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
-              activeTab === i
-                ? "border-[#2563EB] text-white"
-                : "border-transparent text-gray-500 hover:text-gray-300"
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-
-      {/* Tab Content */}
-      <div className="rounded-xl bg-gray-900 border border-gray-800 p-6 mb-6">
-        {activeTab === 0 && (
-          <div>
-            <h2 className="text-base font-semibold text-white mb-1">
-              Brand Settings
-            </h2>
-            <p className="text-sm text-gray-400 mb-4">
-              These colors define how your client&apos;s app looks. The primary color is used for buttons and highlights. Background and text colors set the overall theme.
-            </p>
-
-            {/* Logo uploader */}
-            <div className="mb-6">
-              <ImageUploader
-                tenantId={id}
-                category="logo"
-                label="Logo"
-                currentUrl={brandConfig?.logoUri ?? brandConfig?.logoUrl}
-                onUpload={(url) => {
-                  const updated = {
-                    ...config,
-                    brand: { ...(brandConfig ?? {}), logoUri: url },
-                  };
-                  setConfig(updated);
-                  setConfigJson(JSON.stringify(updated, null, 2));
-                }}
-              />
-            </div>
-
-            {brandConfig ? (
-              <div className="space-y-3">
-                {Object.entries(brandConfig).map(([key, value]) => {
-                  // Skip logoUri/logoUrl since we show the uploader above
-                  if (key === "logoUri" || key === "logoUrl") return null;
-                  return (
-                    <div key={key} className="flex items-center gap-3">
-                      <span className="text-sm text-gray-400 w-36 capitalize">
-                        {key.replace(/([A-Z])/g, " $1").trim()}
-                      </span>
-                      {key.toLowerCase().includes("color") ? (
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-6 h-6 rounded border border-gray-700"
-                            style={{ backgroundColor: value }}
-                          />
-                          <span className="text-sm text-gray-300 font-mono">
-                            {value}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-sm text-gray-300">{value}</span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="text-sm text-gray-500">No brand config set.</p>
-            )}
+      {/* Split layout: Editor + Phone Mockup */}
+      <div className="flex gap-6 items-start">
+        {/* Left: Editor */}
+        <div className="flex-1 min-w-0">
+          {/* Tab Bar */}
+          <div className="flex gap-1 mb-6 border-b border-gray-800 overflow-x-auto">
+            {TABS.map((tab, i) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(i)}
+                className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${
+                  activeTab === i
+                    ? "border-[#2563EB] text-white"
+                    : "border-transparent text-gray-500 hover:text-gray-300"
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
           </div>
-        )}
 
-        {activeTab === 1 && (
-          <div className="space-y-8">
-            <p className="text-sm text-gray-400">
-              Choose a visual style for the app. Presets give you a starting point — you can customize individual settings after selecting one.
-            </p>
-            {/* Preset Picker */}
-            <div>
-              <h2 className="text-base font-semibold text-white mb-4">Design Preset</h2>
-              <div className="grid grid-cols-5 gap-3">
-                {DESIGN_PRESETS.map((p) => (
-                  <button
-                    key={p.id}
-                    onClick={() => applyPreset(p.id)}
-                    className={`relative flex flex-col items-center p-4 rounded-xl border-2 transition-colors ${
-                      designConfig.preset === p.id
-                        ? "border-[#2563EB] bg-gray-800"
-                        : "border-gray-800 hover:border-gray-700"
-                    }`}
-                  >
-                    <div className="w-full h-1 rounded-full mb-3" style={{ backgroundColor: p.accent }} />
-                    <span className="text-sm font-medium text-white">{p.label}</span>
-                    <span className="text-xs text-gray-500 mt-1">{p.desc}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Card Style */}
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-3">Card Style</label>
-              <div className="grid grid-cols-3 gap-3">
-                {([
-                  { id: "rounded", label: "Rounded", preview: "rounded-xl" },
-                  { id: "sharp", label: "Sharp", preview: "rounded-none" },
-                  { id: "flat", label: "Flat", preview: "rounded-lg" },
-                ] as const).map((s) => (
-                  <button
-                    key={s.id}
-                    onClick={() => updateDesign("cardStyle", s.id)}
-                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-colors ${
-                      designConfig.cardStyle === s.id
-                        ? "border-[#2563EB] bg-gray-800"
-                        : "border-gray-800 hover:border-gray-700"
-                    }`}
-                  >
-                    <div className={`w-16 h-10 ${s.preview} ${s.id === "flat" ? "bg-gray-700" : "bg-gray-700 border border-gray-600"}`} />
-                    <span className="text-sm text-white">{s.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Button Shape */}
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-3">Button Shape</label>
-              <div className="flex items-center gap-4">
-                <span className="text-xs text-gray-500">Square</span>
-                <input
-                  type="range"
-                  min={0}
-                  max={24}
-                  value={typeof designConfig.buttonRadius === "number" ? designConfig.buttonRadius > 24 ? 24 : designConfig.buttonRadius : 12}
+          {/* Tab Content */}
+          <div className="rounded-xl bg-gray-900 border border-gray-800 p-6 mb-6">
+            {activeTab === 0 && config && (
+              <BrandEditor tenantId={id} config={config} onChange={handleConfigChange} />
+            )}
+            {activeTab === 1 && config && (
+              <DesignEditor config={config} onChange={handleConfigChange} />
+            )}
+            {activeTab === 2 && config && (
+              <TabsEditor tenantId={id} config={config} onChange={handleConfigChange} />
+            )}
+            {activeTab === 3 && config && (
+              <TemplateSettingsEditor config={config} onChange={handleConfigChange} />
+            )}
+            {activeTab === 4 && (
+              <div>
+                <h2 className="text-base font-semibold text-white mb-4">Raw JSON Config</h2>
+                <p className="text-xs text-gray-500 mb-3">
+                  Edit the full configuration JSON directly. Changes here are reflected when you switch tabs.
+                </p>
+                <textarea
+                  value={configJson}
                   onChange={(e) => {
-                    const v = Number(e.target.value);
-                    updateDesign("buttonRadius", v === 24 ? 999 : v);
+                    setConfigJson(e.target.value);
+                    try {
+                      const parsed = JSON.parse(e.target.value);
+                      setConfig(parsed);
+                    } catch {
+                      // Invalid JSON while typing — don't update config
+                    }
                   }}
-                  className="flex-1 accent-[#2563EB]"
+                  rows={24}
+                  className="w-full rounded-lg bg-gray-800 border border-gray-700 px-4 py-3 text-sm text-white font-mono focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent resize-y"
+                  spellCheck={false}
                 />
-                <span className="text-xs text-gray-500">Pill</span>
               </div>
-              <div className="mt-3 flex justify-center">
-                <div
-                  className="px-6 py-2 bg-[#2563EB] text-white text-sm font-medium"
-                  style={{ borderRadius: typeof designConfig.buttonRadius === "number" ? Math.min(designConfig.buttonRadius as number, 24) : 12 }}
-                >
-                  Preview Button
-                </div>
-              </div>
-            </div>
-
-            {/* Card Layout */}
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-3">Card Layout</label>
-              <div className="grid grid-cols-2 gap-3">
-                {([
-                  { cols: 1, label: "List (1 column)", icon: (
-                    <div className="flex flex-col gap-1 w-8">
-                      <div className="h-2 bg-gray-500 rounded-sm" />
-                      <div className="h-2 bg-gray-500 rounded-sm" />
-                      <div className="h-2 bg-gray-500 rounded-sm" />
-                    </div>
-                  )},
-                  { cols: 2, label: "Grid (2 columns)", icon: (
-                    <div className="grid grid-cols-2 gap-1 w-8">
-                      <div className="h-3 bg-gray-500 rounded-sm" />
-                      <div className="h-3 bg-gray-500 rounded-sm" />
-                      <div className="h-3 bg-gray-500 rounded-sm" />
-                      <div className="h-3 bg-gray-500 rounded-sm" />
-                    </div>
-                  )},
-                ] as const).map((opt) => (
-                  <button
-                    key={opt.cols}
-                    onClick={() => updateDesign("cardColumns", opt.cols)}
-                    className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-colors ${
-                      designConfig.cardColumns === opt.cols
-                        ? "bg-[#2563EB] border-[#2563EB] text-white"
-                        : "border-gray-800 hover:border-gray-700 text-gray-300"
-                    }`}
-                  >
-                    {opt.icon}
-                    <span className="text-sm font-medium">{opt.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Header Alignment */}
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-3">Header Style</label>
-              <div className="grid grid-cols-2 gap-3">
-                {(["left", "centered"] as const).map((style) => (
-                  <button
-                    key={style}
-                    onClick={() => updateDesign("headerStyle", style)}
-                    className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-colors ${
-                      designConfig.headerStyle === style
-                        ? "bg-[#2563EB] border-[#2563EB] text-white"
-                        : "border-gray-800 hover:border-gray-700 text-gray-300"
-                    }`}
-                  >
-                    <span className="text-sm font-medium capitalize">{style === "left" ? "Left aligned" : "Centered"}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Tab Bar Style */}
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-3">Tab Bar</label>
-              <div className="grid grid-cols-2 gap-3">
-                {([
-                  { id: "pills", label: "Pills", preview: (
-                    <div className="flex gap-1">
-                      <div className="px-2 py-0.5 rounded-full bg-[#2563EB] text-[10px] text-white">Tab</div>
-                      <div className="px-2 py-0.5 rounded-full bg-gray-700 text-[10px] text-gray-400">Tab</div>
-                    </div>
-                  )},
-                  { id: "underline", label: "Underline", preview: (
-                    <div className="flex gap-2">
-                      <div className="border-b-2 border-[#2563EB] text-[10px] text-white pb-0.5">Tab</div>
-                      <div className="border-b-2 border-transparent text-[10px] text-gray-400 pb-0.5">Tab</div>
-                    </div>
-                  )},
-                ] as const).map((opt) => (
-                  <button
-                    key={opt.id}
-                    onClick={() => updateDesign("tabBarStyle", opt.id)}
-                    className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-colors ${
-                      designConfig.tabBarStyle === opt.id
-                        ? "border-[#2563EB] bg-gray-800"
-                        : "border-gray-800 hover:border-gray-700"
-                    }`}
-                  >
-                    {opt.preview}
-                    <span className="text-sm text-white">{opt.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Typography */}
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-3">Heading Size</label>
-              <div className="flex gap-2">
-                {(["small", "medium", "large"] as const).map((size) => {
-                  const typo = designConfig.typography as { headingSize?: string; bodySize?: string } | undefined;
-                  return (
-                    <button
-                      key={size}
-                      onClick={() => updateDesign("typography", { ...(typo ?? { headingSize: "medium", bodySize: "medium" }), headingSize: size })}
-                      className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        (typo?.headingSize ?? "medium") === size
-                          ? "bg-[#2563EB] text-white"
-                          : "bg-gray-800 text-gray-400 hover:text-white"
-                      }`}
-                    >
-                      {size === "small" ? "S" : size === "medium" ? "M" : "L"}
-                    </button>
-                  );
-                })}
-              </div>
-              <label className="block text-sm font-medium text-gray-400 mb-3 mt-4">Body Size</label>
-              <div className="flex gap-2">
-                {(["small", "medium", "large"] as const).map((size) => {
-                  const typo = designConfig.typography as { headingSize?: string; bodySize?: string } | undefined;
-                  return (
-                    <button
-                      key={size}
-                      onClick={() => updateDesign("typography", { ...(typo ?? { headingSize: "medium", bodySize: "medium" }), bodySize: size })}
-                      className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        (typo?.bodySize ?? "medium") === size
-                          ? "bg-[#2563EB] text-white"
-                          : "bg-gray-800 text-gray-400 hover:text-white"
-                      }`}
-                    >
-                      {size === "small" ? "S" : size === "medium" ? "M" : "L"}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 2 && (
-          <div>
-            <h2 className="text-base font-semibold text-white mb-1">
-              Tab Configuration
-            </h2>
-            <p className="text-sm text-gray-400 mb-4">
-              Tabs are the main navigation at the bottom of the app. Each tab is a page with its own content.
-            </p>
-            {tabsConfig && tabsConfig.length > 0 ? (
-              <div className="space-y-2">
-                {tabsConfig.map((tab, i) => {
-                  const t = tab as Record<string, unknown>;
-                  return (
-                    <div
-                      key={i}
-                      className="flex items-center justify-between p-3 rounded-lg bg-gray-800 border border-gray-700"
-                    >
-                      <div>
-                        <span className="text-sm text-white font-medium">
-                          {String(t.label ?? t.title ?? `Tab ${i + 1}`)}
-                        </span>
-                        {"type" in t && t.type ? (
-                          <span className="ml-2 text-xs text-gray-500">
-                            ({String(t.type)})
-                          </span>
-                        ) : null}
-                      </div>
-                      <span className="text-xs text-gray-500">#{i + 1}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="text-sm text-gray-500">No tabs configured yet.</p>
             )}
           </div>
-        )}
 
-        {activeTab === 3 && (
-          <div>
-            <h2 className="text-base font-semibold text-white mb-4">
-              Raw JSON Config
-            </h2>
-            <p className="text-xs text-gray-500 mb-3">
-              Edit the full configuration JSON directly. Be careful with changes.
+          {/* Status banners */}
+          {error && (
+            <div className="rounded-lg bg-red-900/30 border border-red-800 px-3 py-2 text-sm text-red-400 mb-4">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="rounded-lg bg-green-900/30 border border-green-800 px-3 py-2 text-sm text-green-400 mb-4">
+              Draft saved successfully.
+            </div>
+          )}
+          {prInfo && (
+            <div className="rounded-lg bg-green-900/30 border border-green-800 px-3 py-2 text-sm text-green-400 mb-4">
+              Config saved! PR opened:{" "}
+              <a href={prInfo.url} target="_blank" rel="noopener noreferrer" className="underline font-medium hover:text-green-300">
+                #{prInfo.number}
+              </a>
+            </div>
+          )}
+
+          {/* Save actions */}
+          <div className="rounded-lg bg-gray-800/50 border border-gray-700 px-4 py-3 mb-4">
+            <p className="text-xs text-gray-400 leading-relaxed">
+              <strong className="text-gray-300">Save Draft</strong> saves to the database without building.{" "}
+              <strong className="text-gray-300">Save &amp; Deploy</strong> saves and creates a PR to trigger a new build.
             </p>
-            <textarea
-              value={configJson}
-              onChange={(e) => setConfigJson(e.target.value)}
-              rows={20}
-              className="w-full rounded-lg bg-gray-800 border border-gray-700 px-4 py-3 text-sm text-white font-mono focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent resize-y"
-              spellCheck={false}
-            />
           </div>
-        )}
-      </div>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => router.push(`/tenants/${id}`)}
+              className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveDraft}
+              disabled={saving || deploying}
+              className="px-6 py-2.5 rounded-lg border border-gray-700 hover:border-gray-600 text-sm font-medium text-gray-300 hover:text-white transition-colors disabled:opacity-50"
+            >
+              {saving ? "Saving..." : "Save Draft"}
+            </button>
+            <button
+              onClick={handleSaveAndDeploy}
+              disabled={saving || deploying}
+              className="px-6 py-2.5 rounded-lg bg-[#2563EB] hover:bg-[#1d4ed8] text-sm font-medium text-white transition-colors disabled:opacity-50"
+            >
+              {deploying ? "Saving & committing..." : "Save & Deploy"}
+            </button>
+          </div>
+        </div>
 
-      {/* Status banners */}
-      {error && (
-        <div className="rounded-lg bg-red-900/30 border border-red-800 px-3 py-2 text-sm text-red-400 mb-4">
-          {error}
+        {/* Right: Phone Mockup */}
+        <div className="sticky top-8 hidden xl:block">
+          {config && <PhoneMockup config={config} />}
         </div>
-      )}
-      {success && (
-        <div className="rounded-lg bg-green-900/30 border border-green-800 px-3 py-2 text-sm text-green-400 mb-4">
-          Draft saved successfully.
-        </div>
-      )}
-      {prInfo && (
-        <div className="rounded-lg bg-green-900/30 border border-green-800 px-3 py-2 text-sm text-green-400 mb-4">
-          Config saved! PR opened:{" "}
-          <a
-            href={prInfo.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline font-medium hover:text-green-300"
-          >
-            #{prInfo.number}
-          </a>
-        </div>
-      )}
-      {/* Save actions explanation */}
-      <div className="rounded-lg bg-gray-800/50 border border-gray-700 px-4 py-3 mb-4">
-        <p className="text-xs text-gray-400 leading-relaxed">
-          <strong className="text-gray-300">Save Draft</strong> saves your changes to the database without building a new version of the app.{" "}
-          <strong className="text-gray-300">Save &amp; Deploy</strong> saves your changes and creates a new version of the app with the updated config.
-        </p>
-      </div>
-      <div className="flex justify-end gap-3">
-        <button
-          onClick={() => router.push(`/tenants/${id}`)}
-          className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-colors"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleSaveDraft}
-          disabled={saving || deploying}
-          className="px-6 py-2.5 rounded-lg border border-gray-700 hover:border-gray-600 text-sm font-medium text-gray-300 hover:text-white transition-colors disabled:opacity-50"
-          title="Saves your changes without building a new app version"
-        >
-          {saving ? "Saving..." : "Save Draft"}
-        </button>
-        <button
-          onClick={handleSaveAndDeploy}
-          disabled={saving || deploying}
-          className="px-6 py-2.5 rounded-lg bg-[#2563EB] hover:bg-[#1d4ed8] text-sm font-medium text-white transition-colors disabled:opacity-50"
-          title="Saves changes and creates a new build with updated config"
-        >
-          {deploying ? "Saving & committing..." : "Save & Deploy"}
-        </button>
       </div>
     </div>
   );

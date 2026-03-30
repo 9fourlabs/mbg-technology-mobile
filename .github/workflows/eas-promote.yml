@@ -16,6 +16,11 @@ on:
           - ios
           - android
           - both
+      version:
+        description: "App version (semver)"
+        required: false
+        default: "1.0.0"
+        type: string
 
 jobs:
   promote:
@@ -40,5 +45,5 @@ jobs:
 
       - name: Run EAS release workflow (tenant)
         run: |
-          eas workflow:run .eas/workflows/release-tenant.yml --input tenant=${{ inputs.tenant }} --input platform=${{ inputs.platform }} --non-interactive
+          eas workflow:run .eas/workflows/release-tenant.yml --input tenant=${{ inputs.tenant }} --input platform=${{ inputs.platform }} --input version=${{ inputs.version || '1.0.0' }} --non-interactive
 
