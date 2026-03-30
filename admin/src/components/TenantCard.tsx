@@ -70,12 +70,6 @@ export default function TenantCard({
           View
         </Link>
         <Link
-          href={`/tenants/${id}/config`}
-          className="inline-flex items-center px-3 py-1.5 rounded-lg border border-gray-700 hover:border-gray-600 text-xs font-medium text-gray-300 hover:text-white transition-colors"
-        >
-          Edit Config
-        </Link>
-        <Link
           href={`/tenants/${id}/builds`}
           className="inline-flex items-center px-3 py-1.5 rounded-lg border border-gray-700 hover:border-gray-600 text-xs font-medium text-gray-300 hover:text-white transition-colors"
         >

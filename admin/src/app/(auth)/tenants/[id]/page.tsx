@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import BuildStatusPoller from "./builds/build-status-poller";
+import DeployPreviewButton from "./deploy-preview-button";
 
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
@@ -52,15 +54,23 @@ export default async function TenantDetailPage({
 
   const config = tenant.config as Record<string, unknown> | null;
   const brand = (config?.brand ?? {}) as Record<string, string>;
-  const tabs = (config?.tabs ?? []) as unknown[];
+  const tabs = (config?.tabs ?? []) as Record<string, unknown>[];
+  const design = (config?.design ?? {}) as Record<string, unknown>;
 
-  // Fetch recent builds
+  // Count protected tabs (tabs with requiresAuth or protected flag)
+  const protectedTabs = tabs.filter(
+    (t) => t.requiresAuth === true || t.protected === true
+  ).length;
+
+  // Fetch recent builds (get more fields for latest build display)
   const { data: builds } = await supabase
     .from("builds")
-    .select("id, profile, status, created_at")
+    .select("*")
     .eq("tenant_id", id)
     .order("created_at", { ascending: false })
     .limit(5);
+
+  const latestBuild = builds && builds.length > 0 ? builds[0] : null;
 
   // Fetch activity
   const { data: activity } = await supabase
@@ -78,11 +88,11 @@ export default async function TenantDetailPage({
           Tenants
         </Link>
         <span>/</span>
-        <span className="text-white">{id}</span>
+        <span className="text-white">{tenant.business_name || id}</span>
       </div>
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-semibold text-white">
@@ -99,20 +109,29 @@ export default async function TenantDetailPage({
             </span>
           </div>
         </div>
-        <div className="flex gap-3">
-          <Link
-            href={`/tenants/${id}/config`}
-            className="px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
-          >
-            Edit Config
-          </Link>
-          <Link
-            href={`/tenants/${id}/builds`}
-            className="px-4 py-2 rounded-lg bg-[#2563EB] hover:bg-[#1d4ed8] text-sm font-medium text-white transition-colors"
-          >
-            Trigger Build
-          </Link>
-        </div>
+      </div>
+
+      {/* Quick Actions Bar */}
+      <div className="flex flex-wrap items-center gap-3 mb-8 p-4 rounded-xl bg-gray-900 border border-gray-800">
+        <Link
+          href={`/tenants/${id}/config`}
+          className="inline-flex items-center px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+        >
+          Edit Config
+        </Link>
+        <Link
+          href={`/tenants/${id}/content`}
+          className="inline-flex items-center px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+        >
+          Manage Content
+        </Link>
+        <Link
+          href={`/tenants/${id}/builds`}
+          className="inline-flex items-center px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+        >
+          View Builds
+        </Link>
+        <DeployPreviewButton tenantId={id} />
       </div>
 
       {/* What's Next? Guidance Card */}
@@ -125,7 +144,7 @@ export default async function TenantDetailPage({
             This app hasn&apos;t been built yet. Click{" "}
             <strong className="text-white">Edit Config</strong> to customize the
             branding, then{" "}
-            <strong className="text-white">Trigger Build</strong> to create a
+            <strong className="text-white">Deploy Preview</strong> to create a
             preview version your client can install and try.
           </p>
         )}
@@ -137,7 +156,7 @@ export default async function TenantDetailPage({
               href={`/tenants/${id}/builds`}
               className="text-[#2563EB] hover:underline font-medium"
             >
-              Builds
+              View Builds
             </Link>{" "}
             and deploy to production to submit it to the app stores.
           </p>
@@ -154,16 +173,17 @@ export default async function TenantDetailPage({
           tenant.status !== "preview" &&
           tenant.status !== "production" && (
             <p className="text-sm text-gray-300 leading-relaxed">
-              Use the buttons above to configure and build this app.
+              Use the action buttons above to configure and build this app.
             </p>
           )}
       </div>
 
-      {/* Brand Preview + Config Summary */}
+      {/* App Overview: Brand + Config Summary */}
+      <h2 className="text-lg font-semibold text-white mb-4">App Overview</h2>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Brand Preview */}
         <div className="rounded-xl bg-gray-900 border border-gray-800 p-6">
-          <h2 className="text-base font-semibold text-white mb-4">Brand</h2>
+          <h3 className="text-base font-semibold text-white mb-4">Brand</h3>
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <span className="text-sm text-gray-400 w-24">Primary</span>
@@ -210,92 +230,174 @@ export default async function TenantDetailPage({
 
         {/* Config Summary */}
         <div className="rounded-xl bg-gray-900 border border-gray-800 p-6">
-          <h2 className="text-base font-semibold text-white mb-4">
+          <h3 className="text-base font-semibold text-white mb-4">
             Config Summary
-          </h2>
-          <div className="space-y-3">
-            <div className="flex justify-between py-2 border-b border-gray-800">
-              <span className="text-sm text-gray-400">Tabs</span>
-              <span className="text-sm text-white">{tabs.length} configured</span>
-            </div>
-            <div className="flex justify-between py-2 border-b border-gray-800">
+          </h3>
+          <div className="space-y-0">
+            <div className="flex justify-between py-2.5 border-b border-gray-800">
               <span className="text-sm text-gray-400">Template</span>
               <span className="text-sm text-white capitalize">
                 {tenant.template_type}
               </span>
             </div>
-            <div className="flex justify-between py-2 border-b border-gray-800">
-              <span className="text-sm text-gray-400">Status</span>
-              <span className="text-sm text-white capitalize">
-                {tenant.status}
+            <div className="flex justify-between py-2.5 border-b border-gray-800">
+              <span className="text-sm text-gray-400">Design Preset</span>
+              <span className="text-sm text-white">
+                {(design.preset as string) ?? "default"}
               </span>
             </div>
-            <div className="flex justify-between py-2">
+            <div className="flex justify-between py-2.5 border-b border-gray-800">
+              <span className="text-sm text-gray-400">Tabs</span>
+              <span className="text-sm text-white">{tabs.length} configured</span>
+            </div>
+            {tenant.template_type === "authenticated" && (
+              <div className="flex justify-between py-2.5 border-b border-gray-800">
+                <span className="text-sm text-gray-400">Protected Tabs</span>
+                <span className="text-sm text-white">{protectedTabs}</span>
+              </div>
+            )}
+            <div className="flex justify-between py-2.5 border-b border-gray-800">
+              <span className="text-sm text-gray-400">Supabase Project</span>
+              <span className="text-sm">
+                {tenant.supabase_project_id ? (
+                  <a
+                    href={`https://supabase.com/dashboard/project/${tenant.supabase_project_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#2563EB] hover:underline"
+                  >
+                    {tenant.supabase_project_id}
+                  </a>
+                ) : (
+                  <span className="text-gray-500">Not configured</span>
+                )}
+              </span>
+            </div>
+            {tenant.expo_project_id && (
+              <div className="flex justify-between py-2.5 border-b border-gray-800">
+                <span className="text-sm text-gray-400">Expo Project ID</span>
+                <span className="text-sm text-white font-mono text-xs">
+                  {tenant.expo_project_id}
+                </span>
+              </div>
+            )}
+            <div className="flex justify-between py-2.5">
               <span className="text-sm text-gray-400">Created</span>
               <span className="text-sm text-white">
                 {new Date(tenant.created_at).toLocaleDateString()}
               </span>
             </div>
           </div>
-
-          {/* Quick Actions */}
-          <div className="mt-6 space-y-2">
-            <Link
-              href={`/tenants/${id}/content`}
-              className="block w-full text-center px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
-            >
-              Manage Content
-            </Link>
-          </div>
         </div>
       </div>
 
-      {/* Recent Builds */}
-      <div className="rounded-xl bg-gray-900 border border-gray-800 mb-8">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
-          <h2 className="text-base font-semibold text-white">Recent Builds</h2>
-          <Link
-            href={`/tenants/${id}/builds`}
-            className="text-sm text-[#2563EB] hover:underline"
-          >
-            View all
-          </Link>
-        </div>
-        {builds && builds.length > 0 ? (
-          <table className="w-full">
-            <thead>
-              <tr className="text-left text-xs text-gray-500 border-b border-gray-800">
-                <th className="px-6 py-3 font-medium">Profile</th>
-                <th className="px-6 py-3 font-medium">Status</th>
-                <th className="px-6 py-3 font-medium">Date</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-800">
-              {builds.map((build) => (
-                <tr key={build.id} className="text-sm">
-                  <td className="px-6 py-3 text-white">{build.profile}</td>
-                  <td className="px-6 py-3">
-                    <StatusBadge status={build.status} />
-                  </td>
-                  <td className="px-6 py-3 text-gray-500">
-                    {new Date(build.created_at).toLocaleDateString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* Latest Build */}
+      <h2 className="text-lg font-semibold text-white mb-4">Latest Build</h2>
+      <div className="rounded-xl bg-gray-900 border border-gray-800 p-6 mb-8">
+        {latestBuild ? (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-4">
+              {/* Status */}
+              <div>
+                {latestBuild.status === "pending" ||
+                latestBuild.status === "building" ||
+                latestBuild.status === "queued" ? (
+                  <BuildStatusPoller
+                    build={{
+                      id: latestBuild.id,
+                      status: latestBuild.status,
+                      workflow_run_id: latestBuild.workflow_run_id,
+                    }}
+                    tenantId={id}
+                  />
+                ) : (
+                  <StatusBadge status={latestBuild.status} />
+                )}
+              </div>
+
+              {/* Profile */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-gray-500">Profile:</span>
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                    latestBuild.profile === "production"
+                      ? "bg-green-900/50 text-green-400"
+                      : "bg-yellow-900/50 text-yellow-400"
+                  }`}
+                >
+                  {latestBuild.profile}
+                </span>
+              </div>
+
+              {/* Platform */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-gray-500">Platform:</span>
+                <span className="text-sm text-gray-300">
+                  {latestBuild.platform ?? "android"}
+                </span>
+              </div>
+
+              {/* Date */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-gray-500">Date:</span>
+                <span className="text-sm text-gray-300">
+                  {new Date(latestBuild.created_at).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+
+            {/* Artifacts */}
+            <div className="flex items-center gap-3">
+              {latestBuild.status === "completed" && latestBuild.download_url ? (
+                <a
+                  href={latestBuild.download_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-3 py-1.5 rounded-lg bg-[#2563EB] hover:bg-[#1d4ed8] text-xs font-medium text-white transition-colors"
+                >
+                  Download APK
+                </a>
+              ) : latestBuild.status === "completed" ? (
+                <BuildStatusPoller
+                  build={{
+                    id: latestBuild.id,
+                    status: latestBuild.status,
+                    workflow_run_id: latestBuild.workflow_run_id,
+                  }}
+                  tenantId={id}
+                  artifactsOnly
+                />
+              ) : null}
+              {latestBuild.build_url && (
+                <a
+                  href={latestBuild.build_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-gray-400 hover:text-white transition-colors"
+                >
+                  View on Expo
+                </a>
+              )}
+              <Link
+                href={`/tenants/${id}/builds`}
+                className="text-xs text-[#2563EB] hover:underline"
+              >
+                All builds
+              </Link>
+            </div>
+          </div>
         ) : (
-          <div className="px-6 py-8 text-center text-sm text-gray-500">
-            No builds yet for this tenant.
+          <div className="text-center py-4">
+            <p className="text-sm text-gray-500">
+              No builds yet. Deploy a preview to get started.
+            </p>
           </div>
         )}
       </div>
 
-      {/* Activity Log */}
-      <div className="rounded-xl bg-gray-900 border border-gray-800">
-        <div className="px-6 py-4 border-b border-gray-800">
-          <h2 className="text-base font-semibold text-white">Activity Log</h2>
-        </div>
+      {/* Recent Activity */}
+      <h2 className="text-lg font-semibold text-white mb-4">Recent Activity</h2>
+      <div className="rounded-xl bg-gray-900 border border-gray-800 mb-8">
         <div className="px-6 py-4">
           {activity && activity.length > 0 ? (
             <div className="space-y-4">
@@ -321,10 +423,25 @@ export default async function TenantDetailPage({
             </div>
           ) : (
             <p className="text-sm text-gray-500 text-center py-4">
-              No activity recorded for this tenant.
+              No activity recorded yet.
             </p>
           )}
         </div>
+      </div>
+
+      {/* Danger Zone */}
+      <div className="rounded-xl border border-gray-800 border-dashed p-6">
+        <h2 className="text-sm font-semibold text-red-400 mb-2">Danger Zone</h2>
+        <p className="text-xs text-gray-500 mb-4">
+          Destructive actions that cannot be undone.
+        </p>
+        <button
+          disabled
+          className="px-4 py-2 rounded-lg border border-red-800/50 text-sm font-medium text-red-400 hover:bg-red-900/20 transition-colors cursor-not-allowed opacity-60"
+          title="Deletion is not yet implemented"
+        >
+          Delete Tenant
+        </button>
       </div>
     </div>
   );
