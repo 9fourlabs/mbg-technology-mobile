@@ -41,7 +41,7 @@ export default function TenantFilters({
   };
 
   return (
-    <div className="flex flex-col sm:flex-row gap-4 mb-6">
+    <div className="flex flex-col sm:flex-row gap-4 flex-1">
       <form onSubmit={handleSearch} className="flex-1">
         <input
           type="text"

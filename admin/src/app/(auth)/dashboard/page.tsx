@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import BuildStatusPoller from "@/app/(auth)/tenants/[id]/builds/build-status-poller";
 
 function StatusBadge({
   status,
@@ -25,24 +26,15 @@ function StatusBadge({
   );
 }
 
-export default async function DashboardPage() {
+export default async function BuildJobsPage() {
   const supabase = await createClient();
 
-  // Fetch tenant counts
-  const { data: tenants } = await supabase.from("tenants").select("id, status");
-  const totalTenants = tenants?.length ?? 0;
-  const productionCount =
-    tenants?.filter((t) => t.status === "production").length ?? 0;
-  const draftCount = tenants?.filter((t) => t.status === "draft").length ?? 0;
-  const previewCount =
-    tenants?.filter((t) => t.status === "preview").length ?? 0;
-
-  // Fetch recent builds
+  // Fetch recent builds with higher limit
   const { data: builds } = await supabase
     .from("builds")
-    .select("id, tenant_id, profile, status, created_at")
+    .select("id, tenant_id, profile, status, created_at, workflow_run_id, updated_at")
     .order("created_at", { ascending: false })
-    .limit(5);
+    .limit(20);
 
   // Fetch recent activity
   const { data: activity } = await supabase
@@ -51,128 +43,61 @@ export default async function DashboardPage() {
     .order("created_at", { ascending: false })
     .limit(10);
 
-  const stats = [
-    {
-      label: "Client Apps",
-      subtitle: "Each one is a separate branded app for a client",
-      value: totalTenants,
-      detail: `${draftCount} draft, ${previewCount} preview`,
-    },
-    {
-      label: "Builds in Progress",
-      subtitle: "Apps currently being compiled and packaged",
-      value: builds?.filter((b) => b.status === "building").length ?? 0,
-      detail: `${builds?.filter((b) => b.status === "completed").length ?? 0} completed today`,
-    },
-    {
-      label: "Live in App Stores",
-      subtitle: "Apps published to Apple App Store or Google Play",
-      value: productionCount,
-      detail: `${totalTenants - productionCount} in development`,
-    },
-  ];
+  // Compute summary stats for builds
+  const buildingCount = builds?.filter((b) => b.status === "building" || b.status === "pending" || b.status === "queued").length ?? 0;
+  const completedCount = builds?.filter((b) => b.status === "completed").length ?? 0;
+  const failedCount = builds?.filter((b) => b.status === "failed").length ?? 0;
+
+  function formatDuration(created: string, updated: string | null) {
+    if (!updated) return "-";
+    const start = new Date(created).getTime();
+    const end = new Date(updated).getTime();
+    const diffMs = end - start;
+    if (diffMs < 0) return "-";
+    const mins = Math.floor(diffMs / 60000);
+    const secs = Math.floor((diffMs % 60000) / 1000);
+    if (mins > 0) return `${mins}m ${secs}s`;
+    return `${secs}s`;
+  }
 
   return (
     <div>
-      {/* Welcome Section */}
-      <div className="rounded-xl bg-gradient-to-r from-[#2563EB]/10 to-gray-900 border border-gray-800 p-6 mb-8">
-        <h1 className="text-2xl font-semibold text-white">
-          Welcome to MBG App Platform
-        </h1>
-        <p className="text-sm text-gray-400 mt-2 max-w-2xl">
-          Create branded mobile apps for your clients in minutes — no coding
-          required. Each app is fully customized with your client&apos;s branding,
-          colors, and content.
-        </p>
-        <div className="mt-4">
-          <Link
-            href="/tenants/new"
-            className="inline-flex items-center px-4 py-2.5 rounded-lg bg-[#2563EB] hover:bg-[#1d4ed8] text-sm font-medium text-white transition-colors"
-          >
-            + Create New Client App
-          </Link>
-        </div>
-      </div>
-
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-xl bg-gray-900 border border-gray-800 p-6"
-          >
-            <p className="text-sm text-gray-400">{stat.label}</p>
-            <p className="text-3xl font-semibold text-white mt-1">
-              {stat.value}
-            </p>
-            <p className="text-xs text-gray-500 mt-2">{stat.detail}</p>
-            <p className="text-xs text-gray-600 mt-1">{stat.subtitle}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Getting Started — shown when no tenants exist */}
-      {totalTenants === 0 && (
-        <div className="rounded-xl bg-gray-900 border border-gray-800 p-6 mb-8">
-          <h2 className="text-base font-semibold text-white mb-1">
-            Getting Started
-          </h2>
-          <p className="text-sm text-gray-400 mb-6">
-            Follow these three steps to launch your first client app.
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-semibold text-white">Build Jobs</h1>
+          <p className="text-sm text-gray-400 mt-1">
+            Track build progress and download artifacts
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Step 1 */}
-            <Link
-              href="/tenants/new"
-              className="group rounded-xl border border-gray-800 hover:border-[#2563EB]/50 p-5 transition-colors"
-            >
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#2563EB]/20 text-[#2563EB] font-bold text-sm mb-4">
-                1
-              </div>
-              <h3 className="text-sm font-semibold text-white mb-2 group-hover:text-[#2563EB] transition-colors">
-                Create a Client App
-              </h3>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                Choose a template type and fill in your client&apos;s branding.
-                Each template comes pre-built with features your clients need.
-              </p>
-            </Link>
-
-            {/* Step 2 */}
-            <div className="rounded-xl border border-gray-800 p-5">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 text-gray-400 font-bold text-sm mb-4">
-                2
-              </div>
-              <h3 className="text-sm font-semibold text-white mb-2">
-                Preview &amp; Share
-              </h3>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                Once created, deploy a preview build. Share the install link or
-                QR code with your client so they can try the app on their phone.
-              </p>
-            </div>
-
-            {/* Step 3 */}
-            <div className="rounded-xl border border-gray-800 p-5">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 text-gray-400 font-bold text-sm mb-4">
-                3
-              </div>
-              <h3 className="text-sm font-semibold text-white mb-2">
-                Go Live
-              </h3>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                After client approval, deploy to production. The app will be
-                submitted to the App Store and Google Play.
-              </p>
-            </div>
-          </div>
         </div>
-      )}
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center px-4 py-2.5 rounded-lg border border-gray-700 hover:border-gray-600 text-sm font-medium text-gray-300 hover:text-white transition-colors"
+        >
+          Refresh
+        </Link>
+      </div>
 
-      {/* Recent Builds */}
+      {/* Build summary chips */}
+      <div className="flex items-center gap-4 mb-6">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-900 border border-gray-800 text-xs">
+          <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
+          <span className="text-gray-300">{buildingCount} in progress</span>
+        </div>
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-900 border border-gray-800 text-xs">
+          <span className="w-2 h-2 rounded-full bg-green-400" />
+          <span className="text-gray-300">{completedCount} completed</span>
+        </div>
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-900 border border-gray-800 text-xs">
+          <span className="w-2 h-2 rounded-full bg-red-400" />
+          <span className="text-gray-300">{failedCount} failed</span>
+        </div>
+      </div>
+
+      {/* Builds Table */}
       <div className="rounded-xl bg-gray-900 border border-gray-800 mb-8">
         <div className="px-6 py-4 border-b border-gray-800">
-          <h2 className="text-base font-semibold text-white">Recent Builds</h2>
+          <h2 className="text-base font-semibold text-white">All Builds</h2>
         </div>
         <div className="overflow-x-auto">
           {builds && builds.length > 0 ? (
@@ -182,7 +107,9 @@ export default async function DashboardPage() {
                   <th className="px-6 py-3 font-medium">Tenant</th>
                   <th className="px-6 py-3 font-medium">Profile</th>
                   <th className="px-6 py-3 font-medium">Status</th>
-                  <th className="px-6 py-3 font-medium">Date</th>
+                  <th className="px-6 py-3 font-medium">Artifacts</th>
+                  <th className="px-6 py-3 font-medium">Started</th>
+                  <th className="px-6 py-3 font-medium">Duration</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800">
@@ -198,10 +125,35 @@ export default async function DashboardPage() {
                     </td>
                     <td className="px-6 py-3 text-gray-400">{build.profile}</td>
                     <td className="px-6 py-3">
-                      <StatusBadge status={build.status} />
+                      <BuildStatusPoller
+                        build={{
+                          id: build.id,
+                          status: build.status,
+                          workflow_run_id: build.workflow_run_id,
+                        }}
+                        tenantId={build.tenant_id}
+                      />
+                    </td>
+                    <td className="px-6 py-3 relative">
+                      {build.status === "completed" ? (
+                        <BuildStatusPoller
+                          build={{
+                            id: build.id,
+                            status: build.status,
+                            workflow_run_id: build.workflow_run_id,
+                          }}
+                          tenantId={build.tenant_id}
+                          artifactsOnly
+                        />
+                      ) : (
+                        <span className="text-xs text-gray-600">-</span>
+                      )}
                     </td>
                     <td className="px-6 py-3 text-gray-500">
-                      {new Date(build.created_at).toLocaleDateString()}
+                      {new Date(build.created_at).toLocaleString()}
+                    </td>
+                    <td className="px-6 py-3 text-gray-500">
+                      {formatDuration(build.created_at, build.updated_at)}
                     </td>
                   </tr>
                 ))}
