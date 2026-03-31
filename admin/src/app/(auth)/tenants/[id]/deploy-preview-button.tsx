@@ -31,7 +31,7 @@ export default function DeployPreviewButton({ tenantId }: { tenantId: string }) 
 
       setBanner({
         type: "success",
-        message: "Preview build triggered! Check the Latest Build section below.",
+        message: "Preview is building! Check below for progress.",
       });
       router.refresh();
     } catch (err) {
@@ -55,10 +55,10 @@ export default function DeployPreviewButton({ tenantId }: { tenantId: string }) 
         {loading ? (
           <>
             <span className="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            Deploying...
+            Building...
           </>
         ) : (
-          "Deploy Preview"
+          "Create Preview"
         )}
       </button>
       {banner && (

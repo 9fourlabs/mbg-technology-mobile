@@ -40,7 +40,7 @@ export default function DeployButtons({
 
       setBanner({
         type: "success",
-        message: "Build triggered! Check back shortly for updates.",
+        message: profile === "preview" ? "Preview is building!" : "Going live! Build started.",
       });
       router.refresh();
     } catch (err) {
@@ -74,7 +74,7 @@ export default function DeployButtons({
           disabled={loading !== null}
           className="px-4 py-2.5 rounded-lg bg-yellow-600 hover:bg-yellow-700 disabled:opacity-50 text-sm font-medium text-white transition-colors"
         >
-          {loading === "preview" ? "Deploying..." : "Deploy Preview"}
+          {loading === "preview" ? "Building..." : "Create Preview"}
         </button>
         <div className="relative group">
           <button
@@ -86,7 +86,7 @@ export default function DeployButtons({
                 : "bg-green-600/40 cursor-not-allowed"
             }`}
           >
-            {loading === "production" ? "Deploying..." : "Deploy Production"}
+            {loading === "production" ? "Going live..." : "Go Live"}
           </button>
           {!productionReady && missingRequirements.length > 0 && (
             <div className="hidden group-hover:block absolute z-50 bottom-full left-0 mb-2 w-64 p-3 rounded-lg bg-gray-100 border border-gray-300 shadow-md">

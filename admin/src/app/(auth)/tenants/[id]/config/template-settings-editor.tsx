@@ -125,7 +125,7 @@ export default function TemplateSettingsEditor({ config, onChange }: TemplateSet
       {!["informational", "authenticated", "booking", "commerce"].includes(templateId) && (
         <div className="rounded-lg bg-yellow-900/20 border border-yellow-800/50 p-3 mt-4">
           <p className="text-xs text-yellow-400">
-            Additional {templateId} settings can be configured in the Raw JSON tab.
+            Additional {templateId} settings can be configured in the Advanced tab.
           </p>
         </div>
       )}

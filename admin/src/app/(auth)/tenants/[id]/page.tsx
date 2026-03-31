@@ -92,7 +92,7 @@ export default async function TenantDetailPage({
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
         <Link href="/tenants" className="hover:text-gray-900 transition-colors">
-          Tenants
+          Apps
         </Link>
         <span>/</span>
         <span className="text-gray-900">{tenant.business_name || id}</span>
@@ -133,7 +133,7 @@ export default async function TenantDetailPage({
             href={`/tenants/${id}/config`}
             className="inline-flex items-center px-4 py-2 rounded-lg bg-gray-100 border border-gray-300 text-sm font-medium text-gray-900 hover:bg-gray-100 transition-colors"
           >
-            Edit Config
+            Design
           </Link>
         )}
         {!isCustom && (
@@ -141,7 +141,7 @@ export default async function TenantDetailPage({
             href={`/tenants/${id}/content`}
             className="inline-flex items-center px-4 py-2 rounded-lg bg-gray-100 border border-gray-300 text-sm font-medium text-gray-900 hover:bg-gray-100 transition-colors"
           >
-            Manage Content
+            Content
           </Link>
         )}
         {isCustom && repoUrl && (
@@ -158,7 +158,7 @@ export default async function TenantDetailPage({
           href={`/tenants/${id}/builds`}
           className="inline-flex items-center px-4 py-2 rounded-lg bg-gray-100 border border-gray-300 text-sm font-medium text-gray-900 hover:bg-gray-100 transition-colors"
         >
-          View Builds
+          Builds
         </Link>
         <DeployPreviewButton tenantId={id} />
         <SharePreviewLink tenantId={id} />
@@ -176,16 +176,16 @@ export default async function TenantDetailPage({
                 This custom app hasn&apos;t been built yet. Make sure the repo has{" "}
                 <strong className="text-gray-900">eas.json</strong> and{" "}
                 <strong className="text-gray-900">app.config.ts</strong>, then click{" "}
-                <strong className="text-gray-900">Deploy Preview</strong> to trigger
+                <strong className="text-gray-900">Create Preview</strong> to trigger
                 your first build.
               </>
             ) : (
               <>
                 This app hasn&apos;t been built yet. Click{" "}
-                <strong className="text-gray-900">Edit Config</strong> to customize the
-                branding, then{" "}
-                <strong className="text-gray-900">Deploy Preview</strong> to create a
-                preview version your client can install and try.
+                <strong className="text-gray-900">Design</strong> to customize the
+                look and feel, then{" "}
+                <strong className="text-gray-900">Create Preview</strong> to build a
+                test version your client can install and try.
               </>
             )}
           </p>
@@ -198,9 +198,9 @@ export default async function TenantDetailPage({
               href={`/tenants/${id}/builds`}
               className="text-blue-600 hover:underline font-medium"
             >
-              View Builds
+              Builds
             </Link>{" "}
-            and deploy to production to submit it to the app stores.
+            and go live to publish it to the app stores.
           </p>
         )}
         {tenant.status === "production" && (
@@ -209,13 +209,13 @@ export default async function TenantDetailPage({
               <>
                 This app is live in the app stores. Push code changes to the
                 repo, then trigger a new build from{" "}
-                <strong className="text-gray-900">View Builds</strong> when ready.
+                <strong className="text-gray-900">Builds</strong> when ready.
               </>
             ) : (
               <>
                 This app is live in the app stores. Any config changes will need a
                 new build to take effect. Use{" "}
-                <strong className="text-gray-900">Edit Config</strong> to make
+                <strong className="text-gray-900">Design</strong> to make
                 updates, then trigger a new build when ready.
               </>
             )}
@@ -537,7 +537,7 @@ export default async function TenantDetailPage({
           className="px-4 py-2 rounded-lg border border-red-200 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors cursor-not-allowed opacity-60"
           title="Deletion is not yet implemented"
         >
-          Delete Tenant
+          Delete App
         </button>
       </div>
     </div>

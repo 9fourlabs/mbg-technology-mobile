@@ -48,7 +48,7 @@ export default function TenantFilters({
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search tenants..."
+          placeholder="Search apps..."
           className="w-full rounded-lg bg-white border border-gray-200 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
       </form>
@@ -57,7 +57,7 @@ export default function TenantFilters({
         onChange={(e) => updateParams("template", e.target.value)}
         className="rounded-lg bg-white border border-gray-200 px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
       >
-        <option value="">All Templates</option>
+        <option value="">All Types</option>
         {TEMPLATE_TYPES.map((t) => (
           <option key={t} value={t}>
             {t.charAt(0).toUpperCase() + t.slice(1)}

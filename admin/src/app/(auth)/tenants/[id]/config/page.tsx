@@ -10,7 +10,7 @@ import TabsEditor from "./tabs-editor";
 import TemplateSettingsEditor from "./template-settings-editor";
 import PhoneMockup from "./phone-mockup";
 
-const TABS = ["Brand", "Design", "Tabs & Content", "Template Settings", "Raw JSON"];
+const TABS = ["Brand", "Design", "Pages", "Features", "Advanced"];
 
 export default function ConfigEditorPage() {
   const { id } = useParams<{ id: string }>();
@@ -132,11 +132,11 @@ export default function ConfigEditorPage() {
     return (
       <div>
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-          <Link href="/tenants" className="hover:text-gray-900 transition-colors">Tenants</Link>
+          <Link href="/tenants" className="hover:text-gray-900 transition-colors">Apps</Link>
           <span>/</span>
           <Link href={`/tenants/${id}`} className="hover:text-gray-900 transition-colors">{id}</Link>
           <span>/</span>
-          <span className="text-gray-900">Config</span>
+          <span className="text-gray-900">Design</span>
         </div>
         <div className="rounded-xl bg-white border border-gray-200 p-8 text-center">
           <span className="text-4xl mb-4 block">&#x1F4BB;</span>
@@ -211,7 +211,7 @@ export default function ConfigEditorPage() {
             )}
             {activeTab === 4 && (
               <div>
-                <h2 className="text-base font-semibold text-gray-900 mb-4">Raw JSON Config</h2>
+                <h2 className="text-base font-semibold text-gray-900 mb-4">Advanced Config</h2>
                 <p className="text-xs text-gray-500 mb-3">
                   Edit the full configuration JSON directly. Changes here are reflected when you switch tabs.
                 </p>
@@ -247,9 +247,9 @@ export default function ConfigEditorPage() {
           )}
           {prInfo && (
             <div className="rounded-lg bg-emerald-50 border border-green-200 px-3 py-2 text-sm text-emerald-700 mb-4">
-              Config saved! PR opened:{" "}
-              <a href={prInfo.url} target="_blank" rel="noopener noreferrer" className="underline font-medium hover:text-emerald-600">
-                #{prInfo.number}
+              Changes saved! Building preview...
+              <a href={prInfo.url} target="_blank" rel="noopener noreferrer" className="underline font-medium hover:text-emerald-600 ml-1">
+                View details
               </a>
             </div>
           )}
@@ -257,8 +257,8 @@ export default function ConfigEditorPage() {
           {/* Save actions */}
           <div className="rounded-lg bg-gray-50 border border-gray-300 px-4 py-3 mb-4">
             <p className="text-xs text-gray-500 leading-relaxed">
-              <strong className="text-gray-600">Save Draft</strong> saves to the database without building.{" "}
-              <strong className="text-gray-600">Save &amp; Deploy</strong> saves and creates a PR to trigger a new build.
+              <strong className="text-gray-600">Save Draft</strong> saves your changes.{" "}
+              <strong className="text-gray-600">Save &amp; Build</strong> saves and starts a new preview build.
             </p>
           </div>
           <div className="flex justify-end gap-3">
@@ -280,7 +280,7 @@ export default function ConfigEditorPage() {
               disabled={saving || deploying}
               className="px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-sm font-medium text-white transition-colors disabled:opacity-50"
             >
-              {deploying ? "Saving & committing..." : "Save & Deploy"}
+              {deploying ? "Saving & building..." : "Save & Build"}
             </button>
           </div>
         </div>

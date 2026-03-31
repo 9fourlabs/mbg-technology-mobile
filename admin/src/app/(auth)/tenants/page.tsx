@@ -65,9 +65,9 @@ export default async function TenantsPage({
     <div>
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Client Apps</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">My Apps</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Manage and monitor your client applications
+          Create and manage mobile apps for your clients
         </p>
       </div>
 

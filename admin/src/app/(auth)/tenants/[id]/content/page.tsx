@@ -26,7 +26,7 @@ export default async function ContentPage({
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
         <Link href="/tenants" className="hover:text-gray-900 transition-colors">
-          Tenants
+          Apps
         </Link>
         <span>/</span>
         <Link

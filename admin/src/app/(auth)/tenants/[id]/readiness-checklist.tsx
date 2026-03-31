@@ -53,12 +53,12 @@ export default async function ReadinessChecklist({
           hint: "Custom apps need a GitHub repo URL",
         },
         {
-          label: "Expo Project ID assigned",
+          label: "App ID configured",
           passed: !!tenant.expo_project_id,
           hint: "Required for production builds and app store submission",
         },
         {
-          label: "Preview build succeeded",
+          label: "Preview build complete",
           passed: (successfulBuilds ?? 0) > 0,
           href: `/tenants/${tenantId}/builds`,
           hint: "Deploy at least one successful preview build before going to production",
@@ -66,25 +66,25 @@ export default async function ReadinessChecklist({
       ]
     : [
         {
-          label: "Config saved",
+          label: "Settings saved",
           passed: !!config && tabs.length > 0,
           href: `/tenants/${tenantId}/config`,
           hint: "Save at least one tab in the config editor",
         },
         {
-          label: "Brand configured",
+          label: "Brand colors set",
           passed: !!brand.primaryColor,
           href: `/tenants/${tenantId}/config`,
           hint: "Set a primary color and optionally a logo",
         },
         {
-          label: "Expo Project ID assigned",
+          label: "App ID configured",
           passed: !!tenant.expo_project_id,
           href: `/tenants/${tenantId}/config`,
           hint: "Required for production builds and app store submission",
         },
         {
-          label: "Preview build succeeded",
+          label: "Preview build complete",
           passed: (successfulBuilds ?? 0) > 0,
           href: `/tenants/${tenantId}/builds`,
           hint: "Deploy at least one successful preview build before going to production",
@@ -107,7 +107,7 @@ export default async function ReadinessChecklist({
     <div className="rounded-xl bg-white border border-gray-200 p-6 mb-8">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-base font-semibold text-gray-900">
-          Production Readiness
+          Go-Live Checklist
         </h2>
         <span
           className={`text-xs font-medium px-2.5 py-1 rounded-full ${

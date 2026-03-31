@@ -15,8 +15,8 @@ const TEMPLATE_TYPES = [
   { id: "directory", label: "Directory", emoji: "\u{1F4D6}", color: "border-indigo-500", description: "A searchable directory with categories and detail pages. Member directories, location finders." },
 ];
 
-const TEMPLATE_STEPS = ["App Type", "Template", "Identity", "Brand", "Design", "Review"];
-const CUSTOM_STEPS = ["App Type", "Identity", "Repository", "Review"];
+const TEMPLATE_STEPS = ["Choose Type", "Pick a Template", "Name Your App", "Colors & Logo", "Visual Style", "Review & Create"];
+const CUSTOM_STEPS = ["Choose Type", "Name Your App", "Repository", "Review & Create"];
 
 const DESIGN_PRESETS = [
   { id: "modern", label: "Modern", desc: "Clean & fresh", accent: "#2563EB" },
@@ -236,7 +236,7 @@ export default function NewTenantPage() {
         {/* Step 0: App Type */}
         {step === 0 && (
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-1">What kind of app?</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">What type of app?</h2>
             <p className="text-sm text-gray-500 mb-4">
               Choose whether to use a pre-built template or connect a custom codebase.
             </p>
@@ -319,7 +319,7 @@ export default function NewTenantPage() {
             </p>
             <div>
               <label className="block text-sm font-medium text-gray-600 mb-1.5">
-                App ID
+                URL Slug
               </label>
               <input
                 type="text"
@@ -333,7 +333,7 @@ export default function NewTenantPage() {
                 className="w-full rounded-lg bg-gray-100 border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               <p className="text-xs text-gray-500 mt-1">
-                This is the internal identifier for this app. Use something like &quot;acme-dental&quot; or &quot;toms-burgers&quot;. Lowercase, hyphens only. Min 3 characters.
+                This will be your app&apos;s unique identifier. Use something like &quot;acme-dental&quot; or &quot;toms-burgers&quot;. Lowercase, hyphens only. Min 3 characters.
               </p>
               {form.tenant_id.length > 0 && !validateTenantId(form.tenant_id) && (
                 <p className="text-xs text-red-600 mt-1">
@@ -797,7 +797,7 @@ export default function NewTenantPage() {
             disabled={creating}
             className="px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-sm font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {creating ? "Creating tenant & opening PR..." : "Create Tenant"}
+            {creating ? "Creating app..." : "Create App"}
           </button>
         )}
       </div>

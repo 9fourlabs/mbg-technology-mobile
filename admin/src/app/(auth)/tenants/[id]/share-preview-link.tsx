@@ -18,7 +18,7 @@ export default function SharePreviewLink({ tenantId }: { tenantId: string }) {
       onClick={handleCopy}
       className="inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
     >
-      {copied ? "Link Copied!" : "Share Preview"}
+      {copied ? "Link Copied!" : "Share"}
     </button>
   );
 }

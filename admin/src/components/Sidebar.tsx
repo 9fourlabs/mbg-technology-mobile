@@ -6,8 +6,8 @@ import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 
 const navItems = [
-  { href: "/tenants", label: "Client Apps", icon: AppsIcon },
-  { href: "/dashboard", label: "Build Jobs", icon: HammerIcon },
+  { href: "/tenants", label: "My Apps", icon: AppsIcon },
+  { href: "/dashboard", label: "Recent Builds", icon: HammerIcon },
   { href: "/analytics", label: "Analytics", icon: ChartIcon },
   { href: "/settings", label: "Settings", icon: GearIcon },
 ];

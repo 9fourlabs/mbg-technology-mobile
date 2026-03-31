@@ -51,8 +51,8 @@ export default async function BuildsPage({
     .eq("status", "completed");
 
   const missingRequirements: string[] = [];
-  if (!config || tabs.length === 0) missingRequirements.push("Config not saved");
-  if (!brand.primaryColor) missingRequirements.push("Brand not configured");
+  if (!config || tabs.length === 0) missingRequirements.push("App settings configured");
+  if (!brand.primaryColor) missingRequirements.push("Brand colors set");
   if (!tenant.expo_project_id) missingRequirements.push("Expo Project ID not set");
   if ((successfulPreviews ?? 0) === 0) missingRequirements.push("No successful preview build");
 
@@ -70,7 +70,7 @@ export default async function BuildsPage({
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
         <Link href="/tenants" className="hover:text-gray-900 transition-colors">
-          Tenants
+          Apps
         </Link>
         <span>/</span>
         <Link
@@ -111,7 +111,7 @@ export default async function BuildsPage({
       {/* Build types explainer */}
       <div className="rounded-xl bg-white border border-gray-200 p-5 mb-6">
         <h3 className="text-sm font-semibold text-gray-900 mb-3">
-          Understanding Build Types
+          Build Types
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="rounded-lg bg-gray-50 border border-gray-300 p-4">
@@ -291,7 +291,7 @@ export default async function BuildsPage({
           </table>
         ) : (
           <div className="px-6 py-12 text-center text-sm text-gray-500">
-            No builds yet. Click &ldquo;Deploy Preview&rdquo; to start your
+            No builds yet. Click &ldquo;Create Preview&rdquo; to start your
             first build.
           </div>
         )}
