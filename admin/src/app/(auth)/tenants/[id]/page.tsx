@@ -434,14 +434,26 @@ export default async function TenantDetailPage({
             {/* Artifacts */}
             <div className="flex items-center gap-3">
               {latestBuild.status === "completed" && latestBuild.download_url ? (
-                <a
-                  href={latestBuild.download_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center px-3 py-1.5 rounded-lg bg-[#2563EB] hover:bg-[#1d4ed8] text-xs font-medium text-white transition-colors"
-                >
-                  Download APK
-                </a>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={latestBuild.download_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center px-3 py-1.5 rounded-lg bg-[#2563EB] hover:bg-[#1d4ed8] text-xs font-medium text-white transition-colors"
+                  >
+                    APK
+                  </a>
+                  {latestBuild.download_url_ios && (
+                    <a
+                      href={latestBuild.download_url_ios}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center px-3 py-1.5 rounded-lg bg-[#2563EB] hover:bg-[#1d4ed8] text-xs font-medium text-white transition-colors"
+                    >
+                      IPA
+                    </a>
+                  )}
+                </div>
               ) : latestBuild.status === "completed" ? (
                 <BuildStatusPoller
                   build={{

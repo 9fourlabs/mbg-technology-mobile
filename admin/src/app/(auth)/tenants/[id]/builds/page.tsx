@@ -58,7 +58,7 @@ export default async function BuildsPage({
 
   const { data: builds } = await supabase
     .from("builds")
-    .select("*, updated_at, error_message")
+    .select("*, updated_at, error_message, download_url_ios")
     .eq("tenant_id", id)
     .order("created_at", { ascending: false });
 
@@ -204,10 +204,21 @@ export default async function BuildsPage({
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-xs font-medium text-[#2563EB] hover:text-blue-400 transition-colors"
                         >
-                          Download APK
+                          APK
                         </a>
+                        {build.download_url_ios && (
+                          <a
+                            href={build.download_url_ios}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs font-medium text-[#2563EB] hover:text-blue-400 transition-colors"
+                          >
+                            IPA
+                          </a>
+                        )}
                         <BuildArtifacts
                           downloadUrl={build.download_url}
+                          downloadUrlIos={build.download_url_ios}
                           buildId={build.id}
                         />
                         {build.build_url && (

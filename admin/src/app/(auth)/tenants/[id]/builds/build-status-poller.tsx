@@ -63,16 +63,17 @@ export default function BuildStatusPoller({
 }) {
   const [status, setStatus] = useState(build.status);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [downloadUrlIos, setDownloadUrlIos] = useState<string | null>(null);
   const [expoInstallUrl, setExpoInstallUrl] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [showQR, setShowQR] = useState(false);
+  const [showQR, setShowQR] = useState<"android" | "ios" | null>(null);
   const [pollCount, setPollCount] = useState(0);
 
   useEffect(() => {
-    // For artifactsOnly mode on completed builds, keep polling until we get a download URL
+    // For artifactsOnly mode on completed builds, keep polling until we get download URLs
     const isTerminal = TERMINAL_STATUSES.has(status);
     if (isTerminal && !artifactsOnly) return;
-    if (isTerminal && downloadUrl) return;
+    if (isTerminal && downloadUrl && downloadUrlIos) return;
 
     let active = true;
 
@@ -88,6 +89,9 @@ export default function BuildStatusPoller({
         }
         if (active && data.download_url) {
           setDownloadUrl(data.download_url);
+        }
+        if (active && data.download_url_ios) {
+          setDownloadUrlIos(data.download_url_ios);
         }
         if (active && data.expo_install_url) {
           setExpoInstallUrl(data.expo_install_url);
@@ -110,32 +114,63 @@ export default function BuildStatusPoller({
       active = false;
       clearInterval(interval);
     };
-  }, [status, downloadUrl, build.id, tenantId, artifactsOnly]);
+  }, [status, downloadUrl, downloadUrlIos, build.id, tenantId, artifactsOnly]);
 
   // Artifacts-only mode: renders in the Artifacts column for completed builds without a URL yet
   if (artifactsOnly) {
-    if (downloadUrl) {
+    if (downloadUrl || downloadUrlIos) {
       return (
-        <div className="flex items-center gap-2">
-          <a
-            href={downloadUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs font-medium text-[#2563EB] hover:text-blue-400 transition-colors"
-          >
-            Download APK
-          </a>
-          <button
-            onClick={() => setShowQR(!showQR)}
-            className="text-xs text-gray-400 hover:text-white transition-colors"
-            title="Show QR code"
-          >
-            QR
-          </button>
-          {showQR && (
-            <div className="absolute z-40 mt-2 p-3 bg-white rounded-lg shadow-xl">
-              <QRCode url={downloadUrl} size={150} />
-            </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          {downloadUrl && (
+            <>
+              <a
+                href={downloadUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs font-medium text-[#2563EB] hover:text-blue-400 transition-colors"
+              >
+                APK
+              </a>
+              <button
+                onClick={() => setShowQR(showQR === "android" ? null : "android")}
+                className="text-xs text-gray-400 hover:text-white transition-colors"
+                title="Show Android QR code"
+              >
+                QR
+              </button>
+              {showQR === "android" && (
+                <div className="absolute z-40 mt-2 p-3 bg-white rounded-lg shadow-xl">
+                  <p className="text-xs text-gray-600 text-center mb-1 font-medium">Android</p>
+                  <QRCode url={downloadUrl} size={150} />
+                </div>
+              )}
+            </>
+          )}
+          {downloadUrlIos && (
+            <>
+              {downloadUrl && <span className="text-gray-600">|</span>}
+              <a
+                href={downloadUrlIos}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs font-medium text-[#2563EB] hover:text-blue-400 transition-colors"
+              >
+                IPA
+              </a>
+              <button
+                onClick={() => setShowQR(showQR === "ios" ? null : "ios")}
+                className="text-xs text-gray-400 hover:text-white transition-colors"
+                title="Show iOS QR code"
+              >
+                QR
+              </button>
+              {showQR === "ios" && (
+                <div className="absolute z-40 mt-2 p-3 bg-white rounded-lg shadow-xl">
+                  <p className="text-xs text-gray-600 text-center mb-1 font-medium">iOS</p>
+                  <QRCode url={downloadUrlIos} size={150} />
+                </div>
+              )}
+            </>
           )}
         </div>
       );
@@ -172,30 +207,28 @@ export default function BuildStatusPoller({
           {errorMessage}
         </span>
       )}
-      {status === "completed" && downloadUrl && (
+      {status === "completed" && (downloadUrl || downloadUrlIos) && (
         <span className="inline-flex items-center gap-1.5">
-          <a
-            href={downloadUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs font-medium text-[#2563EB] hover:text-blue-400 transition-colors"
-          >
-            Download
-          </a>
-          <span className="relative">
-            <button
-              onClick={() => setShowQR(!showQR)}
-              className="text-xs text-gray-400 hover:text-white transition-colors"
-              title="Show QR code"
+          {downloadUrl && (
+            <a
+              href={downloadUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-medium text-[#2563EB] hover:text-blue-400 transition-colors"
             >
-              QR
-            </button>
-            {showQR && (
-              <div className="absolute z-40 right-0 top-6 p-3 bg-white rounded-lg shadow-xl">
-                <QRCode url={downloadUrl} size={150} />
-              </div>
-            )}
-          </span>
+              Android
+            </a>
+          )}
+          {downloadUrlIos && (
+            <a
+              href={downloadUrlIos}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-medium text-[#2563EB] hover:text-blue-400 transition-colors"
+            >
+              iOS
+            </a>
+          )}
         </span>
       )}
     </span>

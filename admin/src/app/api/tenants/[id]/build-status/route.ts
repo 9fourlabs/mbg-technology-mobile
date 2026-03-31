@@ -110,31 +110,49 @@ export async function GET(
 
     const easBuildsUrl = status === "completed" ? getExpoBuildPageUrl() : null;
 
-    // Try to find a download URL from EAS when the build is completed
+    // Try to find download URLs from EAS when the build is completed
     let downloadUrl: string | null = null;
+    let downloadUrlIos: string | null = null;
 
     // First check the DB record
     const { data: freshBuild } = await supabase
       .from("builds")
-      .select("download_url")
+      .select("download_url, download_url_ios")
       .eq("id", buildId)
       .single();
     downloadUrl = freshBuild?.download_url ?? null;
+    downloadUrlIos = freshBuild?.download_url_ios ?? null;
 
-    // If completed and no download_url yet, try fetching from EAS
-    if (status === "completed" && !downloadUrl) {
+    // If completed and missing either URL, try fetching from EAS
+    if (status === "completed" && (!downloadUrl || !downloadUrlIos)) {
       try {
         const easBuilds = await getEASBuilds(10);
-        // Find a recent finished build (EAS uses "finished" for completed)
-        const match = easBuilds.find(
-          (b) => b.status === "finished" && b.downloadUrl
-        );
-        if (match?.downloadUrl) {
-          downloadUrl = match.downloadUrl;
-          // Persist the download_url for future lookups
+        const updateFields: Record<string, string> = {};
+
+        if (!downloadUrl) {
+          const androidMatch = easBuilds.find(
+            (b) => b.status === "finished" && b.platform === "android" && b.downloadUrl
+          );
+          if (androidMatch?.downloadUrl) {
+            downloadUrl = androidMatch.downloadUrl;
+            updateFields.download_url = downloadUrl;
+          }
+        }
+
+        if (!downloadUrlIos) {
+          const iosMatch = easBuilds.find(
+            (b) => b.status === "finished" && b.platform === "ios" && b.downloadUrl
+          );
+          if (iosMatch?.downloadUrl) {
+            downloadUrlIos = iosMatch.downloadUrl;
+            updateFields.download_url_ios = downloadUrlIos;
+          }
+        }
+
+        if (Object.keys(updateFields).length > 0) {
           await supabase
             .from("builds")
-            .update({ download_url: downloadUrl })
+            .update(updateFields)
             .eq("id", buildId);
         }
       } catch (err) {
@@ -153,6 +171,7 @@ export async function GET(
       build_url: buildUrl,
       eas_builds_url: easBuildsUrl,
       download_url: downloadUrl,
+      download_url_ios: downloadUrlIos,
       expo_install_url: expoInstallUrl,
       error_message: errorMessage,
       updated,

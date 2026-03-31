@@ -5,20 +5,22 @@ import QRCode from "@/components/QRCode";
 
 interface BuildArtifactsProps {
   downloadUrl: string;
+  downloadUrlIos?: string | null;
   buildId: string;
 }
 
 export default function BuildArtifacts({
   downloadUrl,
+  downloadUrlIos,
   buildId,
 }: BuildArtifactsProps) {
   const [open, setOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
 
-  function handleCopy() {
-    navigator.clipboard.writeText(downloadUrl).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+  function handleCopy(url: string, platform: string) {
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(platform);
+      setTimeout(() => setCopied(null), 2000);
     });
   }
 
@@ -50,32 +52,55 @@ export default function BuildArtifacts({
               {buildId.slice(0, 8)}
             </p>
 
-            {/* QR Code */}
-            <div className="flex justify-center mb-4 bg-white rounded-lg p-3">
-              <QRCode url={downloadUrl} size={200} />
+            {/* Android */}
+            <div className="mb-4">
+              <p className="text-xs text-gray-400 font-medium mb-2">Android</p>
+              <div className="flex justify-center mb-2 bg-white rounded-lg p-3">
+                <QRCode url={downloadUrl} size={180} />
+              </div>
+              <div className="flex flex-col gap-2">
+                <a
+                  href={downloadUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#2563EB] text-white text-sm font-medium hover:bg-blue-600 transition-colors"
+                >
+                  Download APK
+                </a>
+                <button
+                  onClick={() => handleCopy(downloadUrl, "android")}
+                  className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-gray-700 text-gray-300 text-xs font-medium hover:bg-gray-800 transition-colors"
+                >
+                  {copied === "android" ? "Copied!" : "Copy link"}
+                </button>
+              </div>
             </div>
 
-            <p className="text-xs text-gray-400 text-center mb-4">
-              Scan to install on device
-            </p>
-
-            {/* Actions */}
-            <div className="flex flex-col gap-2">
-              <a
-                href={downloadUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-[#2563EB] text-white text-sm font-medium hover:bg-blue-600 transition-colors"
-              >
-                Download APK
-              </a>
-              <button
-                onClick={handleCopy}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-gray-700 text-gray-300 text-sm font-medium hover:bg-gray-800 transition-colors"
-              >
-                {copied ? "Copied!" : "Share install link"}
-              </button>
-            </div>
+            {/* iOS */}
+            {downloadUrlIos && (
+              <div className="pt-4 border-t border-gray-800">
+                <p className="text-xs text-gray-400 font-medium mb-2">iOS</p>
+                <div className="flex justify-center mb-2 bg-white rounded-lg p-3">
+                  <QRCode url={downloadUrlIos} size={180} />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <a
+                    href={downloadUrlIos}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#2563EB] text-white text-sm font-medium hover:bg-blue-600 transition-colors"
+                  >
+                    Download IPA
+                  </a>
+                  <button
+                    onClick={() => handleCopy(downloadUrlIos, "ios")}
+                    className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-gray-700 text-gray-300 text-xs font-medium hover:bg-gray-800 transition-colors"
+                  >
+                    {copied === "ios" ? "Copied!" : "Copy link"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

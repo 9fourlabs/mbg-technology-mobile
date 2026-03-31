@@ -1,0 +1,1 @@
+ALTER TABLE builds ADD COLUMN IF NOT EXISTS download_url_ios TEXT;
