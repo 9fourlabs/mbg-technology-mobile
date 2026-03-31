@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import BrandEditor from "./brand-editor";
 import DesignEditor from "./design-editor";
 import TabsEditor from "./tabs-editor";
 import TemplateSettingsEditor from "./template-settings-editor";
 import PhoneMockup from "./phone-mockup";
+import TenantTabBar from "@/components/TenantTabBar";
 
 const TABS = ["Brand", "Design", "Pages", "Features", "Advanced"];
 
@@ -21,6 +21,8 @@ export default function ConfigEditorPage() {
   const [loading, setLoading] = useState(true);
   const [isCustomApp, setIsCustomApp] = useState(false);
   const [repoUrl, setRepoUrl] = useState<string | null>(null);
+  const [tenantName, setTenantName] = useState<string>(id);
+  const [appType, setAppType] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
   const [deploying, setDeploying] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +34,7 @@ export default function ConfigEditorPage() {
       const supabase = createClient();
       const { data, error: fetchError } = await supabase
         .from("tenants")
-        .select("config, app_type, repo_url")
+        .select("config, app_type, repo_url, business_name")
         .eq("id", id)
         .single();
 
@@ -41,6 +43,9 @@ export default function ConfigEditorPage() {
         setLoading(false);
         return;
       }
+
+      setTenantName(data.business_name || id);
+      setAppType(data.app_type);
 
       if (data.app_type === "custom") {
         setIsCustomApp(true);
@@ -131,13 +136,7 @@ export default function ConfigEditorPage() {
   if (isCustomApp) {
     return (
       <div>
-        <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-          <Link href="/tenants" className="hover:text-gray-900 transition-colors">Apps</Link>
-          <span>/</span>
-          <Link href={`/tenants/${id}`} className="hover:text-gray-900 transition-colors">{id}</Link>
-          <span>/</span>
-          <span className="text-gray-900">Design</span>
-        </div>
+        <TenantTabBar tenantId={id} tenantName={tenantName} appType={appType} />
         <div className="rounded-xl bg-white border border-gray-200 p-8 text-center">
           <span className="text-4xl mb-4 block">&#x1F4BB;</span>
           <h2 className="text-lg font-semibold text-gray-900 mb-2">Custom App</h2>
@@ -161,14 +160,7 @@ export default function ConfigEditorPage() {
 
   return (
     <div>
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-        <Link href="/tenants" className="hover:text-gray-900 transition-colors">Tenants</Link>
-        <span>/</span>
-        <Link href={`/tenants/${id}`} className="hover:text-gray-900 transition-colors">{id}</Link>
-        <span>/</span>
-        <span className="text-gray-900">Config</span>
-      </div>
+      <TenantTabBar tenantId={id} tenantName={tenantName} appType={appType} />
 
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">Configuration Editor</h1>

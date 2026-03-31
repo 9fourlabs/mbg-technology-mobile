@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getExpoBuildPageUrl } from "@/lib/eas";
@@ -7,6 +6,7 @@ import BuildStatusPoller from "./build-status-poller";
 import BuildArtifacts from "./build-artifacts";
 import RetryBuildButton from "./retry-build-button";
 import SharePreviewLink from "../share-preview-link";
+import TenantTabBar from "@/components/TenantTabBar";
 
 function formatDuration(created: string, updated: string | null) {
   if (!updated) return "-";
@@ -30,7 +30,7 @@ export default async function BuildsPage({
 
   const { data: tenant } = await supabase
     .from("tenants")
-    .select("id, business_name, expo_project_id, status, config")
+    .select("id, business_name, expo_project_id, status, config, app_type")
     .eq("id", id)
     .single();
 
@@ -67,21 +67,7 @@ export default async function BuildsPage({
 
   return (
     <div>
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-        <Link href="/tenants" className="hover:text-gray-900 transition-colors">
-          Apps
-        </Link>
-        <span>/</span>
-        <Link
-          href={`/tenants/${id}`}
-          className="hover:text-gray-900 transition-colors"
-        >
-          {id}
-        </Link>
-        <span>/</span>
-        <span className="text-gray-900">Builds</span>
-      </div>
+      <TenantTabBar tenantId={id} tenantName={tenant.business_name || id} appType={(tenant as any).app_type} />
 
       <div className="flex items-center justify-between mb-8">
         <div>

@@ -5,7 +5,7 @@ import BuildStatusPoller from "./builds/build-status-poller";
 import DeployPreviewButton from "./deploy-preview-button";
 import SharePreviewLink from "./share-preview-link";
 import ReadinessChecklist from "./readiness-checklist";
-import VersionBump from "./version-bump";
+import TenantTabBar from "@/components/TenantTabBar";
 
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
@@ -59,17 +59,7 @@ export default async function TenantDetailPage({
   const repoUrl = (tenant as Record<string, unknown>).repo_url as string | null;
   const repoBranch = ((tenant as Record<string, unknown>).repo_branch as string) ?? "main";
 
-  const config = tenant.config as Record<string, unknown> | null;
-  const brand = (config?.brand ?? {}) as Record<string, string>;
-  const tabs = (config?.tabs ?? []) as Record<string, unknown>[];
-  const design = (config?.design ?? {}) as Record<string, unknown>;
-
-  // Count protected tabs (tabs with requiresAuth or protected flag)
-  const protectedTabs = tabs.filter(
-    (t) => t.requiresAuth === true || t.protected === true
-  ).length;
-
-  // Fetch recent builds (get more fields for latest build display)
+  // Fetch recent builds
   const { data: builds } = await supabase
     .from("builds")
     .select("*")
@@ -89,154 +79,257 @@ export default async function TenantDetailPage({
 
   return (
     <div>
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-        <Link href="/tenants" className="hover:text-gray-900 transition-colors">
-          Apps
-        </Link>
-        <span>/</span>
-        <span className="text-gray-900">{tenant.business_name || id}</span>
-      </div>
+      {/* Tab Bar (includes breadcrumb) */}
+      <TenantTabBar
+        tenantId={id}
+        tenantName={tenant.business_name || id}
+        appType={tenant.app_type}
+      />
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3 flex-wrap">
+          <h1 className="text-2xl font-semibold text-gray-900">
+            {tenant.business_name || id}
+          </h1>
+          <StatusBadge status={tenant.status} />
+          <span
+            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${templateColors[tenant.template_type] ?? "bg-gray-700 text-gray-500"}`}
+          >
+            {tenant.template_type}
+          </span>
+        </div>
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-semibold text-gray-900">
-              {tenant.business_name || id}
-            </h1>
-            <StatusBadge status={tenant.status} />
-          </div>
-          <div className="flex items-center gap-2 mt-2">
-            <span className="text-sm text-gray-500 font-mono">{id}</span>
-            <span
-              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${templateColors[tenant.template_type] ?? "bg-gray-700 text-gray-500"}`}
+          {tenant.status === "draft" && (
+            <DeployPreviewButton tenantId={id} />
+          )}
+          {tenant.status === "preview" && (
+            <SharePreviewLink tenantId={id} />
+          )}
+          {tenant.status === "production" && (
+            <Link
+              href={`/tenants/${id}/builds`}
+              className="inline-flex items-center px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-sm font-medium text-white transition-colors"
             >
-              {tenant.template_type}
-            </span>
-          </div>
+              Go Live
+            </Link>
+          )}
         </div>
       </div>
 
-      {/* Version */}
-      <div className="mb-4">
-        <VersionBump
-          tenantId={id}
-          currentVersion={(tenant as Record<string, unknown>).app_version as string ?? "1.0.0"}
-        />
-      </div>
-
-      {/* Quick Actions Bar */}
-      <div className="flex flex-wrap items-center gap-3 mb-8 p-4 rounded-xl bg-white border border-gray-200">
-        {!isCustom && (
-          <Link
-            href={`/tenants/${id}/config`}
-            className="inline-flex items-center px-4 py-2 rounded-lg bg-gray-100 border border-gray-300 text-sm font-medium text-gray-900 hover:bg-gray-100 transition-colors"
-          >
-            Design
-          </Link>
-        )}
-        {!isCustom && (
-          <Link
-            href={`/tenants/${id}/content`}
-            className="inline-flex items-center px-4 py-2 rounded-lg bg-gray-100 border border-gray-300 text-sm font-medium text-gray-900 hover:bg-gray-100 transition-colors"
-          >
-            Content
-          </Link>
-        )}
-        {isCustom && repoUrl && (
-          <a
-            href={repoUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center px-4 py-2 rounded-lg bg-gray-100 border border-gray-300 text-sm font-medium text-gray-900 hover:bg-gray-100 transition-colors"
-          >
-            View Repo
-          </a>
-        )}
-        <Link
-          href={`/tenants/${id}/builds`}
-          className="inline-flex items-center px-4 py-2 rounded-lg bg-gray-100 border border-gray-300 text-sm font-medium text-gray-900 hover:bg-gray-100 transition-colors"
-        >
-          Builds
-        </Link>
-        <DeployPreviewButton tenantId={id} />
-        <SharePreviewLink tenantId={id} />
-      </div>
-
-      {/* What's Next? Guidance Card */}
-      <div className="rounded-xl border border-gray-200 bg-blue-600/5 p-5 mb-8">
-        <h2 className="text-sm font-semibold text-blue-600 mb-2">
-          What&apos;s Next?
-        </h2>
+      {/* Guidance Card */}
+      <div className="rounded-xl border border-blue-200 bg-blue-50 p-6 mb-8">
         {tenant.status === "draft" && (
-          <p className="text-sm text-gray-500 leading-relaxed">
-            {isCustom ? (
-              <>
-                This custom app hasn&apos;t been built yet. Make sure the repo has{" "}
-                <strong className="text-gray-900">eas.json</strong> and{" "}
-                <strong className="text-gray-900">app.config.ts</strong>, then click{" "}
-                <strong className="text-gray-900">Create Preview</strong> to trigger
-                your first build.
-              </>
-            ) : (
-              <>
-                This app hasn&apos;t been built yet. Click{" "}
-                <strong className="text-gray-900">Design</strong> to customize the
-                look and feel, then{" "}
-                <strong className="text-gray-900">Create Preview</strong> to build a
-                test version your client can install and try.
-              </>
-            )}
-          </p>
+          <div>
+            <h2 className="text-lg font-semibold text-blue-900 mb-2">
+              Get started
+            </h2>
+            <p className="text-base text-blue-800 leading-relaxed mb-4">
+              {isCustom ? (
+                <>
+                  This custom app hasn&apos;t been built yet. Make sure the repo
+                  has <strong>eas.json</strong> and{" "}
+                  <strong>app.config.ts</strong>, then create a preview build.
+                </>
+              ) : (
+                <>
+                  Start by customizing your app&apos;s design -- colors, logo,
+                  and layout -- then create a preview build to share with your
+                  client.
+                </>
+              )}
+            </p>
+            {!isCustom ? (
+              <Link
+                href={`/tenants/${id}/config`}
+                className="inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-sm font-medium text-white transition-colors"
+              >
+                Open Design &rarr;
+              </Link>
+            ) : repoUrl ? (
+              <a
+                href={repoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-sm font-medium text-white transition-colors"
+              >
+                View Repo &rarr;
+              </a>
+            ) : null}
+          </div>
         )}
         {tenant.status === "preview" && (
-          <p className="text-sm text-gray-500 leading-relaxed">
-            A preview build is available! Share the install link with your
-            client for approval. Once they&apos;re happy, go to{" "}
-            <Link
-              href={`/tenants/${id}/builds`}
-              className="text-blue-600 hover:underline font-medium"
-            >
-              Builds
-            </Link>{" "}
-            and go live to publish it to the app stores.
-          </p>
+          <div>
+            <h2 className="text-lg font-semibold text-blue-900 mb-2">
+              Preview ready
+            </h2>
+            <p className="text-base text-blue-800 leading-relaxed mb-4">
+              Share the preview with your client for approval. Once they&apos;re
+              happy, head to Builds and go live.
+            </p>
+            <SharePreviewLink tenantId={id} />
+          </div>
         )}
         {tenant.status === "production" && (
-          <p className="text-sm text-gray-500 leading-relaxed">
-            {isCustom ? (
-              <>
-                This app is live in the app stores. Push code changes to the
-                repo, then trigger a new build from{" "}
-                <strong className="text-gray-900">Builds</strong> when ready.
-              </>
-            ) : (
-              <>
-                This app is live in the app stores. Any config changes will need a
-                new build to take effect. Use{" "}
-                <strong className="text-gray-900">Design</strong> to make
-                updates, then trigger a new build when ready.
-              </>
-            )}
-          </p>
+          <div>
+            <h2 className="text-lg font-semibold text-emerald-900 mb-2">
+              Your app is live!
+            </h2>
+            <p className="text-base text-emerald-800 leading-relaxed">
+              {isCustom ? (
+                <>
+                  Push code changes to the repo, then trigger a new build from
+                  Builds when ready.
+                </>
+              ) : (
+                <>
+                  Any config changes will need a new build to take effect. Use
+                  Design to make updates, then trigger a new build.
+                </>
+              )}
+            </p>
+          </div>
         )}
         {tenant.status !== "draft" &&
           tenant.status !== "preview" &&
           tenant.status !== "production" && (
-            <p className="text-sm text-gray-500 leading-relaxed">
-              Use the action buttons above to configure and build this app.
-            </p>
+            <div>
+              <h2 className="text-lg font-semibold text-blue-900 mb-2">
+                Next steps
+              </h2>
+              <p className="text-base text-blue-800 leading-relaxed">
+                Use the tabs above to configure and build this app.
+              </p>
+            </div>
           )}
       </div>
 
-      {/* Production Readiness Checklist */}
-      <ReadinessChecklist tenantId={id} />
+      {/* Two-column: Checklist + Latest Build */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Left: Go-Live Checklist */}
+        <div>
+          <ReadinessChecklist tenantId={id} />
+        </div>
+
+        {/* Right: Latest Build */}
+        <div>
+          <h2 className="text-base font-semibold text-gray-900 mb-3">
+            Latest Build
+          </h2>
+          <div className="rounded-xl bg-white border border-gray-200 p-6">
+            {latestBuild ? (
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  {/* Status */}
+                  <div>
+                    {latestBuild.status === "pending" ||
+                    latestBuild.status === "building" ||
+                    latestBuild.status === "queued" ? (
+                      <BuildStatusPoller
+                        build={{
+                          id: latestBuild.id,
+                          status: latestBuild.status,
+                          workflow_run_id: latestBuild.workflow_run_id,
+                        }}
+                        tenantId={id}
+                      />
+                    ) : (
+                      <StatusBadge status={latestBuild.status} />
+                    )}
+                  </div>
+
+                  {/* Profile */}
+                  <span
+                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                      latestBuild.profile === "production"
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-amber-50 text-amber-700"
+                    }`}
+                  >
+                    {latestBuild.profile}
+                  </span>
+
+                  {/* Platform */}
+                  <span className="text-sm text-gray-500">
+                    {latestBuild.platform ?? "android"}
+                  </span>
+
+                  {/* Date */}
+                  <span className="text-sm text-gray-500">
+                    {new Date(latestBuild.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+
+                {/* Artifacts */}
+                <div className="flex flex-wrap items-center gap-3">
+                  {latestBuild.status === "completed" &&
+                  latestBuild.download_url ? (
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={latestBuild.download_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-xs font-medium text-white transition-colors"
+                      >
+                        APK
+                      </a>
+                      {latestBuild.download_url_ios && (
+                        <a
+                          href={latestBuild.download_url_ios}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-xs font-medium text-white transition-colors"
+                        >
+                          iOS
+                        </a>
+                      )}
+                    </div>
+                  ) : latestBuild.status === "completed" ? (
+                    <BuildStatusPoller
+                      build={{
+                        id: latestBuild.id,
+                        status: latestBuild.status,
+                        workflow_run_id: latestBuild.workflow_run_id,
+                      }}
+                      tenantId={id}
+                      artifactsOnly
+                    />
+                  ) : null}
+                  {latestBuild.build_url && (
+                    <a
+                      href={latestBuild.build_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-gray-500 hover:text-gray-900 transition-colors"
+                    >
+                      View on Expo
+                    </a>
+                  )}
+                  <Link
+                    href={`/tenants/${id}/builds`}
+                    className="text-xs text-blue-600 hover:underline"
+                  >
+                    All builds
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-sm text-gray-500">
+                  No builds yet. Deploy a preview to get started.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Custom App: Repository Info */}
       {isCustom && repoUrl && (
         <div className="rounded-xl bg-white border border-gray-200 p-6 mb-8">
-          <h2 className="text-base font-semibold text-gray-900 mb-4">Repository</h2>
+          <h2 className="text-base font-semibold text-gray-900 mb-4">
+            Repository
+          </h2>
           <div className="space-y-0">
             <div className="flex justify-between py-2.5 border-b border-gray-200">
               <span className="text-sm text-gray-500">Repo URL</span>
@@ -251,7 +344,9 @@ export default async function TenantDetailPage({
             </div>
             <div className="flex justify-between py-2.5 border-b border-gray-200">
               <span className="text-sm text-gray-500">Branch</span>
-              <span className="text-sm text-gray-900 font-mono">{repoBranch}</span>
+              <span className="text-sm text-gray-900 font-mono">
+                {repoBranch}
+              </span>
             </div>
             <div className="flex justify-between py-2.5">
               <span className="text-sm text-gray-500">Type</span>
@@ -263,239 +358,15 @@ export default async function TenantDetailPage({
         </div>
       )}
 
-      {/* App Overview: Brand + Config Summary (template only) */}
-      {!isCustom && <h2 className="text-lg font-semibold text-gray-900 mb-4">App Overview</h2>}
-      {!isCustom && <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Brand Preview */}
-        <div className="rounded-xl bg-white border border-gray-200 p-6">
-          <h3 className="text-base font-semibold text-gray-900 mb-4">Brand</h3>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-500 w-24">Primary</span>
-              <div
-                className="w-8 h-8 rounded border border-gray-300"
-                style={{ backgroundColor: brand.primaryColor ?? "#2563EB" }}
-              />
-              <span className="text-sm text-gray-500 font-mono">
-                {brand.primaryColor ?? "not set"}
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-500 w-24">Background</span>
-              <div
-                className="w-8 h-8 rounded border border-gray-300"
-                style={{ backgroundColor: brand.backgroundColor ?? "#000000" }}
-              />
-              <span className="text-sm text-gray-500 font-mono">
-                {brand.backgroundColor ?? "not set"}
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-500 w-24">Text</span>
-              <div
-                className="w-8 h-8 rounded border border-gray-300"
-                style={{ backgroundColor: brand.textColor ?? "#FFFFFF" }}
-              />
-              <span className="text-sm text-gray-500 font-mono">
-                {brand.textColor ?? "not set"}
-              </span>
-            </div>
-            {brand.logoUrl && (
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-gray-500 w-24">Logo</span>
-                <img
-                  src={brand.logoUrl}
-                  alt="Logo"
-                  className="w-10 h-10 rounded-lg object-cover border border-gray-300"
-                />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Config Summary */}
-        <div className="rounded-xl bg-white border border-gray-200 p-6">
-          <h3 className="text-base font-semibold text-gray-900 mb-4">
-            Config Summary
-          </h3>
-          <div className="space-y-0">
-            <div className="flex justify-between py-2.5 border-b border-gray-200">
-              <span className="text-sm text-gray-500">Template</span>
-              <span className="text-sm text-gray-900 capitalize">
-                {tenant.template_type}
-              </span>
-            </div>
-            <div className="flex justify-between py-2.5 border-b border-gray-200">
-              <span className="text-sm text-gray-500">Design Preset</span>
-              <span className="text-sm text-gray-900">
-                {(design.preset as string) ?? "default"}
-              </span>
-            </div>
-            <div className="flex justify-between py-2.5 border-b border-gray-200">
-              <span className="text-sm text-gray-500">Tabs</span>
-              <span className="text-sm text-gray-900">{tabs.length} configured</span>
-            </div>
-            {tenant.template_type === "authenticated" && (
-              <div className="flex justify-between py-2.5 border-b border-gray-200">
-                <span className="text-sm text-gray-500">Protected Tabs</span>
-                <span className="text-sm text-gray-900">{protectedTabs}</span>
-              </div>
-            )}
-            <div className="flex justify-between py-2.5 border-b border-gray-200">
-              <span className="text-sm text-gray-500">Supabase Project</span>
-              <span className="text-sm">
-                {tenant.supabase_project_id ? (
-                  <a
-                    href={`https://supabase.com/dashboard/project/${tenant.supabase_project_id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
-                  >
-                    {tenant.supabase_project_id}
-                  </a>
-                ) : (
-                  <span className="text-gray-500">Not configured</span>
-                )}
-              </span>
-            </div>
-            {tenant.expo_project_id && (
-              <div className="flex justify-between py-2.5 border-b border-gray-200">
-                <span className="text-sm text-gray-500">Expo Project ID</span>
-                <span className="text-sm text-gray-900 font-mono text-xs">
-                  {tenant.expo_project_id}
-                </span>
-              </div>
-            )}
-            <div className="flex justify-between py-2.5">
-              <span className="text-sm text-gray-500">Created</span>
-              <span className="text-sm text-gray-900">
-                {new Date(tenant.created_at).toLocaleDateString()}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>}
-
-      {/* Latest Build */}
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">Latest Build</h2>
-      <div className="rounded-xl bg-white border border-gray-200 p-6 mb-8">
-        {latestBuild ? (
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex flex-wrap items-center gap-4">
-              {/* Status */}
-              <div>
-                {latestBuild.status === "pending" ||
-                latestBuild.status === "building" ||
-                latestBuild.status === "queued" ? (
-                  <BuildStatusPoller
-                    build={{
-                      id: latestBuild.id,
-                      status: latestBuild.status,
-                      workflow_run_id: latestBuild.workflow_run_id,
-                    }}
-                    tenantId={id}
-                  />
-                ) : (
-                  <StatusBadge status={latestBuild.status} />
-                )}
-              </div>
-
-              {/* Profile */}
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs text-gray-500">Profile:</span>
-                <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                    latestBuild.profile === "production"
-                      ? "bg-emerald-50 text-emerald-700"
-                      : "bg-amber-50 text-amber-700"
-                  }`}
-                >
-                  {latestBuild.profile}
-                </span>
-              </div>
-
-              {/* Platform */}
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs text-gray-500">Platform:</span>
-                <span className="text-sm text-gray-500">
-                  {latestBuild.platform ?? "android"}
-                </span>
-              </div>
-
-              {/* Date */}
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs text-gray-500">Date:</span>
-                <span className="text-sm text-gray-500">
-                  {new Date(latestBuild.created_at).toLocaleDateString()}
-                </span>
-              </div>
-            </div>
-
-            {/* Artifacts */}
-            <div className="flex items-center gap-3">
-              {latestBuild.status === "completed" && latestBuild.download_url ? (
-                <div className="flex items-center gap-2">
-                  <a
-                    href={latestBuild.download_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-xs font-medium text-white transition-colors"
-                  >
-                    APK
-                  </a>
-                  {latestBuild.download_url_ios && (
-                    <a
-                      href={latestBuild.download_url_ios}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-xs font-medium text-white transition-colors"
-                    >
-                      iOS
-                    </a>
-                  )}
-                </div>
-              ) : latestBuild.status === "completed" ? (
-                <BuildStatusPoller
-                  build={{
-                    id: latestBuild.id,
-                    status: latestBuild.status,
-                    workflow_run_id: latestBuild.workflow_run_id,
-                  }}
-                  tenantId={id}
-                  artifactsOnly
-                />
-              ) : null}
-              {latestBuild.build_url && (
-                <a
-                  href={latestBuild.build_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-gray-500 hover:text-gray-900 transition-colors"
-                >
-                  View on Expo
-                </a>
-              )}
-              <Link
-                href={`/tenants/${id}/builds`}
-                className="text-xs text-blue-600 hover:underline"
-              >
-                All builds
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <div className="text-center py-4">
-            <p className="text-sm text-gray-500">
-              No builds yet. Deploy a preview to get started.
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Recent Activity */}
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h2>
-      <div className="rounded-xl bg-white border border-gray-200 mb-8">
-        <div className="px-6 py-4">
+      {/* Recent Activity (collapsed by default) */}
+      <details className="rounded-xl bg-white border border-gray-200 mb-8">
+        <summary className="px-6 py-4 cursor-pointer select-none flex items-center justify-between text-base font-semibold text-gray-900 hover:bg-gray-50 transition-colors rounded-xl">
+          Recent Activity
+          <span className="text-sm font-normal text-gray-500">
+            Show activity
+          </span>
+        </summary>
+        <div className="px-6 pb-4">
           {activity && activity.length > 0 ? (
             <div className="space-y-4">
               {activity.map((entry) => (
@@ -524,22 +395,7 @@ export default async function TenantDetailPage({
             </p>
           )}
         </div>
-      </div>
-
-      {/* Danger Zone */}
-      <div className="rounded-xl border border-gray-200 border-dashed p-6">
-        <h2 className="text-sm font-semibold text-red-600 mb-2">Danger Zone</h2>
-        <p className="text-xs text-gray-500 mb-4">
-          Destructive actions that cannot be undone.
-        </p>
-        <button
-          disabled
-          className="px-4 py-2 rounded-lg border border-red-200 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors cursor-not-allowed opacity-60"
-          title="Deletion is not yet implemented"
-        >
-          Delete App
-        </button>
-      </div>
+      </details>
     </div>
   );
 }

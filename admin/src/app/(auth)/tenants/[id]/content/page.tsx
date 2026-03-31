@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import ContentRouter from "@/components/content/ContentRouter";
+import TenantTabBar from "@/components/TenantTabBar";
 
 export default async function ContentPage({
   params,
@@ -13,7 +13,7 @@ export default async function ContentPage({
 
   const { data: tenant } = await supabase
     .from("tenants")
-    .select("id, template_type, business_name, supabase_project_id")
+    .select("id, template_type, business_name, supabase_project_id, app_type")
     .eq("id", id)
     .single();
 
@@ -23,21 +23,7 @@ export default async function ContentPage({
 
   return (
     <div>
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-        <Link href="/tenants" className="hover:text-gray-900 transition-colors">
-          Apps
-        </Link>
-        <span>/</span>
-        <Link
-          href={`/tenants/${id}`}
-          className="hover:text-gray-900 transition-colors"
-        >
-          {id}
-        </Link>
-        <span>/</span>
-        <span className="text-gray-900">Content</span>
-      </div>
+      <TenantTabBar tenantId={id} tenantName={tenant.business_name || id} appType={(tenant as any).app_type} />
 
       <div className="mb-8">
         <h1 className="text-2xl font-semibold text-gray-900">
