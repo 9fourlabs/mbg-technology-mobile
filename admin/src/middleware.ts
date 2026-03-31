@@ -4,6 +4,12 @@ import { NextResponse, type NextRequest } from "next/server";
 /** Paths that never require authentication. */
 const PUBLIC_PATHS = ["/login", "/api/auth/callback", "/share"];
 
+/** API paths that use their own auth (shared secrets, not Supabase session). */
+function isSelfAuth(pathname: string): boolean {
+  // Match /api/tenants/{id}/build-link
+  return pathname.includes("/build-link") && pathname.startsWith("/api/tenants/");
+}
+
 function isPublic(pathname: string): boolean {
   return PUBLIC_PATHS.some((p) => pathname.startsWith(p));
 }
@@ -19,7 +25,7 @@ function isStaticAsset(pathname: string): boolean {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (isPublic(pathname) || isStaticAsset(pathname)) {
+  if (isPublic(pathname) || isStaticAsset(pathname) || isSelfAuth(pathname)) {
     return NextResponse.next();
   }
 
