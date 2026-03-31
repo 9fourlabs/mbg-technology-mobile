@@ -143,8 +143,9 @@ export async function GET(
           const iosMatch = easBuilds.find(
             (b) => b.status === "finished" && b.platform === "ios" && b.downloadUrl
           );
-          if (iosMatch?.downloadUrl) {
-            downloadUrlIos = iosMatch.downloadUrl;
+          if (iosMatch) {
+            // Use Expo install page URL (handles itms-services:// for iOS OTA install)
+            downloadUrlIos = getExpoInstallUrl(iosMatch.id);
             updateFields.download_url_ios = downloadUrlIos;
           }
         }

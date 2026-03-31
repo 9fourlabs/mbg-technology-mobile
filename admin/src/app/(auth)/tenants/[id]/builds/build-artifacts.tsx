@@ -90,7 +90,7 @@ export default function BuildArtifacts({
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[#2563EB] text-white text-sm font-medium hover:bg-blue-600 transition-colors"
                   >
-                    Download IPA
+                    Install on iOS
                   </a>
                   <button
                     onClick={() => handleCopy(downloadUrlIos, "ios")}

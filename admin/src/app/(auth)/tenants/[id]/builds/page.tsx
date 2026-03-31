@@ -213,7 +213,7 @@ export default async function BuildsPage({
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 text-xs font-medium text-[#2563EB] hover:text-blue-400 transition-colors"
                           >
-                            IPA
+                            iOS
                           </a>
                         )}
                         <BuildArtifacts

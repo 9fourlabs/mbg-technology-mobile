@@ -450,7 +450,7 @@ export default async function TenantDetailPage({
                       rel="noopener noreferrer"
                       className="inline-flex items-center px-3 py-1.5 rounded-lg bg-[#2563EB] hover:bg-[#1d4ed8] text-xs font-medium text-white transition-colors"
                     >
-                      IPA
+                      iOS
                     </a>
                   )}
                 </div>
