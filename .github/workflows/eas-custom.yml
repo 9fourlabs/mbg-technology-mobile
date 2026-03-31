@@ -57,29 +57,20 @@ jobs:
       - name: Build preview
         if: inputs.profile == 'preview'
         working-directory: ./custom-app
-        run: |
-          BUILD_ARGS="--profile preview --platform all --non-interactive"
-          if [ -n "${{ inputs.expo_project_id }}" ]; then
-            BUILD_ARGS="$BUILD_ARGS --project-id ${{ inputs.expo_project_id }}"
-          fi
-          APP_VERSION="${{ inputs.version }}" eas build $BUILD_ARGS
+        env:
+          APP_VERSION: ${{ inputs.version }}
+        run: eas build --profile preview --platform all --non-interactive
 
       - name: Build production
         if: inputs.profile == 'production'
         working-directory: ./custom-app
-        run: |
-          BUILD_ARGS="--profile production --platform all --non-interactive"
-          if [ -n "${{ inputs.expo_project_id }}" ]; then
-            BUILD_ARGS="$BUILD_ARGS --project-id ${{ inputs.expo_project_id }}"
-          fi
-          APP_VERSION="${{ inputs.version }}" eas build $BUILD_ARGS
+        env:
+          APP_VERSION: ${{ inputs.version }}
+        run: eas build --profile production --platform all --non-interactive
 
       - name: Submit to stores
         if: inputs.profile == 'production'
         working-directory: ./custom-app
-        run: |
-          SUBMIT_ARGS="--profile production --platform all --non-interactive"
-          if [ -n "${{ inputs.expo_project_id }}" ]; then
-            SUBMIT_ARGS="$SUBMIT_ARGS --project-id ${{ inputs.expo_project_id }}"
-          fi
-          APP_VERSION="${{ inputs.version }}" eas submit $SUBMIT_ARGS
+        env:
+          APP_VERSION: ${{ inputs.version }}
+        run: eas submit --profile production --platform all --non-interactive

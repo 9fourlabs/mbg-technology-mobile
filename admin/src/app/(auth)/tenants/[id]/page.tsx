@@ -171,11 +171,23 @@ export default async function TenantDetailPage({
         </h2>
         {tenant.status === "draft" && (
           <p className="text-sm text-gray-300 leading-relaxed">
-            This app hasn&apos;t been built yet. Click{" "}
-            <strong className="text-white">Edit Config</strong> to customize the
-            branding, then{" "}
-            <strong className="text-white">Deploy Preview</strong> to create a
-            preview version your client can install and try.
+            {isCustom ? (
+              <>
+                This custom app hasn&apos;t been built yet. Make sure the repo has{" "}
+                <strong className="text-white">eas.json</strong> and{" "}
+                <strong className="text-white">app.config.ts</strong>, then click{" "}
+                <strong className="text-white">Deploy Preview</strong> to trigger
+                your first build.
+              </>
+            ) : (
+              <>
+                This app hasn&apos;t been built yet. Click{" "}
+                <strong className="text-white">Edit Config</strong> to customize the
+                branding, then{" "}
+                <strong className="text-white">Deploy Preview</strong> to create a
+                preview version your client can install and try.
+              </>
+            )}
           </p>
         )}
         {tenant.status === "preview" && (
@@ -193,10 +205,20 @@ export default async function TenantDetailPage({
         )}
         {tenant.status === "production" && (
           <p className="text-sm text-gray-300 leading-relaxed">
-            This app is live in the app stores. Any config changes will need a
-            new build to take effect. Use{" "}
-            <strong className="text-white">Edit Config</strong> to make
-            updates, then trigger a new build when ready.
+            {isCustom ? (
+              <>
+                This app is live in the app stores. Push code changes to the
+                repo, then trigger a new build from{" "}
+                <strong className="text-white">View Builds</strong> when ready.
+              </>
+            ) : (
+              <>
+                This app is live in the app stores. Any config changes will need a
+                new build to take effect. Use{" "}
+                <strong className="text-white">Edit Config</strong> to make
+                updates, then trigger a new build when ready.
+              </>
+            )}
           </p>
         )}
         {tenant.status !== "draft" &&
