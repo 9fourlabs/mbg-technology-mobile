@@ -69,24 +69,24 @@ export default async function BuildsPage({
     <div>
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-        <Link href="/tenants" className="hover:text-white transition-colors">
+        <Link href="/tenants" className="hover:text-gray-900 transition-colors">
           Tenants
         </Link>
         <span>/</span>
         <Link
           href={`/tenants/${id}`}
-          className="hover:text-white transition-colors"
+          className="hover:text-gray-900 transition-colors"
         >
           {id}
         </Link>
         <span>/</span>
-        <span className="text-white">Builds</span>
+        <span className="text-gray-900">Builds</span>
       </div>
 
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-semibold text-white">Builds</h1>
-          <p className="text-sm text-gray-400 mt-1">
+          <h1 className="text-2xl font-semibold text-gray-900">Builds</h1>
+          <p className="text-sm text-gray-500 mt-1">
             {tenant.business_name || id}
           </p>
         </div>
@@ -95,7 +95,7 @@ export default async function BuildsPage({
             href={expoBuildsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+            className="text-sm text-blue-600 hover:text-blue-700 transition-colors"
           >
             View All Builds on Expo &rarr;
           </a>
@@ -109,30 +109,30 @@ export default async function BuildsPage({
       </div>
 
       {/* Build types explainer */}
-      <div className="rounded-xl bg-gray-900 border border-gray-800 p-5 mb-6">
-        <h3 className="text-sm font-semibold text-white mb-3">
+      <div className="rounded-xl bg-white border border-gray-200 p-5 mb-6">
+        <h3 className="text-sm font-semibold text-gray-900 mb-3">
           Understanding Build Types
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="rounded-lg bg-gray-800/50 border border-gray-700 p-4">
+          <div className="rounded-lg bg-gray-50 border border-gray-300 p-4">
             <div className="flex items-center gap-2 mb-2">
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-900/50 text-yellow-400">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700">
                 Preview
               </span>
             </div>
-            <p className="text-xs text-gray-400 leading-relaxed">
+            <p className="text-xs text-gray-500 leading-relaxed">
               Creates a test version of the app that can be installed directly on
               Android and iOS devices. Use this to demo the app to your client
               before going live. Share the install link or scan the QR code.
             </p>
           </div>
-          <div className="rounded-lg bg-gray-800/50 border border-gray-700 p-4">
+          <div className="rounded-lg bg-gray-50 border border-gray-300 p-4">
             <div className="flex items-center gap-2 mb-2">
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-900/50 text-green-400">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
                 Production
               </span>
             </div>
-            <p className="text-xs text-gray-400 leading-relaxed">
+            <p className="text-xs text-gray-500 leading-relaxed">
               Submits the app to the App Store (iOS) and Google Play (Android).
               This is the final step — only do this after your client has approved
               the preview.
@@ -142,21 +142,21 @@ export default async function BuildsPage({
       </div>
 
       {!hasExpoProject && (
-        <div className="rounded-lg bg-yellow-900/20 border border-yellow-800/50 px-4 py-3 text-sm text-yellow-400 mb-6">
+        <div className="rounded-lg bg-amber-50 border border-yellow-200 px-4 py-3 text-sm text-amber-700 mb-6">
           Production deploys require an Expo project ID. Configure one in the
           tenant settings.
         </div>
       )}
 
       {/* Build History */}
-      <div className="rounded-xl bg-gray-900 border border-gray-800">
-        <div className="px-6 py-4 border-b border-gray-800">
-          <h2 className="text-base font-semibold text-white">Build History</h2>
+      <div className="rounded-xl bg-white border border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-base font-semibold text-gray-900">Build History</h2>
         </div>
         {builds && builds.length > 0 ? (
           <table className="w-full">
             <thead>
-              <tr className="text-left text-xs text-gray-500 border-b border-gray-800">
+              <tr className="text-left text-xs text-gray-500 border-b border-gray-200">
                 <th className="px-6 py-3 font-medium">Build ID</th>
                 <th className="px-6 py-3 font-medium">Profile</th>
                 <th className="px-6 py-3 font-medium">Status</th>
@@ -167,7 +167,7 @@ export default async function BuildsPage({
                 <th className="px-6 py-3 font-medium">Duration</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-800">
+            <tbody className="divide-y divide-gray-200">
               {builds.map((build) => (
                 <tr key={build.id} className="text-sm">
                   <td className="px-6 py-3 font-mono text-xs">
@@ -176,15 +176,15 @@ export default async function BuildsPage({
                         href={build.build_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-400 hover:text-blue-300 underline"
+                        className="text-blue-600 hover:text-blue-700 underline"
                       >
                         {build.id.slice(0, 8)}
                       </a>
                     ) : (
-                      <span className="text-white">{build.id.slice(0, 8)}</span>
+                      <span className="text-gray-900">{build.id.slice(0, 8)}</span>
                     )}
                   </td>
-                  <td className="px-6 py-3 text-gray-300">{build.profile}</td>
+                  <td className="px-6 py-3 text-gray-500">{build.profile}</td>
                   <td className="px-6 py-3">
                     <BuildStatusPoller
                       build={{
@@ -202,7 +202,7 @@ export default async function BuildsPage({
                           href={build.download_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs font-medium text-[#2563EB] hover:text-blue-400 transition-colors"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors"
                         >
                           APK
                         </a>
@@ -211,7 +211,7 @@ export default async function BuildsPage({
                             href={build.download_url_ios}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-xs font-medium text-[#2563EB] hover:text-blue-400 transition-colors"
+                            className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors"
                           >
                             iOS
                           </a>
@@ -226,7 +226,7 @@ export default async function BuildsPage({
                             href={build.build_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                            className="text-xs text-gray-500 hover:text-gray-500 transition-colors"
                           >
                             Build Log
                           </a>
@@ -248,7 +248,7 @@ export default async function BuildsPage({
                             href={build.build_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                            className="text-xs text-gray-500 hover:text-gray-500 transition-colors"
                           >
                             Build Log
                           </a>
@@ -262,7 +262,7 @@ export default async function BuildsPage({
                         />
                         {build.error_message && (
                           <span
-                            className="text-xs text-red-400 truncate max-w-[200px]"
+                            className="text-xs text-red-600 truncate max-w-[200px]"
                             title={build.error_message}
                           >
                             {build.error_message}
@@ -270,13 +270,13 @@ export default async function BuildsPage({
                         )}
                       </div>
                     ) : (
-                      <span className="text-gray-600">---</span>
+                      <span className="text-gray-500">---</span>
                     )}
                   </td>
-                  <td className="px-6 py-3 text-gray-400">
+                  <td className="px-6 py-3 text-gray-500">
                     {build.platform ?? "android"}
                   </td>
-                  <td className="px-6 py-3 text-gray-400 font-mono text-xs">
+                  <td className="px-6 py-3 text-gray-500 font-mono text-xs">
                     {build.app_version ?? "-"}
                   </td>
                   <td className="px-6 py-3 text-gray-500">

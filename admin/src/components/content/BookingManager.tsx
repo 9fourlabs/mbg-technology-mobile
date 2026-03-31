@@ -22,8 +22,8 @@ export default function BookingManager({ tenantId }: { tenantId: string }) {
             onClick={() => setActiveTab(tab.key)}
             className={`px-4 py-2 text-sm font-medium rounded-lg ${
               activeTab === tab.key
-                ? "bg-gray-800 text-white"
-                : "text-gray-400 hover:text-white"
+                ? "bg-gray-100 text-gray-900"
+                : "text-gray-500 hover:text-gray-900"
             }`}
           >
             {tab.label}

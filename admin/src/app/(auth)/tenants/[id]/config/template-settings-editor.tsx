@@ -20,13 +20,13 @@ function TextInput({
 }) {
   return (
     <div>
-      <label className="block text-xs text-gray-500 mb-1">{label}</label>
+      <label className="block text-xs text-gray-400 mb-1">{label}</label>
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2563EB] ${mono ? "font-mono" : ""}`}
+        className={`w-full px-3 py-2 rounded-lg bg-gray-100 border border-gray-300 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 ${mono ? "font-mono" : ""}`}
       />
     </div>
   );
@@ -44,12 +44,12 @@ export default function TemplateSettingsEditor({ config, onChange }: TemplateSet
   if (templateId === "informational") {
     return (
       <div>
-        <h2 className="text-base font-semibold text-white mb-1">Template Settings</h2>
-        <p className="text-sm text-gray-400 mb-4">
+        <h2 className="text-base font-semibold text-gray-900 mb-1">Template Settings</h2>
+        <p className="text-sm text-gray-500 mb-4">
           The informational template has no additional settings beyond brand, design, and tabs.
         </p>
-        <div className="rounded-lg bg-gray-800/50 border border-gray-700 p-4 text-center">
-          <p className="text-sm text-gray-500">No additional settings required.</p>
+        <div className="rounded-lg bg-gray-50 border border-gray-300 p-4 text-center">
+          <p className="text-sm text-gray-400">No additional settings required.</p>
         </div>
       </div>
     );
@@ -59,14 +59,14 @@ export default function TemplateSettingsEditor({ config, onChange }: TemplateSet
 
   return (
     <div>
-      <h2 className="text-base font-semibold text-white mb-1">Template Settings</h2>
-      <p className="text-sm text-gray-400 mb-4">
-        Settings specific to the <span className="text-white font-medium">{templateId}</span> template.
+      <h2 className="text-base font-semibold text-gray-900 mb-1">Template Settings</h2>
+      <p className="text-sm text-gray-500 mb-4">
+        Settings specific to the <span className="text-gray-900 font-medium">{templateId}</span> template.
       </p>
 
       {/* Auth settings (all non-informational templates) */}
       <div className="space-y-4 mb-6">
-        <h3 className="text-sm font-semibold text-white">Authentication</h3>
+        <h3 className="text-sm font-semibold text-gray-900">Authentication</h3>
         <TextInput
           label="Supabase URL"
           value={auth.supabaseUrl ?? ""}
@@ -84,7 +84,7 @@ export default function TemplateSettingsEditor({ config, onChange }: TemplateSet
 
         {/* Protected tabs picker */}
         <div>
-          <label className="block text-xs text-gray-500 mb-2">Protected Tabs (require login)</label>
+          <label className="block text-xs text-gray-400 mb-2">Protected Tabs (require login)</label>
           <div className="flex flex-wrap gap-2">
             {tabs.map((tab) => {
               const protectedTabs = (config?.protectedTabs ?? []) as string[];
@@ -101,8 +101,8 @@ export default function TemplateSettingsEditor({ config, onChange }: TemplateSet
                   }}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                     isProtected
-                      ? "bg-[#2563EB] text-white"
-                      : "bg-gray-800 text-gray-400 border border-gray-700 hover:border-gray-600"
+                      ? "bg-blue-600 text-white"
+                      : "bg-gray-100 text-gray-500 border border-gray-300 hover:border-gray-400"
                   }`}
                 >
                   {tab.label}
@@ -141,25 +141,25 @@ function BookingSettings({ config, onChange }: { config: Record<string, unknown>
   }
 
   return (
-    <div className="space-y-4 border-t border-gray-800 pt-4">
-      <h3 className="text-sm font-semibold text-white">Booking Settings</h3>
+    <div className="space-y-4 border-t border-gray-200 pt-4">
+      <h3 className="text-sm font-semibold text-gray-900">Booking Settings</h3>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs text-gray-500 mb-1">Slot Duration (min)</label>
+          <label className="block text-xs text-gray-400 mb-1">Slot Duration (min)</label>
           <input
             type="number"
             value={(booking.slotDuration as number) ?? 30}
             onChange={(e) => update("slotDuration", Number(e.target.value))}
-            className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+            className="w-full px-3 py-2 rounded-lg bg-gray-100 border border-gray-300 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div>
-          <label className="block text-xs text-gray-500 mb-1">Advance Booking (days)</label>
+          <label className="block text-xs text-gray-400 mb-1">Advance Booking (days)</label>
           <input
             type="number"
             value={(booking.advanceBookingDays as number) ?? 30}
             onChange={(e) => update("advanceBookingDays", Number(e.target.value))}
-            className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+            className="w-full px-3 py-2 rounded-lg bg-gray-100 border border-gray-300 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>
@@ -181,8 +181,8 @@ function CommerceSettings({ config, onChange }: { config: Record<string, unknown
   }
 
   return (
-    <div className="space-y-4 border-t border-gray-800 pt-4">
-      <h3 className="text-sm font-semibold text-white">Commerce Settings</h3>
+    <div className="space-y-4 border-t border-gray-200 pt-4">
+      <h3 className="text-sm font-semibold text-gray-900">Commerce Settings</h3>
       <TextInput
         label="Store Name"
         value={(commerce.storeName as string) ?? ""}
@@ -204,13 +204,13 @@ function CommerceSettings({ config, onChange }: { config: Record<string, unknown
           placeholder="USD"
         />
         <div>
-          <label className="block text-xs text-gray-500 mb-1">Tax Rate (%)</label>
+          <label className="block text-xs text-gray-400 mb-1">Tax Rate (%)</label>
           <input
             type="number"
             step="0.01"
             value={(commerce.taxRate as number) ?? 0}
             onChange={(e) => update("taxRate", Number(e.target.value))}
-            className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+            className="w-full px-3 py-2 rounded-lg bg-gray-100 border border-gray-300 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
       </div>

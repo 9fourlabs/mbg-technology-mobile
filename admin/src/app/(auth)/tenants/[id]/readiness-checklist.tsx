@@ -104,16 +104,16 @@ export default async function ReadinessChecklist({
   const allPassed = passedCount === checks.length;
 
   return (
-    <div className="rounded-xl bg-gray-900 border border-gray-800 p-6 mb-8">
+    <div className="rounded-xl bg-white border border-gray-200 p-6 mb-8">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-base font-semibold text-white">
+        <h2 className="text-base font-semibold text-gray-900">
           Production Readiness
         </h2>
         <span
           className={`text-xs font-medium px-2.5 py-1 rounded-full ${
             allPassed
-              ? "bg-green-900/50 text-green-400"
-              : "bg-yellow-900/50 text-yellow-400"
+              ? "bg-emerald-50 text-emerald-700"
+              : "bg-amber-50 text-amber-700"
           }`}
         >
           {passedCount}/{checks.length} checks passed
@@ -125,11 +125,11 @@ export default async function ReadinessChecklist({
           <div key={check.label} className="flex items-start gap-3">
             <span className="mt-0.5 flex-shrink-0">
               {check.passed ? (
-                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-900/50 text-green-400 text-xs">
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-50 text-emerald-700 text-xs">
                   ✓
                 </span>
               ) : (
-                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-900/50 text-red-400 text-xs">
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-50 text-red-600 text-xs">
                   ✗
                 </span>
               )}
@@ -137,14 +137,14 @@ export default async function ReadinessChecklist({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <span
-                  className={`text-sm ${check.passed ? "text-gray-300" : "text-white font-medium"}`}
+                  className={`text-sm ${check.passed ? "text-gray-600" : "text-gray-900 font-medium"}`}
                 >
                   {check.label}
                 </span>
                 {!check.passed && check.href && (
                   <Link
                     href={check.href}
-                    className="text-xs text-[#2563EB] hover:underline"
+                    className="text-xs text-blue-600 hover:underline"
                   >
                     Fix
                   </Link>

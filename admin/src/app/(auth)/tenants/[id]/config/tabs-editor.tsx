@@ -138,8 +138,8 @@ export default function TabsEditor({ tenantId, config, onChange }: TabsEditorPro
 
   return (
     <div>
-      <h2 className="text-base font-semibold text-white mb-1">Tabs & Content</h2>
-      <p className="text-sm text-gray-400 mb-4">
+      <h2 className="text-base font-semibold text-gray-900 mb-1">Tabs & Content</h2>
+      <p className="text-sm text-gray-500 mb-4">
         Each tab is a page in your app with its own header and cards.
       </p>
 
@@ -151,8 +151,8 @@ export default function TabsEditor({ tenantId, config, onChange }: TabsEditorPro
               key={i}
               className={`flex items-center gap-1 rounded-lg px-2 py-2 cursor-pointer transition-colors ${
                 i === selectedTabIdx
-                  ? "bg-[#2563EB] text-white"
-                  : "bg-gray-800 text-gray-300 hover:bg-gray-750"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-150"
               }`}
               onClick={() => { setSelectedTabIdx(i); setEditingCardIdx(null); }}
             >
@@ -186,7 +186,7 @@ export default function TabsEditor({ tenantId, config, onChange }: TabsEditorPro
           ))}
           <button
             onClick={addTab}
-            className="w-full flex items-center justify-center gap-1.5 rounded-lg border-2 border-dashed border-gray-700 px-3 py-2 text-sm text-gray-400 hover:text-white hover:border-gray-600 transition-colors"
+            className="w-full flex items-center justify-center gap-1.5 rounded-lg border-2 border-dashed border-gray-300 px-3 py-2 text-sm text-gray-500 hover:text-gray-900 hover:border-gray-400 transition-colors"
           >
             + Add Tab
           </button>
@@ -199,16 +199,16 @@ export default function TabsEditor({ tenantId, config, onChange }: TabsEditorPro
               {/* Tab fields */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">Label (tab bar)</label>
+                  <label className="block text-xs text-gray-400 mb-1">Label (tab bar)</label>
                   <input
                     type="text"
                     value={selectedTab.label}
                     onChange={(e) => updateTab(selectedTabIdx, "label", e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                    className="w-full px-3 py-2 rounded-lg bg-gray-100 border border-gray-300 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">ID</label>
+                  <label className="block text-xs text-gray-400 mb-1">ID</label>
                   <input
                     type="text"
                     value={selectedTab.id}
@@ -217,49 +217,49 @@ export default function TabsEditor({ tenantId, config, onChange }: TabsEditorPro
                       newTabs[selectedTabIdx] = { ...newTabs[selectedTabIdx], id: e.target.value };
                       updateTabs(newTabs);
                     }}
-                    className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-sm text-white font-mono focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                    className="w-full px-3 py-2 rounded-lg bg-gray-100 border border-gray-300 text-sm text-gray-900 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Page Title</label>
+                <label className="block text-xs text-gray-400 mb-1">Page Title</label>
                 <input
                   type="text"
                   value={selectedTab.headerTitle}
                   onChange={(e) => updateTab(selectedTabIdx, "headerTitle", e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                  className="w-full px-3 py-2 rounded-lg bg-gray-100 border border-gray-300 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Page Subtitle</label>
+                <label className="block text-xs text-gray-400 mb-1">Page Subtitle</label>
                 <textarea
                   value={selectedTab.headerBody}
                   onChange={(e) => updateTab(selectedTabIdx, "headerBody", e.target.value)}
                   rows={2}
-                  className="w-full px-3 py-2 rounded-lg bg-gray-800 border border-gray-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2563EB] resize-none"
+                  className="w-full px-3 py-2 rounded-lg bg-gray-100 border border-gray-300 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 />
               </div>
 
               {/* Cards */}
-              <div className="border-t border-gray-800 pt-4">
+              <div className="border-t border-gray-200 pt-4">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold text-white">
+                  <h3 className="text-sm font-semibold text-gray-900">
                     Cards ({selectedTab.cards.length})
                   </h3>
                   <button
                     onClick={addCard}
-                    className="text-xs font-medium text-[#2563EB] hover:text-blue-400 transition-colors"
+                    className="text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors"
                   >
                     + Add Card
                   </button>
                 </div>
 
                 {selectedTab.cards.length === 0 ? (
-                  <div className="text-center py-6 rounded-lg bg-gray-800/50 border border-dashed border-gray-700">
-                    <p className="text-sm text-gray-500 mb-2">No cards yet</p>
+                  <div className="text-center py-6 rounded-lg bg-gray-50 border border-dashed border-gray-300">
+                    <p className="text-sm text-gray-400 mb-2">No cards yet</p>
                     <button
                       onClick={addCard}
-                      className="text-xs font-medium text-[#2563EB] hover:text-blue-400"
+                      className="text-xs font-medium text-blue-600 hover:text-blue-700"
                     >
                       Add your first card
                     </button>
@@ -272,8 +272,8 @@ export default function TabsEditor({ tenantId, config, onChange }: TabsEditorPro
                         <div
                           className={`flex items-center gap-2 p-2.5 rounded-lg border transition-colors cursor-pointer ${
                             editingCardIdx === ci
-                              ? "bg-gray-800 border-[#2563EB]"
-                              : "bg-gray-800/50 border-gray-700 hover:border-gray-600"
+                              ? "bg-gray-100 border-blue-600"
+                              : "bg-gray-50 border-gray-300 hover:border-gray-400"
                           }`}
                           onClick={() => setEditingCardIdx(editingCardIdx === ci ? null : ci)}
                         >
@@ -281,35 +281,35 @@ export default function TabsEditor({ tenantId, config, onChange }: TabsEditorPro
                             <img src={card.imageUri} alt="" className="w-8 h-8 rounded object-cover flex-shrink-0" />
                           )}
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm text-white font-medium truncate">{card.title}</p>
-                            <p className="text-xs text-gray-500 truncate">{card.body}</p>
+                            <p className="text-sm text-gray-900 font-medium truncate">{card.title}</p>
+                            <p className="text-xs text-gray-400 truncate">{card.body}</p>
                           </div>
                           <div className="flex items-center gap-1 flex-shrink-0">
-                            <button onClick={(e) => { e.stopPropagation(); moveCard(ci, -1); }} disabled={ci === 0} className="text-[10px] text-gray-500 hover:text-white disabled:opacity-30">▲</button>
-                            <button onClick={(e) => { e.stopPropagation(); moveCard(ci, 1); }} disabled={ci === selectedTab.cards.length - 1} className="text-[10px] text-gray-500 hover:text-white disabled:opacity-30">▼</button>
-                            <button onClick={(e) => { e.stopPropagation(); deleteCard(ci); }} className="text-xs text-gray-500 hover:text-red-400 ml-1">✕</button>
+                            <button onClick={(e) => { e.stopPropagation(); moveCard(ci, -1); }} disabled={ci === 0} className="text-[10px] text-gray-400 hover:text-gray-900 disabled:opacity-30">▲</button>
+                            <button onClick={(e) => { e.stopPropagation(); moveCard(ci, 1); }} disabled={ci === selectedTab.cards.length - 1} className="text-[10px] text-gray-400 hover:text-gray-900 disabled:opacity-30">▼</button>
+                            <button onClick={(e) => { e.stopPropagation(); deleteCard(ci); }} className="text-xs text-gray-400 hover:text-red-400 ml-1">✕</button>
                           </div>
                         </div>
 
                         {/* Card edit form */}
                         {editingCardIdx === ci && (
-                          <div className="ml-2 mt-1 p-3 rounded-lg bg-gray-800 border border-gray-700 space-y-3">
+                          <div className="ml-2 mt-1 p-3 rounded-lg bg-gray-100 border border-gray-300 space-y-3">
                             <div>
-                              <label className="block text-xs text-gray-500 mb-1">Title</label>
+                              <label className="block text-xs text-gray-400 mb-1">Title</label>
                               <input
                                 type="text"
                                 value={card.title}
                                 onChange={(e) => updateCard(ci, { title: e.target.value })}
-                                className="w-full px-3 py-1.5 rounded-lg bg-gray-900 border border-gray-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                                className="w-full px-3 py-1.5 rounded-lg bg-white border border-gray-300 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                               />
                             </div>
                             <div>
-                              <label className="block text-xs text-gray-500 mb-1">Body</label>
+                              <label className="block text-xs text-gray-400 mb-1">Body</label>
                               <textarea
                                 value={card.body}
                                 onChange={(e) => updateCard(ci, { body: e.target.value })}
                                 rows={2}
-                                className="w-full px-3 py-1.5 rounded-lg bg-gray-900 border border-gray-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2563EB] resize-none"
+                                className="w-full px-3 py-1.5 rounded-lg bg-white border border-gray-300 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                               />
                             </div>
                             <div>
@@ -322,13 +322,13 @@ export default function TabsEditor({ tenantId, config, onChange }: TabsEditorPro
                               />
                             </div>
                             {/* Action */}
-                            <div className="border-t border-gray-700 pt-3">
-                              <label className="block text-xs text-gray-500 mb-2">Button Action</label>
+                            <div className="border-t border-gray-300 pt-3">
+                              <label className="block text-xs text-gray-400 mb-2">Button Action</label>
                               <div className="flex gap-2 mb-2">
                                 <button
                                   onClick={() => updateCard(ci, { action: { type: "open_url", url: card.action?.url ?? "", label: card.action?.label ?? "Learn more", variant: "primary" } })}
                                   className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                                    card.action?.type === "open_url" ? "bg-[#2563EB] text-white" : "bg-gray-900 text-gray-400"
+                                    card.action?.type === "open_url" ? "bg-blue-600 text-white" : "bg-white text-gray-500"
                                   }`}
                                 >
                                   Open URL
@@ -336,7 +336,7 @@ export default function TabsEditor({ tenantId, config, onChange }: TabsEditorPro
                                 <button
                                   onClick={() => updateCard(ci, { action: { type: "none" } })}
                                   className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                                    !card.action || card.action.type === "none" ? "bg-[#2563EB] text-white" : "bg-gray-900 text-gray-400"
+                                    !card.action || card.action.type === "none" ? "bg-blue-600 text-white" : "bg-white text-gray-500"
                                   }`}
                                 >
                                   None
@@ -349,14 +349,14 @@ export default function TabsEditor({ tenantId, config, onChange }: TabsEditorPro
                                     value={card.action.label ?? ""}
                                     onChange={(e) => updateCard(ci, { action: { ...card.action!, label: e.target.value } })}
                                     placeholder="Button label"
-                                    className="w-full px-3 py-1.5 rounded-lg bg-gray-900 border border-gray-700 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                                    className="w-full px-3 py-1.5 rounded-lg bg-white border border-gray-300 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                   />
                                   <input
                                     type="text"
                                     value={card.action.url ?? ""}
                                     onChange={(e) => updateCard(ci, { action: { ...card.action!, url: e.target.value } })}
                                     placeholder="https://..."
-                                    className="w-full px-3 py-1.5 rounded-lg bg-gray-900 border border-gray-700 text-sm text-white font-mono focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                                    className="w-full px-3 py-1.5 rounded-lg bg-white border border-gray-300 text-sm text-gray-900 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
                                   />
                                   <div className="flex gap-2">
                                     {(["primary", "secondary"] as const).map((v) => (
@@ -364,7 +364,7 @@ export default function TabsEditor({ tenantId, config, onChange }: TabsEditorPro
                                         key={v}
                                         onClick={() => updateCard(ci, { action: { ...card.action!, variant: v } })}
                                         className={`flex-1 py-1 rounded text-xs font-medium ${
-                                          (card.action?.variant ?? "primary") === v ? "bg-[#2563EB] text-white" : "bg-gray-900 text-gray-400"
+                                          (card.action?.variant ?? "primary") === v ? "bg-blue-600 text-white" : "bg-white text-gray-500"
                                         }`}
                                       >
                                         {v}
@@ -383,7 +383,7 @@ export default function TabsEditor({ tenantId, config, onChange }: TabsEditorPro
               </div>
             </div>
           ) : (
-            <p className="text-sm text-gray-500">Add a tab to get started.</p>
+            <p className="text-sm text-gray-400">Add a tab to get started.</p>
           )}
         </div>
       </div>

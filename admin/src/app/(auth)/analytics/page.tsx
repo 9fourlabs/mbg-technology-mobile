@@ -10,20 +10,20 @@ import type { ExpoPlan } from "@/lib/costs";
 import PricingSimulator from "./pricing-simulator";
 
 const templateColors: Record<string, string> = {
-  informational: "bg-gray-900/50 text-gray-400",
-  authenticated: "bg-blue-900/50 text-blue-400",
-  booking: "bg-green-900/50 text-green-400",
-  commerce: "bg-yellow-900/50 text-yellow-400",
-  loyalty: "bg-purple-900/50 text-purple-400",
-  content: "bg-orange-900/50 text-orange-400",
-  forms: "bg-teal-900/50 text-teal-400",
-  directory: "bg-indigo-900/50 text-indigo-400",
+  informational: "bg-gray-50 text-gray-500",
+  authenticated: "bg-blue-50 text-blue-600",
+  booking: "bg-emerald-50 text-emerald-700",
+  commerce: "bg-amber-50 text-amber-700",
+  loyalty: "bg-purple-50 text-purple-700",
+  content: "bg-orange-50 text-orange-700",
+  forms: "bg-teal-50 text-teal-700",
+  directory: "bg-indigo-50 text-indigo-700",
 };
 
 const statusColors: Record<string, string> = {
-  draft: "bg-gray-700 text-gray-300",
-  preview: "bg-yellow-900/50 text-yellow-400",
-  production: "bg-green-900/50 text-green-400",
+  draft: "bg-gray-200 text-gray-600",
+  preview: "bg-amber-50 text-amber-700",
+  production: "bg-emerald-50 text-emerald-700",
 };
 
 export default async function AnalyticsPage() {
@@ -130,54 +130,54 @@ export default async function AnalyticsPage() {
       ? "bg-red-500"
       : budget.percent >= 70
         ? "bg-yellow-500"
-        : "bg-[#2563EB]";
+        : "bg-blue-600";
 
   return (
     <div>
       {/* A. Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-white">Analytics</h1>
-        <p className="text-sm text-gray-400 mt-1">
+        <h1 className="text-2xl font-semibold text-gray-900">Analytics</h1>
+        <p className="text-sm text-gray-500 mt-1">
           Platform metrics, cost tracking, and pricing analysis
         </p>
       </div>
 
       {/* B. Platform Overview */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="rounded-lg bg-gray-900 border border-gray-800 border-l-4 border-l-[#2563EB] px-4 py-3">
-          <p className="text-xs text-gray-400">Total Tenants</p>
-          <p className="text-2xl font-semibold text-white mt-1">
+        <div className="rounded-lg bg-white border border-gray-200 border-l-4 border-l-blue-600 px-4 py-3">
+          <p className="text-xs text-gray-500">Total Tenants</p>
+          <p className="text-2xl font-semibold text-gray-900 mt-1">
             {allTenants.length}
           </p>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-gray-400 mt-1">
             {tenantsByStatus.production} prod &middot; {tenantsByStatus.preview}{" "}
             preview &middot; {tenantsByStatus.draft} draft
           </p>
         </div>
-        <div className="rounded-lg bg-gray-900 border border-gray-800 border-l-4 border-l-green-500 px-4 py-3">
-          <p className="text-xs text-gray-400">Builds This Month</p>
-          <p className="text-2xl font-semibold text-white mt-1">
+        <div className="rounded-lg bg-white border border-gray-200 border-l-4 border-l-green-500 px-4 py-3">
+          <p className="text-xs text-gray-500">Builds This Month</p>
+          <p className="text-2xl font-semibold text-gray-900 mt-1">
             {buildsThisMonth.length}
           </p>
         </div>
-        <div className="rounded-lg bg-gray-900 border border-gray-800 border-l-4 border-l-yellow-500 px-4 py-3">
-          <p className="text-xs text-gray-400">Success Rate</p>
-          <p className="text-2xl font-semibold text-white mt-1">
+        <div className="rounded-lg bg-white border border-gray-200 border-l-4 border-l-yellow-500 px-4 py-3">
+          <p className="text-xs text-gray-500">Success Rate</p>
+          <p className="text-2xl font-semibold text-gray-900 mt-1">
             {buildSuccessRate}%
           </p>
         </div>
-        <div className="rounded-lg bg-gray-900 border border-gray-800 border-l-4 border-l-purple-500 px-4 py-3">
-          <p className="text-xs text-gray-400">Cost per Tenant</p>
-          <p className="text-2xl font-semibold text-white mt-1">
+        <div className="rounded-lg bg-white border border-gray-200 border-l-4 border-l-purple-500 px-4 py-3">
+          <p className="text-xs text-gray-500">Cost per Tenant</p>
+          <p className="text-2xl font-semibold text-gray-900 mt-1">
             {formatCurrencyPrecise(costBreakdown.perTenant)}
           </p>
-          <p className="text-xs text-gray-500 mt-1">/month</p>
+          <p className="text-xs text-gray-400 mt-1">/month</p>
         </div>
       </div>
 
       {/* C. Monthly Build Trend */}
-      <div className="rounded-xl bg-gray-900 border border-gray-800 p-6 mb-8">
-        <h2 className="text-base font-semibold text-white mb-4">
+      <div className="rounded-xl bg-white border border-gray-200 p-6 mb-8">
+        <h2 className="text-base font-semibold text-gray-900 mb-4">
           Build Trend (6 months)
         </h2>
         <div className="flex items-end gap-2 h-32">
@@ -187,14 +187,14 @@ export default async function AnalyticsPage() {
               className="flex-1 flex flex-col items-center gap-1"
             >
               <div
-                className="w-full bg-[#2563EB] rounded-t"
+                className="w-full bg-blue-600 rounded-t"
                 style={{
                   height: `${(m.count / maxCount) * 100}%`,
                   minHeight: m.count > 0 ? "4px" : "0",
                 }}
               />
-              <span className="text-xs text-gray-500">{m.label}</span>
-              <span className="text-xs text-gray-400">{m.count}</span>
+              <span className="text-xs text-gray-400">{m.label}</span>
+              <span className="text-xs text-gray-500">{m.count}</span>
             </div>
           ))}
         </div>
@@ -203,23 +203,23 @@ export default async function AnalyticsPage() {
       {/* D. Cost Dashboard */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         {/* Fixed Costs */}
-        <div className="rounded-xl bg-gray-900 border border-gray-800 p-6">
-          <h2 className="text-base font-semibold text-white mb-4">
+        <div className="rounded-xl bg-white border border-gray-200 p-6">
+          <h2 className="text-base font-semibold text-gray-900 mb-4">
             Fixed Costs
           </h2>
           <table className="w-full text-sm">
             <tbody>
               {costBreakdown.fixed.map((item) => (
                 <tr key={item.label}>
-                  <td className="py-1.5 text-gray-400">{item.label}</td>
-                  <td className="py-1.5 text-right text-gray-300">
+                  <td className="py-1.5 text-gray-500">{item.label}</td>
+                  <td className="py-1.5 text-right text-gray-600">
                     {formatCurrencyPrecise(item.amount)}
                   </td>
                 </tr>
               ))}
-              <tr className="border-t border-gray-800">
-                <td className="pt-2 text-gray-300 font-medium">Subtotal</td>
-                <td className="pt-2 text-right text-white font-medium">
+              <tr className="border-t border-gray-200">
+                <td className="pt-2 text-gray-600 font-medium">Subtotal</td>
+                <td className="pt-2 text-right text-gray-900 font-medium">
                   {formatCurrencyPrecise(
                     costBreakdown.fixed.reduce((s, i) => s + i.amount, 0)
                   )}
@@ -230,8 +230,8 @@ export default async function AnalyticsPage() {
         </div>
 
         {/* Variable Costs */}
-        <div className="rounded-xl bg-gray-900 border border-gray-800 p-6">
-          <h2 className="text-base font-semibold text-white mb-4">
+        <div className="rounded-xl bg-white border border-gray-200 p-6">
+          <h2 className="text-base font-semibold text-gray-900 mb-4">
             Variable Costs
           </h2>
           <table className="w-full text-sm">
@@ -239,22 +239,22 @@ export default async function AnalyticsPage() {
               {costBreakdown.variable.length > 0 ? (
                 costBreakdown.variable.map((item) => (
                   <tr key={item.label}>
-                    <td className="py-1.5 text-gray-400">{item.label}</td>
-                    <td className="py-1.5 text-right text-gray-300">
+                    <td className="py-1.5 text-gray-500">{item.label}</td>
+                    <td className="py-1.5 text-right text-gray-600">
                       {formatCurrencyPrecise(item.amount)}
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td className="py-1.5 text-gray-500" colSpan={2}>
+                  <td className="py-1.5 text-gray-400" colSpan={2}>
                     No variable costs yet
                   </td>
                 </tr>
               )}
-              <tr className="border-t border-gray-800">
-                <td className="pt-2 text-gray-300 font-medium">Subtotal</td>
-                <td className="pt-2 text-right text-white font-medium">
+              <tr className="border-t border-gray-200">
+                <td className="pt-2 text-gray-600 font-medium">Subtotal</td>
+                <td className="pt-2 text-right text-gray-900 font-medium">
                   {formatCurrencyPrecise(
                     costBreakdown.variable.reduce((s, i) => s + i.amount, 0)
                   )}
@@ -262,16 +262,16 @@ export default async function AnalyticsPage() {
               </tr>
             </tbody>
           </table>
-          <div className="mt-4 pt-4 border-t border-gray-800">
+          <div className="mt-4 pt-4 border-t border-gray-200">
             <div className="flex items-center justify-between">
-              <span className="text-gray-300 font-medium">
+              <span className="text-gray-600 font-medium">
                 Total Monthly Cost
               </span>
-              <span className="text-xl font-semibold text-white">
+              <span className="text-xl font-semibold text-gray-900">
                 {formatCurrency(costBreakdown.total)}
               </span>
             </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-400 mt-1">
               {formatCurrencyPrecise(costBreakdown.perTenant)} per tenant
             </p>
           </div>
@@ -279,17 +279,17 @@ export default async function AnalyticsPage() {
       </div>
 
       {/* E. Expo Build Budget */}
-      <div className="rounded-xl bg-gray-900 border border-gray-800 p-6 mb-8">
-        <h2 className="text-base font-semibold text-white mb-4">
+      <div className="rounded-xl bg-white border border-gray-200 p-6 mb-8">
+        <h2 className="text-base font-semibold text-gray-900 mb-4">
           Expo Build Budget
         </h2>
-        <div className="w-full bg-gray-800 rounded-full h-3">
+        <div className="w-full bg-gray-100 rounded-full h-3">
           <div
             className={`${budgetColor} rounded-full h-3`}
             style={{ width: `${budget.percent}%` }}
           />
         </div>
-        <p className="text-sm text-gray-400 mt-2">
+        <p className="text-sm text-gray-500 mt-2">
           {budget.used} / {budget.limit} builds used ({budget.percent}%)
         </p>
       </div>
@@ -305,9 +305,9 @@ export default async function AnalyticsPage() {
       </div>
 
       {/* G. Per-Tenant Metrics */}
-      <div className="rounded-xl bg-gray-900 border border-gray-800">
-        <div className="px-6 py-4 border-b border-gray-800">
-          <h2 className="text-base font-semibold text-white">
+      <div className="rounded-xl bg-white border border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-base font-semibold text-gray-900">
             Per-Tenant Metrics
           </h2>
         </div>
@@ -315,7 +315,7 @@ export default async function AnalyticsPage() {
           {perTenantData.length > 0 ? (
             <table className="w-full">
               <thead>
-                <tr className="text-left text-xs text-gray-500 border-b border-gray-800">
+                <tr className="text-left text-xs text-gray-400 border-b border-gray-200">
                   <th className="px-6 py-3 font-medium">Name</th>
                   <th className="px-6 py-3 font-medium">Template</th>
                   <th className="px-6 py-3 font-medium">Status</th>
@@ -324,17 +324,17 @@ export default async function AnalyticsPage() {
                   <th className="px-6 py-3 font-medium">Last Build</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800">
+              <tbody className="divide-y divide-gray-200">
                 {perTenantData.map((tenant) => (
                   <tr key={tenant.id} className="text-sm">
-                    <td className="px-6 py-3 text-white font-medium">
+                    <td className="px-6 py-3 text-gray-900 font-medium">
                       {tenant.business_name || tenant.id}
                     </td>
                     <td className="px-6 py-3">
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                           templateColors[tenant.template_type] ??
-                          "bg-gray-700 text-gray-300"
+                          "bg-gray-200 text-gray-600"
                         }`}
                       >
                         {tenant.template_type}
@@ -344,21 +344,21 @@ export default async function AnalyticsPage() {
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                           statusColors[tenant.status] ??
-                          "bg-gray-700 text-gray-300"
+                          "bg-gray-200 text-gray-600"
                         }`}
                       >
                         {tenant.status}
                       </span>
                     </td>
-                    <td className="px-6 py-3 text-gray-400">
+                    <td className="px-6 py-3 text-gray-500">
                       {tenant.buildsThisMonth}
                     </td>
-                    <td className="px-6 py-3 text-gray-400">
+                    <td className="px-6 py-3 text-gray-500">
                       {tenant.status !== "draft"
                         ? formatCurrencyPrecise(tenant.estCost)
                         : "-"}
                     </td>
-                    <td className="px-6 py-3 text-gray-500">
+                    <td className="px-6 py-3 text-gray-400">
                       {tenant.lastBuildDate
                         ? new Date(tenant.lastBuildDate).toLocaleDateString()
                         : "-"}
@@ -368,7 +368,7 @@ export default async function AnalyticsPage() {
               </tbody>
             </table>
           ) : (
-            <div className="px-6 py-8 text-center text-sm text-gray-500">
+            <div className="px-6 py-8 text-center text-sm text-gray-400">
               No tenants yet.
             </div>
           )}

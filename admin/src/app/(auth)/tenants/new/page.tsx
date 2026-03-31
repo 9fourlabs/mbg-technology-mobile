@@ -196,8 +196,8 @@ export default function NewTenantPage() {
     <div className="max-w-3xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-white">Create a New Client App</h1>
-        <p className="text-sm text-gray-400 mt-1">
+        <h1 className="text-2xl font-semibold text-gray-900">Create a New Client App</h1>
+        <p className="text-sm text-gray-500 mt-1">
           Set up a mobile app for your client in a few easy steps.
         </p>
       </div>
@@ -209,48 +209,48 @@ export default function NewTenantPage() {
             <div
               className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-medium transition-colors ${
                 i === step
-                  ? "bg-[#2563EB] text-white"
+                  ? "bg-blue-600 text-white"
                   : i < step
                     ? "bg-green-600 text-white"
-                    : "bg-gray-800 text-gray-500"
+                    : "bg-gray-100 text-gray-500"
               }`}
             >
               {i < step ? "\u2713" : i + 1}
             </div>
             <span
               className={`text-sm hidden sm:block ${
-                i === step ? "text-white font-medium" : "text-gray-500"
+                i === step ? "text-gray-900 font-medium" : "text-gray-500"
               }`}
             >
               {label}
             </span>
             {i < STEPS.length - 1 && (
-              <div className="w-8 h-px bg-gray-800 mx-1" />
+              <div className="w-8 h-px bg-gray-100 mx-1" />
             )}
           </div>
         ))}
       </div>
 
       {/* Step Content */}
-      <div className="rounded-xl bg-gray-900 border border-gray-800 p-6">
+      <div className="rounded-xl bg-white border border-gray-200 p-6">
         {/* Step 0: App Type */}
         {step === 0 && (
           <div>
-            <h2 className="text-lg font-semibold text-white mb-1">What kind of app?</h2>
-            <p className="text-sm text-gray-400 mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">What kind of app?</h2>
+            <p className="text-sm text-gray-500 mb-4">
               Choose whether to use a pre-built template or connect a custom codebase.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <button
                 onClick={() => updateForm({ app_type: "template" })}
                 className={`flex items-start gap-3 p-5 rounded-xl border-2 text-left transition-colors ${
-                  form.app_type === "template" ? "border-[#2563EB] bg-gray-800" : "border-gray-800 hover:border-gray-700"
+                  form.app_type === "template" ? "border-blue-600 bg-gray-100" : "border-gray-200 hover:border-gray-300"
                 }`}
               >
                 <span className="text-2xl mt-0.5">&#x1F4CB;</span>
                 <div>
-                  <span className="text-sm font-medium text-white block">Template App</span>
-                  <span className="text-xs text-gray-400 mt-1 block leading-relaxed">
+                  <span className="text-sm font-medium text-gray-900 block">Template App</span>
+                  <span className="text-xs text-gray-500 mt-1 block leading-relaxed">
                     Use a pre-built template with config-driven branding, tabs, and content. No coding needed.
                   </span>
                 </div>
@@ -258,13 +258,13 @@ export default function NewTenantPage() {
               <button
                 onClick={() => updateForm({ app_type: "custom" })}
                 className={`flex items-start gap-3 p-5 rounded-xl border-2 text-left transition-colors ${
-                  form.app_type === "custom" ? "border-[#2563EB] bg-gray-800" : "border-gray-800 hover:border-gray-700"
+                  form.app_type === "custom" ? "border-blue-600 bg-gray-100" : "border-gray-200 hover:border-gray-300"
                 }`}
               >
                 <span className="text-2xl mt-0.5">&#x1F4BB;</span>
                 <div>
-                  <span className="text-sm font-medium text-white block">Custom App</span>
-                  <span className="text-xs text-gray-400 mt-1 block leading-relaxed">
+                  <span className="text-sm font-medium text-gray-900 block">Custom App</span>
+                  <span className="text-xs text-gray-500 mt-1 block leading-relaxed">
                     Connect an existing Expo/React Native repo. Build and deploy it through this admin panel.
                   </span>
                 </div>
@@ -276,10 +276,10 @@ export default function NewTenantPage() {
         {/* Template Step 1: Template selection */}
         {!isCustom && step === 1 && (
           <div>
-            <h2 className="text-lg font-semibold text-white mb-1">
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">
               Choose a template
             </h2>
-            <p className="text-sm text-gray-400 mb-4">
+            <p className="text-sm text-gray-500 mb-4">
               Each template is a different type of app. Pick the one that best matches what your client needs.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -289,16 +289,16 @@ export default function NewTenantPage() {
                   onClick={() => updateForm({ template_type: template.id })}
                   className={`flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-colors ${
                     form.template_type === template.id
-                      ? `${template.color} bg-gray-800`
-                      : "border-gray-800 hover:border-gray-700"
+                      ? `${template.color} bg-gray-100`
+                      : "border-gray-200 hover:border-gray-300"
                   }`}
                 >
                   <span className="text-2xl mt-0.5">{template.emoji}</span>
                   <div>
-                    <span className="text-sm font-medium text-white block">
+                    <span className="text-sm font-medium text-gray-900 block">
                       {template.label}
                     </span>
-                    <span className="text-xs text-gray-400 mt-1 block leading-relaxed">
+                    <span className="text-xs text-gray-500 mt-1 block leading-relaxed">
                       {template.description}
                     </span>
                   </div>
@@ -311,14 +311,14 @@ export default function NewTenantPage() {
         {/* Custom Step 1 / Template Step 2: Identity */}
         {((isCustom && step === 1) || (!isCustom && step === 2)) && (
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-white mb-1">
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">
               Client details
             </h2>
-            <p className="text-sm text-gray-400 mb-4">
+            <p className="text-sm text-gray-500 mb-4">
               Tell us about your client. This information is used to set up their app.
             </p>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1.5">
+              <label className="block text-sm font-medium text-gray-600 mb-1.5">
                 App ID
               </label>
               <input
@@ -330,19 +330,19 @@ export default function NewTenantPage() {
                   })
                 }
                 placeholder="acme-dental"
-                className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent"
+                className="w-full rounded-lg bg-gray-100 border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               <p className="text-xs text-gray-500 mt-1">
                 This is the internal identifier for this app. Use something like &quot;acme-dental&quot; or &quot;toms-burgers&quot;. Lowercase, hyphens only. Min 3 characters.
               </p>
               {form.tenant_id.length > 0 && !validateTenantId(form.tenant_id) && (
-                <p className="text-xs text-red-400 mt-1">
+                <p className="text-xs text-red-600 mt-1">
                   Invalid tenant ID format.
                 </p>
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1.5">
+              <label className="block text-sm font-medium text-gray-600 mb-1.5">
                 Business Name
               </label>
               <input
@@ -350,7 +350,7 @@ export default function NewTenantPage() {
                 value={form.business_name}
                 onChange={(e) => updateForm({ business_name: e.target.value })}
                 placeholder="My Business"
-                className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent"
+                className="w-full rounded-lg bg-gray-100 border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -359,38 +359,38 @@ export default function NewTenantPage() {
         {/* Custom Step 2: Repository */}
         {isCustom && step === 2 && (
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-white mb-1">Repository</h2>
-            <p className="text-sm text-gray-400 mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">Repository</h2>
+            <p className="text-sm text-gray-500 mb-4">
               Point to the GitHub repo containing your Expo/React Native app.
             </p>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1.5">GitHub Repo URL</label>
+              <label className="block text-sm font-medium text-gray-600 mb-1.5">GitHub Repo URL</label>
               <input
                 type="url"
                 value={form.repo_url}
                 onChange={(e) => updateForm({ repo_url: e.target.value })}
                 placeholder="https://github.com/org/repo"
-                className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2.5 text-sm text-white placeholder-gray-500 font-mono focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent"
+                className="w-full rounded-lg bg-gray-100 border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-500 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               <p className="text-xs text-gray-500 mt-1">
                 Must be a public repo or one accessible with your GitHub token.
               </p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1.5">Branch</label>
+              <label className="block text-sm font-medium text-gray-600 mb-1.5">Branch</label>
               <input
                 type="text"
                 value={form.repo_branch}
                 onChange={(e) => updateForm({ repo_branch: e.target.value })}
                 placeholder="main"
-                className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2.5 text-sm text-white placeholder-gray-500 font-mono focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent"
+                className="w-full rounded-lg bg-gray-100 border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-500 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
-            <div className="rounded-lg bg-gray-800/50 border border-gray-700 p-4">
-              <h3 className="text-sm font-medium text-white mb-2">Requirements</h3>
-              <ul className="space-y-1.5 text-xs text-gray-400">
-                <li>&#x2022; Repo must have <code className="text-gray-300">eas.json</code> and <code className="text-gray-300">app.config.ts</code> (or app.json)</li>
-                <li>&#x2022; Dependencies installable via <code className="text-gray-300">npm ci</code></li>
+            <div className="rounded-lg bg-gray-100/50 border border-gray-300 p-4">
+              <h3 className="text-sm font-medium text-gray-900 mb-2">Requirements</h3>
+              <ul className="space-y-1.5 text-xs text-gray-500">
+                <li>&#x2022; Repo must have <code className="text-gray-600">eas.json</code> and <code className="text-gray-600">app.config.ts</code> (or app.json)</li>
+                <li>&#x2022; Dependencies installable via <code className="text-gray-600">npm ci</code></li>
                 <li>&#x2022; EAS project must be under the MBG Expo org (or use a shared EXPO_TOKEN)</li>
               </ul>
             </div>
@@ -400,32 +400,32 @@ export default function NewTenantPage() {
         {/* Custom Step 3: Review */}
         {isCustom && step === 3 && (
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-white mb-4">Review & Create</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Review & Create</h2>
             <div className="space-y-3">
-              <div className="flex justify-between py-2 border-b border-gray-800">
-                <span className="text-sm text-gray-400">App Type</span>
-                <span className="text-sm text-white">Custom App</span>
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-sm text-gray-500">App Type</span>
+                <span className="text-sm text-gray-900">Custom App</span>
               </div>
-              <div className="flex justify-between py-2 border-b border-gray-800">
-                <span className="text-sm text-gray-400">Tenant ID</span>
-                <span className="text-sm text-white font-mono">{form.tenant_id}</span>
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-sm text-gray-500">Tenant ID</span>
+                <span className="text-sm text-gray-900 font-mono">{form.tenant_id}</span>
               </div>
-              <div className="flex justify-between py-2 border-b border-gray-800">
-                <span className="text-sm text-gray-400">Business Name</span>
-                <span className="text-sm text-white">{form.business_name}</span>
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-sm text-gray-500">Business Name</span>
+                <span className="text-sm text-gray-900">{form.business_name}</span>
               </div>
-              <div className="flex justify-between py-2 border-b border-gray-800">
-                <span className="text-sm text-gray-400">Repository</span>
-                <span className="text-sm text-[#2563EB] font-mono truncate max-w-xs">{form.repo_url}</span>
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-sm text-gray-500">Repository</span>
+                <span className="text-sm text-blue-600 font-mono truncate max-w-xs">{form.repo_url}</span>
               </div>
-              <div className="flex justify-between py-2 border-b border-gray-800">
-                <span className="text-sm text-gray-400">Branch</span>
-                <span className="text-sm text-white font-mono">{form.repo_branch}</span>
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-sm text-gray-500">Branch</span>
+                <span className="text-sm text-gray-900 font-mono">{form.repo_branch}</span>
               </div>
             </div>
 
             {error && (
-              <div className="rounded-lg bg-red-900/30 border border-red-800 px-3 py-2 text-sm text-red-400">
+              <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-600">
                 {error}
               </div>
             )}
@@ -435,15 +435,15 @@ export default function NewTenantPage() {
         {/* Template Step 3: Brand */}
         {!isCustom && step === 3 && (
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-white mb-1">
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">
               Brand basics
             </h2>
-            <p className="text-sm text-gray-400 mb-4">
+            <p className="text-sm text-gray-500 mb-4">
               These colors define how your client&apos;s app looks. The primary color is used for buttons and highlights. Background and text colors set the overall theme.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1.5">
+                <label className="block text-sm font-medium text-gray-600 mb-1.5">
                   Primary Color
                 </label>
                 <div className="flex items-center gap-2">
@@ -453,7 +453,7 @@ export default function NewTenantPage() {
                     onChange={(e) =>
                       updateForm({ primary_color: e.target.value })
                     }
-                    className="w-10 h-10 rounded-lg border border-gray-700 cursor-pointer bg-transparent"
+                    className="w-10 h-10 rounded-lg border border-gray-300 cursor-pointer bg-transparent"
                   />
                   <input
                     type="text"
@@ -461,12 +461,12 @@ export default function NewTenantPage() {
                     onChange={(e) =>
                       updateForm({ primary_color: e.target.value })
                     }
-                    className="flex-1 rounded-lg bg-gray-800 border border-gray-700 px-3 py-2.5 text-sm text-white font-mono focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                    className="flex-1 rounded-lg bg-gray-100 border border-gray-300 px-3 py-2.5 text-sm text-gray-900 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1.5">
+                <label className="block text-sm font-medium text-gray-600 mb-1.5">
                   Background Color
                 </label>
                 <div className="flex items-center gap-2">
@@ -476,7 +476,7 @@ export default function NewTenantPage() {
                     onChange={(e) =>
                       updateForm({ background_color: e.target.value })
                     }
-                    className="w-10 h-10 rounded-lg border border-gray-700 cursor-pointer bg-transparent"
+                    className="w-10 h-10 rounded-lg border border-gray-300 cursor-pointer bg-transparent"
                   />
                   <input
                     type="text"
@@ -484,12 +484,12 @@ export default function NewTenantPage() {
                     onChange={(e) =>
                       updateForm({ background_color: e.target.value })
                     }
-                    className="flex-1 rounded-lg bg-gray-800 border border-gray-700 px-3 py-2.5 text-sm text-white font-mono focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                    className="flex-1 rounded-lg bg-gray-100 border border-gray-300 px-3 py-2.5 text-sm text-gray-900 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1.5">
+                <label className="block text-sm font-medium text-gray-600 mb-1.5">
                   Text Color
                 </label>
                 <div className="flex items-center gap-2">
@@ -499,7 +499,7 @@ export default function NewTenantPage() {
                     onChange={(e) =>
                       updateForm({ text_color: e.target.value })
                     }
-                    className="w-10 h-10 rounded-lg border border-gray-700 cursor-pointer bg-transparent"
+                    className="w-10 h-10 rounded-lg border border-gray-300 cursor-pointer bg-transparent"
                   />
                   <input
                     type="text"
@@ -507,7 +507,7 @@ export default function NewTenantPage() {
                     onChange={(e) =>
                       updateForm({ text_color: e.target.value })
                     }
-                    className="flex-1 rounded-lg bg-gray-800 border border-gray-700 px-3 py-2.5 text-sm text-white font-mono focus:outline-none focus:ring-2 focus:ring-[#2563EB]"
+                    className="flex-1 rounded-lg bg-gray-100 border border-gray-300 px-3 py-2.5 text-sm text-gray-900 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -527,7 +527,7 @@ export default function NewTenantPage() {
               </p>
             )}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1.5">
+              <label className="block text-sm font-medium text-gray-600 mb-1.5">
                 Or enter URL directly
               </label>
               <input
@@ -535,11 +535,11 @@ export default function NewTenantPage() {
                 value={form.logo_url}
                 onChange={(e) => updateForm({ logo_url: e.target.value })}
                 placeholder="https://example.com/logo.png"
-                className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent"
+                className="w-full rounded-lg bg-gray-100 border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
             {/* Preview */}
-            <div className="mt-4 p-4 rounded-lg border border-gray-700">
+            <div className="mt-4 p-4 rounded-lg border border-gray-300">
               <p className="text-xs text-gray-500 mb-2">Preview</p>
               <div
                 className="rounded-lg p-4 flex items-center gap-3"
@@ -571,13 +571,13 @@ export default function NewTenantPage() {
         {/* Template Step 4: Design */}
         {!isCustom && step === 4 && (
           <div className="space-y-6">
-            <h2 className="text-lg font-semibold text-white mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
               Design customization
             </h2>
 
             {/* Preset Picker */}
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-3">Preset</label>
+              <label className="block text-sm font-medium text-gray-500 mb-3">Preset</label>
               <div className="grid grid-cols-5 gap-3">
                 {DESIGN_PRESETS.map((p) => (
                   <button
@@ -585,12 +585,12 @@ export default function NewTenantPage() {
                     onClick={() => applyPreset(p.id)}
                     className={`relative flex flex-col items-center p-4 rounded-xl border-2 transition-colors ${
                       form.design.preset === p.id
-                        ? "border-[#2563EB] bg-gray-800"
-                        : "border-gray-800 hover:border-gray-700"
+                        ? "border-blue-600 bg-gray-100"
+                        : "border-gray-200 hover:border-gray-300"
                     }`}
                   >
                     <div className="w-full h-1 rounded-full mb-3" style={{ backgroundColor: p.accent }} />
-                    <span className="text-sm font-medium text-white">{p.label}</span>
+                    <span className="text-sm font-medium text-gray-900">{p.label}</span>
                     <span className="text-xs text-gray-500 mt-1">{p.desc}</span>
                   </button>
                 ))}
@@ -599,7 +599,7 @@ export default function NewTenantPage() {
 
             {/* Card Style */}
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-3">Card Style</label>
+              <label className="block text-sm font-medium text-gray-500 mb-3">Card Style</label>
               <div className="grid grid-cols-3 gap-3">
                 {([
                   { id: "rounded", label: "Rounded", preview: "rounded-xl" },
@@ -611,12 +611,12 @@ export default function NewTenantPage() {
                     onClick={() => updateDesign("cardStyle", s.id)}
                     className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-colors ${
                       form.design.cardStyle === s.id
-                        ? "border-[#2563EB] bg-gray-800"
-                        : "border-gray-800 hover:border-gray-700"
+                        ? "border-blue-600 bg-gray-100"
+                        : "border-gray-200 hover:border-gray-300"
                     }`}
                   >
-                    <div className={`w-16 h-10 ${s.preview} ${s.id === "flat" ? "bg-gray-700" : "bg-gray-700 border border-gray-600"}`} />
-                    <span className="text-sm text-white">{s.label}</span>
+                    <div className={`w-16 h-10 ${s.preview} ${s.id === "flat" ? "bg-gray-300" : "bg-gray-300 border border-gray-300"}`} />
+                    <span className="text-sm text-gray-900">{s.label}</span>
                   </button>
                 ))}
               </div>
@@ -624,7 +624,7 @@ export default function NewTenantPage() {
 
             {/* Button Shape */}
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-3">Button Shape</label>
+              <label className="block text-sm font-medium text-gray-500 mb-3">Button Shape</label>
               <div className="flex items-center gap-4">
                 <span className="text-xs text-gray-500">Square</span>
                 <input
@@ -636,13 +636,13 @@ export default function NewTenantPage() {
                     const v = Number(e.target.value);
                     updateDesign("buttonRadius", v === 24 ? 999 : v);
                   }}
-                  className="flex-1 accent-[#2563EB]"
+                  className="flex-1 accent-blue-600"
                 />
                 <span className="text-xs text-gray-500">Pill</span>
               </div>
               <div className="mt-3 flex justify-center">
                 <div
-                  className="px-6 py-2 bg-[#2563EB] text-white text-sm font-medium"
+                  className="px-6 py-2 bg-blue-600 text-white text-sm font-medium"
                   style={{ borderRadius: Math.min(form.design.buttonRadius, 24) }}
                 >
                   Preview Button
@@ -652,7 +652,7 @@ export default function NewTenantPage() {
 
             {/* Card Layout */}
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-3">Card Layout</label>
+              <label className="block text-sm font-medium text-gray-500 mb-3">Card Layout</label>
               <div className="grid grid-cols-2 gap-3">
                 {([
                   { cols: 1, label: "List (1 column)", icon: (
@@ -676,8 +676,8 @@ export default function NewTenantPage() {
                     onClick={() => updateDesign("cardColumns", opt.cols)}
                     className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-colors ${
                       form.design.cardColumns === opt.cols
-                        ? "bg-[#2563EB] border-[#2563EB] text-white"
-                        : "border-gray-800 hover:border-gray-700 text-gray-300"
+                        ? "bg-blue-600 border-blue-600 text-white"
+                        : "border-gray-200 hover:border-gray-300 text-gray-600"
                     }`}
                   >
                     {opt.icon}
@@ -692,80 +692,80 @@ export default function NewTenantPage() {
         {/* Template Step 5: Review */}
         {!isCustom && step === 5 && (
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold text-white mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
               Review & Create
             </h2>
             <div className="space-y-3">
-              <div className="flex justify-between py-2 border-b border-gray-800">
-                <span className="text-sm text-gray-400">Template</span>
-                <span className="text-sm text-white capitalize">
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-sm text-gray-500">Template</span>
+                <span className="text-sm text-gray-900 capitalize">
                   {form.template_type}
                 </span>
               </div>
-              <div className="flex justify-between py-2 border-b border-gray-800">
-                <span className="text-sm text-gray-400">Tenant ID</span>
-                <span className="text-sm text-white font-mono">
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-sm text-gray-500">Tenant ID</span>
+                <span className="text-sm text-gray-900 font-mono">
                   {form.tenant_id}
                 </span>
               </div>
-              <div className="flex justify-between py-2 border-b border-gray-800">
-                <span className="text-sm text-gray-400">Business Name</span>
-                <span className="text-sm text-white">{form.business_name}</span>
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-sm text-gray-500">Business Name</span>
+                <span className="text-sm text-gray-900">{form.business_name}</span>
               </div>
-              <div className="flex justify-between py-2 border-b border-gray-800">
-                <span className="text-sm text-gray-400">Brand Colors</span>
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-sm text-gray-500">Brand Colors</span>
                 <div className="flex gap-2">
                   <div
-                    className="w-6 h-6 rounded border border-gray-700"
+                    className="w-6 h-6 rounded border border-gray-300"
                     style={{ backgroundColor: form.primary_color }}
                     title={`Primary: ${form.primary_color}`}
                   />
                   <div
-                    className="w-6 h-6 rounded border border-gray-700"
+                    className="w-6 h-6 rounded border border-gray-300"
                     style={{ backgroundColor: form.background_color }}
                     title={`Background: ${form.background_color}`}
                   />
                   <div
-                    className="w-6 h-6 rounded border border-gray-700"
+                    className="w-6 h-6 rounded border border-gray-300"
                     style={{ backgroundColor: form.text_color }}
                     title={`Text: ${form.text_color}`}
                   />
                 </div>
               </div>
               {form.logo_url && (
-                <div className="flex justify-between py-2 border-b border-gray-800">
-                  <span className="text-sm text-gray-400">Logo</span>
-                  <span className="text-sm text-white truncate max-w-xs">
+                <div className="flex justify-between py-2 border-b border-gray-200">
+                  <span className="text-sm text-gray-500">Logo</span>
+                  <span className="text-sm text-gray-900 truncate max-w-xs">
                     {form.logo_url}
                   </span>
                 </div>
               )}
-              <div className="flex justify-between py-2 border-b border-gray-800">
-                <span className="text-sm text-gray-400">Design Preset</span>
-                <span className="text-sm text-white capitalize">
+              <div className="flex justify-between py-2 border-b border-gray-200">
+                <span className="text-sm text-gray-500">Design Preset</span>
+                <span className="text-sm text-gray-900 capitalize">
                   {form.design.preset}
                 </span>
               </div>
             </div>
 
             {error && (
-              <div className="rounded-lg bg-red-900/30 border border-red-800 px-3 py-2 text-sm text-red-400">
+              <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-600">
                 {error}
               </div>
             )}
 
             {successPrUrl && (
-              <div className="rounded-lg bg-green-900/30 border border-green-800 px-3 py-2 text-sm text-green-400">
+              <div className="rounded-lg bg-emerald-50 border border-green-200 px-3 py-2 text-sm text-emerald-700">
                 Tenant created! PR opened:{" "}
                 <a
                   href={successPrUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="underline font-medium text-green-300 hover:text-green-200"
+                  className="underline font-medium text-emerald-600 hover:text-emerald-500"
                 >
                   {successPrUrl}
                 </a>
-                <span className="block text-xs text-green-500 mt-1">
+                <span className="block text-xs text-emerald-600 mt-1">
                   Redirecting...
                 </span>
               </div>
@@ -779,7 +779,7 @@ export default function NewTenantPage() {
         <button
           onClick={() => setStep((s) => Math.max(0, s - 1))}
           disabled={step === 0}
-          className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
         >
           Back
         </button>
@@ -787,7 +787,7 @@ export default function NewTenantPage() {
           <button
             onClick={() => setStep((s) => s + 1)}
             disabled={!canProceed()}
-            className="px-6 py-2.5 rounded-lg bg-[#2563EB] hover:bg-[#1d4ed8] text-sm font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-sm font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Continue
           </button>
@@ -795,7 +795,7 @@ export default function NewTenantPage() {
           <button
             onClick={handleCreate}
             disabled={creating}
-            className="px-6 py-2.5 rounded-lg bg-[#2563EB] hover:bg-[#1d4ed8] text-sm font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-sm font-medium text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {creating ? "Creating tenant & opening PR..." : "Create Tenant"}
           </button>

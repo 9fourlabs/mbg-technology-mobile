@@ -51,15 +51,15 @@ export default function VersionBump({
 
   return (
     <div className="flex items-center gap-3">
-      <span className="text-sm text-gray-400">Version</span>
-      <span className="text-sm text-white font-mono font-semibold">
+      <span className="text-sm text-gray-500">Version</span>
+      <span className="text-sm text-gray-900 font-mono font-semibold">
         {currentVersion}
       </span>
       <div className="flex items-center gap-1.5">
         <button
           onClick={() => handleBump("patch")}
           disabled={loading}
-          className="px-2 py-0.5 text-xs rounded bg-gray-800 border border-gray-700 text-gray-300 hover:text-white hover:border-gray-600 transition-colors disabled:opacity-50"
+          className="px-2 py-0.5 text-xs rounded bg-gray-100 border border-gray-300 text-gray-600 hover:text-gray-900 hover:border-gray-400 transition-colors disabled:opacity-50"
           title={`Bump to ${bumpVersion(currentVersion, "patch")}`}
         >
           Patch
@@ -67,7 +67,7 @@ export default function VersionBump({
         <button
           onClick={() => handleBump("minor")}
           disabled={loading}
-          className="px-2 py-0.5 text-xs rounded bg-gray-800 border border-gray-700 text-gray-300 hover:text-white hover:border-gray-600 transition-colors disabled:opacity-50"
+          className="px-2 py-0.5 text-xs rounded bg-gray-100 border border-gray-300 text-gray-600 hover:text-gray-900 hover:border-gray-400 transition-colors disabled:opacity-50"
           title={`Bump to ${bumpVersion(currentVersion, "minor")}`}
         >
           Minor
@@ -75,7 +75,7 @@ export default function VersionBump({
         <button
           onClick={() => handleBump("major")}
           disabled={loading}
-          className="px-2 py-0.5 text-xs rounded bg-gray-800 border border-gray-700 text-gray-300 hover:text-white hover:border-gray-600 transition-colors disabled:opacity-50"
+          className="px-2 py-0.5 text-xs rounded bg-gray-100 border border-gray-300 text-gray-600 hover:text-gray-900 hover:border-gray-400 transition-colors disabled:opacity-50"
           title={`Bump to ${bumpVersion(currentVersion, "major")}`}
         >
           Major

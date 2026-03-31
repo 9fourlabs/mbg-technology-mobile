@@ -65,8 +65,8 @@ export default function DeployPreviewButton({ tenantId }: { tenantId: string }) 
         <div
           className={`mt-2 rounded-lg px-3 py-2 text-xs ${
             banner.type === "success"
-              ? "bg-green-900/20 border border-green-800/50 text-green-400"
-              : "bg-red-900/20 border border-red-800/50 text-red-400"
+              ? "bg-emerald-50 border border-green-200 text-emerald-700"
+              : "bg-red-50 border border-red-200 text-red-600"
           }`}
         >
           {banner.message}

@@ -49,13 +49,13 @@ export default function TenantFilters({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search tenants..."
-          className="w-full rounded-lg bg-gray-900 border border-gray-800 px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent"
+          className="w-full rounded-lg bg-white border border-gray-200 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
       </form>
       <select
         value={currentTemplate ?? ""}
         onChange={(e) => updateParams("template", e.target.value)}
-        className="rounded-lg bg-gray-900 border border-gray-800 px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent"
+        className="rounded-lg bg-white border border-gray-200 px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
       >
         <option value="">All Templates</option>
         {TEMPLATE_TYPES.map((t) => (

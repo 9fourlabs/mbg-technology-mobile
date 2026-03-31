@@ -35,7 +35,7 @@ export default function RetryBuildButton({
     <button
       onClick={handleRetry}
       disabled={loading}
-      className="text-xs font-medium text-yellow-400 hover:text-yellow-300 transition-colors disabled:opacity-50"
+      className="text-xs font-medium text-amber-700 hover:text-amber-600 transition-colors disabled:opacity-50"
     >
       {loading ? "Retrying..." : "Retry"}
     </button>

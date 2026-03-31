@@ -20,7 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} h-full`}>
-      <body className="h-full bg-gray-950 text-white font-sans antialiased">
+      <body className="h-full bg-gray-50 text-gray-900 font-sans antialiased">
         <LayoutShell>{children}</LayoutShell>
       </body>
     </html>

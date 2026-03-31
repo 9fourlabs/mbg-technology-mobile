@@ -7,25 +7,25 @@
 }
 
 body {
-  background: #030712; /* gray-950 */
-  color: #ffffff;
+  background: #f9fafb; /* gray-50 */
+  color: #111827; /* gray-900 */
 }
 
-/* Custom scrollbar for dark theme */
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #111827;
+  background: #f3f4f6;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #374151;
+  background: #d1d5db;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #4b5563;
+  background: #9ca3af;
 }

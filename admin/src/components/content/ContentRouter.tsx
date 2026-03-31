@@ -9,12 +9,12 @@ import LoyaltyManager from "@/components/content/LoyaltyManager";
 
 function NoContentMessage({ templateType }: { templateType: string }) {
   return (
-    <div className="rounded-xl bg-gray-900 border border-gray-800 p-12 text-center">
-      <h2 className="text-lg font-semibold text-white mb-2">
+    <div className="rounded-xl bg-white border border-gray-200 p-12 text-center">
+      <h2 className="text-lg font-semibold text-gray-900 mb-2">
         No content tables for{" "}
         <span className="capitalize">{templateType}</span> templates
       </h2>
-      <p className="text-sm text-gray-400 max-w-md mx-auto">
+      <p className="text-sm text-gray-500 max-w-md mx-auto">
         This template type does not have content that can be managed from the
         admin panel.
       </p>

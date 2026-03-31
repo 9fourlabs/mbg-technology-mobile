@@ -47,7 +47,7 @@ function StatusDot({
           className={`relative inline-flex h-2.5 w-2.5 rounded-full ${config.color}`}
         />
       </span>
-      <span className="text-xs font-medium text-gray-300">{config.label}</span>
+      <span className="text-xs font-medium text-gray-500">{config.label}</span>
     </span>
   );
 }
@@ -127,20 +127,20 @@ export default function BuildStatusPoller({
                 href={downloadUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-xs font-medium text-[#2563EB] hover:text-blue-400 transition-colors"
+                className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-600 transition-colors"
               >
                 APK
               </a>
               <button
                 onClick={() => setShowQR(showQR === "android" ? null : "android")}
-                className="text-xs text-gray-400 hover:text-white transition-colors"
+                className="text-xs text-gray-500 hover:text-gray-900 transition-colors"
                 title="Show Android QR code"
               >
                 QR
               </button>
               {showQR === "android" && (
-                <div className="absolute z-40 mt-2 p-3 bg-white rounded-lg shadow-xl">
-                  <p className="text-xs text-gray-600 text-center mb-1 font-medium">Android</p>
+                <div className="absolute z-40 mt-2 p-3 bg-white rounded-lg shadow-md">
+                  <p className="text-xs text-gray-500 text-center mb-1 font-medium">Android</p>
                   <QRCode url={downloadUrl} size={150} />
                 </div>
               )}
@@ -148,25 +148,25 @@ export default function BuildStatusPoller({
           )}
           {downloadUrlIos && (
             <>
-              {downloadUrl && <span className="text-gray-600">|</span>}
+              {downloadUrl && <span className="text-gray-500">|</span>}
               <a
                 href={downloadUrlIos}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-xs font-medium text-[#2563EB] hover:text-blue-400 transition-colors"
+                className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-600 transition-colors"
               >
                 iOS
               </a>
               <button
                 onClick={() => setShowQR(showQR === "ios" ? null : "ios")}
-                className="text-xs text-gray-400 hover:text-white transition-colors"
+                className="text-xs text-gray-500 hover:text-gray-900 transition-colors"
                 title="Show iOS QR code"
               >
                 QR
               </button>
               {showQR === "ios" && (
-                <div className="absolute z-40 mt-2 p-3 bg-white rounded-lg shadow-xl">
-                  <p className="text-xs text-gray-600 text-center mb-1 font-medium">iOS</p>
+                <div className="absolute z-40 mt-2 p-3 bg-white rounded-lg shadow-md">
+                  <p className="text-xs text-gray-500 text-center mb-1 font-medium">iOS</p>
                   <QRCode url={downloadUrlIos} size={150} />
                 </div>
               )}
@@ -182,7 +182,7 @@ export default function BuildStatusPoller({
           href={expoInstallUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors"
+          className="text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors"
         >
           View on Expo
         </a>
@@ -201,7 +201,7 @@ export default function BuildStatusPoller({
       <StatusDot status={status} />
       {status === "failed" && errorMessage && (
         <span
-          className="text-xs text-red-400 truncate max-w-[180px]"
+          className="text-xs text-red-600 truncate max-w-[180px]"
           title={errorMessage}
         >
           {errorMessage}
@@ -214,7 +214,7 @@ export default function BuildStatusPoller({
               href={downloadUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs font-medium text-[#2563EB] hover:text-blue-400 transition-colors"
+              className="text-xs font-medium text-blue-600 hover:text-blue-600 transition-colors"
             >
               Android
             </a>
@@ -224,7 +224,7 @@ export default function BuildStatusPoller({
               href={downloadUrlIos}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs font-medium text-[#2563EB] hover:text-blue-400 transition-colors"
+              className="text-xs font-medium text-blue-600 hover:text-blue-600 transition-colors"
             >
               iOS
             </a>

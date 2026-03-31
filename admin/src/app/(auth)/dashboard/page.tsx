@@ -8,18 +8,18 @@ function StatusBadge({
   status: string;
 }) {
   const colors: Record<string, string> = {
-    draft: "bg-gray-700 text-gray-300",
-    preview: "bg-yellow-900/50 text-yellow-400",
-    production: "bg-green-900/50 text-green-400",
-    pending: "bg-blue-900/50 text-blue-400",
-    building: "bg-yellow-900/50 text-yellow-400",
-    completed: "bg-green-900/50 text-green-400",
-    failed: "bg-red-900/50 text-red-400",
+    draft: "bg-gray-200 text-gray-600",
+    preview: "bg-amber-50 text-amber-700",
+    production: "bg-emerald-50 text-emerald-700",
+    pending: "bg-blue-50 text-blue-600",
+    building: "bg-amber-50 text-amber-700",
+    completed: "bg-emerald-50 text-emerald-700",
+    failed: "bg-red-50 text-red-600",
   };
 
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${colors[status] ?? "bg-gray-700 text-gray-300"}`}
+      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${colors[status] ?? "bg-gray-200 text-gray-600"}`}
     >
       {status}
     </span>
@@ -65,14 +65,14 @@ export default async function BuildJobsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-white">Build Jobs</h1>
-          <p className="text-sm text-gray-400 mt-1">
+          <h1 className="text-2xl font-semibold text-gray-900">Build Jobs</h1>
+          <p className="text-sm text-gray-500 mt-1">
             Track build progress and download artifacts
           </p>
         </div>
         <Link
           href="/dashboard"
-          className="inline-flex items-center px-4 py-2.5 rounded-lg border border-gray-700 hover:border-gray-600 text-sm font-medium text-gray-300 hover:text-white transition-colors"
+          className="inline-flex items-center px-4 py-2.5 rounded-lg border border-gray-300 hover:border-gray-600 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
         >
           Refresh
         </Link>
@@ -80,30 +80,30 @@ export default async function BuildJobsPage() {
 
       {/* Build summary chips */}
       <div className="flex items-center gap-4 mb-6">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-900 border border-gray-800 text-xs">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-xs">
           <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
-          <span className="text-gray-300">{buildingCount} in progress</span>
+          <span className="text-gray-600">{buildingCount} in progress</span>
         </div>
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-900 border border-gray-800 text-xs">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-xs">
           <span className="w-2 h-2 rounded-full bg-green-400" />
-          <span className="text-gray-300">{completedCount} completed</span>
+          <span className="text-gray-600">{completedCount} completed</span>
         </div>
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-900 border border-gray-800 text-xs">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-xs">
           <span className="w-2 h-2 rounded-full bg-red-400" />
-          <span className="text-gray-300">{failedCount} failed</span>
+          <span className="text-gray-600">{failedCount} failed</span>
         </div>
       </div>
 
       {/* Builds Table */}
-      <div className="rounded-xl bg-gray-900 border border-gray-800 mb-8">
-        <div className="px-6 py-4 border-b border-gray-800">
-          <h2 className="text-base font-semibold text-white">All Builds</h2>
+      <div className="rounded-xl bg-white border border-gray-200 mb-8">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-base font-semibold text-gray-900">All Builds</h2>
         </div>
         <div className="overflow-x-auto">
           {builds && builds.length > 0 ? (
             <table className="w-full">
               <thead>
-                <tr className="text-left text-xs text-gray-500 border-b border-gray-800">
+                <tr className="text-left text-xs text-gray-400 border-b border-gray-200">
                   <th className="px-6 py-3 font-medium">Tenant</th>
                   <th className="px-6 py-3 font-medium">Profile</th>
                   <th className="px-6 py-3 font-medium">Status</th>
@@ -112,18 +112,18 @@ export default async function BuildJobsPage() {
                   <th className="px-6 py-3 font-medium">Duration</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800">
+              <tbody className="divide-y divide-gray-200">
                 {builds.map((build) => (
                   <tr key={build.id} className="text-sm">
-                    <td className="px-6 py-3 text-white font-medium">
+                    <td className="px-6 py-3 text-gray-900 font-medium">
                       <Link
                         href={`/tenants/${build.tenant_id}`}
-                        className="hover:text-[#2563EB] transition-colors"
+                        className="hover:text-blue-600 transition-colors"
                       >
                         {build.tenant_id}
                       </Link>
                     </td>
-                    <td className="px-6 py-3 text-gray-400">{build.profile}</td>
+                    <td className="px-6 py-3 text-gray-500">{build.profile}</td>
                     <td className="px-6 py-3">
                       <BuildStatusPoller
                         build={{
@@ -149,10 +149,10 @@ export default async function BuildJobsPage() {
                         <span className="text-xs text-gray-600">-</span>
                       )}
                     </td>
-                    <td className="px-6 py-3 text-gray-500">
+                    <td className="px-6 py-3 text-gray-400">
                       {new Date(build.created_at).toLocaleString()}
                     </td>
-                    <td className="px-6 py-3 text-gray-500">
+                    <td className="px-6 py-3 text-gray-400">
                       {formatDuration(build.created_at, build.updated_at)}
                     </td>
                   </tr>
@@ -160,7 +160,7 @@ export default async function BuildJobsPage() {
               </tbody>
             </table>
           ) : (
-            <div className="px-6 py-8 text-center text-sm text-gray-500">
+            <div className="px-6 py-8 text-center text-sm text-gray-400">
               No builds yet. Create a client app and trigger your first build.
             </div>
           )}
@@ -168,9 +168,9 @@ export default async function BuildJobsPage() {
       </div>
 
       {/* Activity Timeline */}
-      <div className="rounded-xl bg-gray-900 border border-gray-800">
-        <div className="px-6 py-4 border-b border-gray-800">
-          <h2 className="text-base font-semibold text-white">
+      <div className="rounded-xl bg-white border border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-base font-semibold text-gray-900">
             Recent Activity
           </h2>
         </div>
@@ -182,10 +182,10 @@ export default async function BuildJobsPage() {
                   key={entry.id}
                   className="flex items-start gap-3 text-sm"
                 >
-                  <div className="w-2 h-2 mt-1.5 rounded-full bg-[#2563EB] shrink-0" />
+                  <div className="w-2 h-2 mt-1.5 rounded-full bg-blue-600 shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-gray-300">
-                      <span className="font-medium text-white">
+                    <p className="text-gray-600">
+                      <span className="font-medium text-gray-900">
                         {entry.action}
                       </span>
                       {entry.tenant_id && (
@@ -194,7 +194,7 @@ export default async function BuildJobsPage() {
                           on{" "}
                           <Link
                             href={`/tenants/${entry.tenant_id}`}
-                            className="text-[#2563EB] hover:underline"
+                            className="text-blue-600 hover:underline"
                           >
                             {entry.tenant_id}
                           </Link>
@@ -202,7 +202,7 @@ export default async function BuildJobsPage() {
                       )}
                     </p>
                     {entry.details && (
-                      <p className="text-gray-500 truncate">{entry.details}</p>
+                      <p className="text-gray-400 truncate">{entry.details}</p>
                     )}
                     <p className="text-xs text-gray-600 mt-0.5">
                       {entry.user_email} &middot;{" "}
@@ -213,7 +213,7 @@ export default async function BuildJobsPage() {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-gray-500 text-center py-4">
+            <p className="text-sm text-gray-400 text-center py-4">
               No activity recorded yet.
             </p>
           )}

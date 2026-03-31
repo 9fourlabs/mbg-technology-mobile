@@ -80,10 +80,10 @@ export default function FormModal({
       onClick={onClose}
     >
       <div
-        className="bg-gray-900 border border-gray-800 rounded-xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto"
+        className="bg-white border border-gray-200 rounded-xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-semibold text-white mb-4">{title}</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">{title}</h2>
 
         <div className="flex flex-col gap-4">
           {visibleColumns.map((col) => (
@@ -98,12 +98,12 @@ export default function FormModal({
           ))}
         </div>
 
-        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-800">
+        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
           <button
             type="button"
             onClick={onClose}
             disabled={saving}
-            className="px-4 py-2 text-sm font-medium text-gray-400 hover:text-white transition-colors rounded-lg border border-gray-700 hover:border-gray-600"
+            className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors rounded-lg border border-gray-300 hover:border-gray-600"
           >
             Cancel
           </button>

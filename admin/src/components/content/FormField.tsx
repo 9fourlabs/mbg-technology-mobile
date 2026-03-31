@@ -23,7 +23,7 @@ type Props = {
 const IMAGE_KEY_PATTERN = /image|logo|photo|avatar|thumbnail|banner|icon/i;
 
 const inputClass =
-  "bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none w-full";
+  "bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none w-full";
 
 export default function FormField({ column, value, onChange, error, tenantId }: Props) {
   const [jsonError, setJsonError] = useState<string | null>(null);
@@ -141,7 +141,7 @@ export default function FormField({ column, value, onChange, error, tenantId }: 
               checked={!!value}
               onChange={(e) => onChange(column.key, e.target.checked)}
             />
-            <div className="w-11 h-6 bg-gray-700 peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600" />
+            <div className="w-11 h-6 bg-gray-200 peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600" />
           </label>
         );
 
@@ -178,7 +178,7 @@ export default function FormField({ column, value, onChange, error, tenantId }: 
               onChange={(e) => handleJsonChange(e.target.value)}
             />
             {jsonError && (
-              <p className="text-xs text-red-400 mt-1">{jsonError}</p>
+              <p className="text-xs text-red-600 mt-1">{jsonError}</p>
             )}
           </>
         );
@@ -198,12 +198,12 @@ export default function FormField({ column, value, onChange, error, tenantId }: 
 
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-sm font-medium text-gray-300 mb-1">
+      <label className="text-sm font-medium text-gray-600 mb-1">
         {column.label}
-        {column.required && <span className="text-red-400 ml-1">*</span>}
+        {column.required && <span className="text-red-600 ml-1">*</span>}
       </label>
       {renderInput()}
-      {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
+      {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
     </div>
   );
 }

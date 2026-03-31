@@ -38,25 +38,25 @@ export default function DesignEditor({ config, onChange }: DesignEditorProps) {
 
   return (
     <div className="space-y-8">
-      <p className="text-sm text-gray-400">
+      <p className="text-sm text-gray-500">
         Choose a visual style. Presets give you a starting point — customize individual settings after.
       </p>
 
       {/* Presets */}
       <div>
-        <h2 className="text-base font-semibold text-white mb-4">Design Preset</h2>
+        <h2 className="text-base font-semibold text-gray-900 mb-4">Design Preset</h2>
         <div className="grid grid-cols-5 gap-3">
           {DESIGN_PRESETS.map((p) => (
             <button
               key={p.id}
               onClick={() => applyPreset(p.id)}
               className={`relative flex flex-col items-center p-4 rounded-xl border-2 transition-colors ${
-                design.preset === p.id ? "border-[#2563EB] bg-gray-800" : "border-gray-800 hover:border-gray-700"
+                design.preset === p.id ? "border-blue-600 bg-gray-100" : "border-gray-200 hover:border-gray-300"
               }`}
             >
               <div className="w-full h-1 rounded-full mb-3" style={{ backgroundColor: p.accent }} />
-              <span className="text-sm font-medium text-white">{p.label}</span>
-              <span className="text-xs text-gray-500 mt-1">{p.desc}</span>
+              <span className="text-sm font-medium text-gray-900">{p.label}</span>
+              <span className="text-xs text-gray-400 mt-1">{p.desc}</span>
             </button>
           ))}
         </div>
@@ -64,7 +64,7 @@ export default function DesignEditor({ config, onChange }: DesignEditorProps) {
 
       {/* Card Style */}
       <div>
-        <label className="block text-sm font-medium text-gray-400 mb-3">Card Style</label>
+        <label className="block text-sm font-medium text-gray-500 mb-3">Card Style</label>
         <div className="grid grid-cols-3 gap-3">
           {([
             { id: "rounded", label: "Rounded", cls: "rounded-xl" },
@@ -75,11 +75,11 @@ export default function DesignEditor({ config, onChange }: DesignEditorProps) {
               key={s.id}
               onClick={() => updateDesign("cardStyle", s.id)}
               className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-colors ${
-                design.cardStyle === s.id ? "border-[#2563EB] bg-gray-800" : "border-gray-800 hover:border-gray-700"
+                design.cardStyle === s.id ? "border-blue-600 bg-gray-100" : "border-gray-200 hover:border-gray-300"
               }`}
             >
               <div className={`w-16 h-10 ${s.cls} ${s.id === "flat" ? "bg-gray-700" : "bg-gray-700 border border-gray-600"}`} />
-              <span className="text-sm text-white">{s.label}</span>
+              <span className="text-sm text-gray-900">{s.label}</span>
             </button>
           ))}
         </div>
@@ -87,9 +87,9 @@ export default function DesignEditor({ config, onChange }: DesignEditorProps) {
 
       {/* Button Shape */}
       <div>
-        <label className="block text-sm font-medium text-gray-400 mb-3">Button Shape</label>
+        <label className="block text-sm font-medium text-gray-500 mb-3">Button Shape</label>
         <div className="flex items-center gap-4">
-          <span className="text-xs text-gray-500">Square</span>
+          <span className="text-xs text-gray-400">Square</span>
           <input
             type="range" min={0} max={24}
             value={typeof design.buttonRadius === "number" ? (design.buttonRadius as number) > 24 ? 24 : (design.buttonRadius as number) : 12}
@@ -97,13 +97,13 @@ export default function DesignEditor({ config, onChange }: DesignEditorProps) {
               const v = Number(e.target.value);
               updateDesign("buttonRadius", v === 24 ? 999 : v);
             }}
-            className="flex-1 accent-[#2563EB]"
+            className="flex-1 accent-blue-600"
           />
-          <span className="text-xs text-gray-500">Pill</span>
+          <span className="text-xs text-gray-400">Pill</span>
         </div>
         <div className="mt-3 flex justify-center">
           <div
-            className="px-6 py-2 bg-[#2563EB] text-white text-sm font-medium"
+            className="px-6 py-2 bg-blue-600 text-white text-sm font-medium"
             style={{ borderRadius: typeof design.buttonRadius === "number" ? Math.min(design.buttonRadius as number, 24) : 12 }}
           >
             Preview Button
@@ -113,14 +113,14 @@ export default function DesignEditor({ config, onChange }: DesignEditorProps) {
 
       {/* Card Layout */}
       <div>
-        <label className="block text-sm font-medium text-gray-400 mb-3">Card Layout</label>
+        <label className="block text-sm font-medium text-gray-500 mb-3">Card Layout</label>
         <div className="grid grid-cols-2 gap-3">
           {([1, 2] as const).map((cols) => (
             <button
               key={cols}
               onClick={() => updateDesign("cardColumns", cols)}
               className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-colors ${
-                design.cardColumns === cols ? "bg-[#2563EB] border-[#2563EB] text-white" : "border-gray-800 hover:border-gray-700 text-gray-300"
+                design.cardColumns === cols ? "bg-blue-600 border-blue-600 text-white" : "border-gray-200 hover:border-gray-300 text-gray-600"
               }`}
             >
               <div className={cols === 1 ? "flex flex-col gap-1 w-8" : "grid grid-cols-2 gap-1 w-8"}>
@@ -137,14 +137,14 @@ export default function DesignEditor({ config, onChange }: DesignEditorProps) {
       {/* Header & Tab Bar */}
       <div className="grid grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-400 mb-3">Header Style</label>
+          <label className="block text-sm font-medium text-gray-500 mb-3">Header Style</label>
           <div className="flex flex-col gap-2">
             {(["left", "centered"] as const).map((style) => (
               <button
                 key={style}
                 onClick={() => updateDesign("headerStyle", style)}
                 className={`p-3 rounded-lg border-2 text-sm font-medium transition-colors ${
-                  design.headerStyle === style ? "bg-[#2563EB] border-[#2563EB] text-white" : "border-gray-800 hover:border-gray-700 text-gray-300"
+                  design.headerStyle === style ? "bg-blue-600 border-blue-600 text-white" : "border-gray-200 hover:border-gray-300 text-gray-600"
                 }`}
               >
                 {style === "left" ? "Left aligned" : "Centered"}
@@ -153,14 +153,14 @@ export default function DesignEditor({ config, onChange }: DesignEditorProps) {
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-400 mb-3">Tab Bar</label>
+          <label className="block text-sm font-medium text-gray-500 mb-3">Tab Bar</label>
           <div className="flex flex-col gap-2">
             {(["pills", "underline"] as const).map((style) => (
               <button
                 key={style}
                 onClick={() => updateDesign("tabBarStyle", style)}
                 className={`p-3 rounded-lg border-2 text-sm font-medium transition-colors ${
-                  design.tabBarStyle === style ? "bg-[#2563EB] border-[#2563EB] text-white" : "border-gray-800 hover:border-gray-700 text-gray-300"
+                  design.tabBarStyle === style ? "bg-blue-600 border-blue-600 text-white" : "border-gray-200 hover:border-gray-300 text-gray-600"
                 }`}
               >
                 {style === "pills" ? "Pills" : "Underline"}
@@ -173,14 +173,14 @@ export default function DesignEditor({ config, onChange }: DesignEditorProps) {
       {/* Typography */}
       <div className="grid grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-400 mb-3">Heading Size</label>
+          <label className="block text-sm font-medium text-gray-500 mb-3">Heading Size</label>
           <div className="flex gap-2">
             {(["small", "medium", "large"] as const).map((size) => (
               <button
                 key={size}
                 onClick={() => updateDesign("typography", { ...typo, headingSize: size })}
                 className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  (typo.headingSize ?? "medium") === size ? "bg-[#2563EB] text-white" : "bg-gray-800 text-gray-400 hover:text-white"
+                  (typo.headingSize ?? "medium") === size ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500 hover:text-gray-900"
                 }`}
               >
                 {size[0].toUpperCase()}
@@ -189,14 +189,14 @@ export default function DesignEditor({ config, onChange }: DesignEditorProps) {
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-400 mb-3">Body Size</label>
+          <label className="block text-sm font-medium text-gray-500 mb-3">Body Size</label>
           <div className="flex gap-2">
             {(["small", "medium", "large"] as const).map((size) => (
               <button
                 key={size}
                 onClick={() => updateDesign("typography", { ...typo, bodySize: size })}
                 className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  (typo.bodySize ?? "medium") === size ? "bg-[#2563EB] text-white" : "bg-gray-800 text-gray-400 hover:text-white"
+                  (typo.bodySize ?? "medium") === size ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500 hover:text-gray-900"
                 }`}
               >
                 {size[0].toUpperCase()}

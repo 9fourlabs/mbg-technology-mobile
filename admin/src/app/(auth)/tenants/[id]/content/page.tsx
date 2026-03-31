@@ -25,32 +25,32 @@ export default async function ContentPage({
     <div>
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-        <Link href="/tenants" className="hover:text-white transition-colors">
+        <Link href="/tenants" className="hover:text-gray-900 transition-colors">
           Tenants
         </Link>
         <span>/</span>
         <Link
           href={`/tenants/${id}`}
-          className="hover:text-white transition-colors"
+          className="hover:text-gray-900 transition-colors"
         >
           {id}
         </Link>
         <span>/</span>
-        <span className="text-white">Content</span>
+        <span className="text-gray-900">Content</span>
       </div>
 
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-white">
+        <h1 className="text-2xl font-semibold text-gray-900">
           Content Management
         </h1>
-        <p className="text-sm text-gray-400 mt-1">
+        <p className="text-sm text-gray-500 mt-1">
           {tenant.business_name || id}
         </p>
       </div>
 
       {!tenant.supabase_project_id ? (
-        <div className="rounded-xl bg-yellow-900/20 border border-yellow-800 p-6">
-          <p className="text-sm text-yellow-400">
+        <div className="rounded-xl bg-amber-50 border border-yellow-200 p-6">
+          <p className="text-sm text-amber-700">
             This tenant doesn&apos;t have a Supabase project linked. Set one up
             before managing content.
           </p>

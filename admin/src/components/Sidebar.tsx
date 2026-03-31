@@ -37,15 +37,15 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="flex flex-col w-64 min-h-screen bg-gray-900 border-r border-gray-800">
+    <aside className="flex flex-col w-64 min-h-screen bg-white border-r border-gray-200">
       {/* Brand */}
-      <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-800">
-        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#2563EB] text-white font-bold text-sm">
+      <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-200">
+        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600 text-white font-bold text-sm">
           M
         </div>
         <div>
-          <h1 className="text-base font-semibold text-white">MBG Admin</h1>
-          <p className="text-xs text-gray-500">Mobile Platform</p>
+          <h1 className="text-base font-semibold text-gray-900">MBG Admin</h1>
+          <p className="text-xs text-gray-400">Mobile Platform</p>
         </div>
       </div>
 
@@ -59,8 +59,8 @@ export default function Sidebar() {
               href={item.href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive(item.href)
-                  ? "bg-[#2563EB] text-white"
-                  : "text-gray-400 hover:text-white hover:bg-gray-800"
+                  ? "bg-blue-50 text-blue-700"
+                  : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
               }`}
             >
               <Icon className="h-5 w-5 shrink-0" />
@@ -74,33 +74,33 @@ export default function Sidebar() {
       <div className="px-3 pb-2">
         <button
           onClick={() => setShowHelp(!showHelp)}
-          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
         >
           <HelpIcon className="h-5 w-5 shrink-0" />
           Help
         </button>
         {showHelp && (
-          <div className="mx-3 mt-2 mb-2 p-3 rounded-lg bg-gray-800 border border-gray-700 text-xs text-gray-400 leading-relaxed">
-            <p className="font-medium text-gray-300 mb-1">
+          <div className="mx-3 mt-2 mb-2 p-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-500 leading-relaxed">
+            <p className="font-medium text-gray-700 mb-1">
               What is this platform?
             </p>
             <p>
               MBG App Platform lets you create branded mobile apps for your
               clients without any coding. Pick a template, add your
-              client&apos;s branding, and deploy to app stores.
+              client&apos;s branding, and publish to app stores.
             </p>
           </div>
         )}
       </div>
 
       {/* User section */}
-      <div className="px-4 py-4 border-t border-gray-800">
-        <p className="text-xs text-gray-500 truncate mb-2">
+      <div className="px-4 py-4 border-t border-gray-200">
+        <p className="text-xs text-gray-400 truncate mb-2">
           {userEmail ?? "Loading..."}
         </p>
         <button
           onClick={handleSignOut}
-          className="flex items-center gap-2 w-full text-left text-sm text-gray-400 hover:text-white transition-colors"
+          className="flex items-center gap-2 w-full text-left text-sm text-gray-500 hover:text-gray-900 transition-colors"
         >
           <LogoutIcon className="h-4 w-4 shrink-0" />
           Sign Out

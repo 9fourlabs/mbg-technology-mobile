@@ -60,8 +60,8 @@ export default function DeployButtons({
         <div
           className={`rounded-lg px-4 py-3 text-sm mb-6 ${
             banner.type === "success"
-              ? "bg-green-900/20 border border-green-800/50 text-green-400"
-              : "bg-red-900/20 border border-red-800/50 text-red-400"
+              ? "bg-emerald-50 border border-green-200 text-emerald-700"
+              : "bg-red-50 border border-red-200 text-red-600"
           }`}
         >
           {banner.message}
@@ -89,13 +89,13 @@ export default function DeployButtons({
             {loading === "production" ? "Deploying..." : "Deploy Production"}
           </button>
           {!productionReady && missingRequirements.length > 0 && (
-            <div className="hidden group-hover:block absolute z-50 bottom-full left-0 mb-2 w-64 p-3 rounded-lg bg-gray-800 border border-gray-700 shadow-xl">
-              <p className="text-xs font-medium text-white mb-1.5">
+            <div className="hidden group-hover:block absolute z-50 bottom-full left-0 mb-2 w-64 p-3 rounded-lg bg-gray-100 border border-gray-300 shadow-md">
+              <p className="text-xs font-medium text-gray-900 mb-1.5">
                 Not ready for production:
               </p>
               <ul className="space-y-1">
                 {missingRequirements.map((req) => (
-                  <li key={req} className="text-xs text-red-400 flex items-center gap-1.5">
+                  <li key={req} className="text-xs text-red-600 flex items-center gap-1.5">
                     <span className="text-red-500">✗</span> {req}
                   </li>
                 ))}

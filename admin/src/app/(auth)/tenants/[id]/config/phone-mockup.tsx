@@ -78,7 +78,7 @@ export default function PhoneMockup({ config }: PhoneMockupProps) {
 
   return (
     <div className="w-[300px] flex-shrink-0">
-      <p className="text-xs text-gray-500 mb-3 text-center">Live Preview</p>
+      <p className="text-xs text-gray-400 mb-3 text-center">Live Preview</p>
       {/* Phone frame */}
       <div
         className="relative mx-auto rounded-[40px] border-[3px] overflow-hidden shadow-2xl"

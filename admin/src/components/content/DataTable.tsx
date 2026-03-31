@@ -57,7 +57,7 @@ function formatCellValue(value: unknown, type: string): React.ReactNode {
         const str =
           typeof value === "string" ? value : JSON.stringify(value);
         return (
-          <span className="font-mono text-xs text-gray-400">
+          <span className="font-mono text-xs text-gray-500">
             {str.length > 50 ? str.slice(0, 50) + "..." : str}
           </span>
         );
@@ -207,13 +207,13 @@ export function DataTable({ tenantId, schema }: Props) {
       {/* Table */}
       {data.length === 0 ? (
         <div className="text-center py-16">
-          <p className="text-gray-500 text-sm">No {schema.label} found</p>
+          <p className="text-gray-400 text-sm">No {schema.label} found</p>
         </div>
       ) : (
-        <div className="overflow-x-auto border border-gray-800 rounded-lg">
+        <div className="overflow-x-auto border border-gray-200 rounded-lg">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-gray-800">
+              <tr className="border-b border-gray-200">
                 {visibleColumns.map((col) => (
                   <th
                     key={col.key}
@@ -233,12 +233,12 @@ export function DataTable({ tenantId, schema }: Props) {
               {data.map((row, i) => (
                 <tr
                   key={(row.id as string) ?? i}
-                  className="border-b border-gray-800/50 hover:bg-gray-800/50 transition-colors"
+                  className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                 >
                   {visibleColumns.map((col) => (
                     <td
                       key={col.key}
-                      className="text-sm text-gray-300 px-4 py-3"
+                      className="text-sm text-gray-600 px-4 py-3"
                     >
                       {formatCellValue(row[col.key], col.type)}
                     </td>
@@ -247,20 +247,20 @@ export function DataTable({ tenantId, schema }: Props) {
                     <td className="text-right px-4 py-3">
                       {deleteConfirm === (row.id as string) ? (
                         <span className="flex items-center justify-end gap-2">
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-gray-500">
                             Delete?
                           </span>
                           <button
                             onClick={() =>
                               handleDelete(row.id as string)
                             }
-                            className="text-xs text-red-400 hover:text-red-300 font-medium"
+                            className="text-xs text-red-600 hover:text-red-500 font-medium"
                           >
                             Yes
                           </button>
                           <button
                             onClick={() => setDeleteConfirm(null)}
-                            className="text-xs text-gray-500 hover:text-gray-300"
+                            className="text-xs text-gray-400 hover:text-gray-600"
                           >
                             No
                           </button>
@@ -269,7 +269,7 @@ export function DataTable({ tenantId, schema }: Props) {
                         <span className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => handleEdit(row)}
-                            className="text-xs text-blue-400 hover:text-blue-300 font-medium"
+                            className="text-xs text-blue-600 hover:text-blue-500 font-medium"
                           >
                             Edit
                           </button>
@@ -277,7 +277,7 @@ export function DataTable({ tenantId, schema }: Props) {
                             onClick={() =>
                               setDeleteConfirm(row.id as string)
                             }
-                            className="text-xs text-red-400 hover:text-red-300 font-medium"
+                            className="text-xs text-red-600 hover:text-red-500 font-medium"
                           >
                             Delete
                           </button>
@@ -298,17 +298,17 @@ export function DataTable({ tenantId, schema }: Props) {
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page <= 1}
-            className="px-3 py-1.5 text-sm text-gray-400 hover:text-white border border-gray-700 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-900 border border-gray-300 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             Previous
           </button>
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-gray-400">
             Page {page} of {totalPages}
           </span>
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page >= totalPages}
-            className="px-3 py-1.5 text-sm text-gray-400 hover:text-white border border-gray-700 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-900 border border-gray-300 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             Next
           </button>

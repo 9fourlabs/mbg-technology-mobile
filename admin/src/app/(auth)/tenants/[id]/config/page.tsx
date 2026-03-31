@@ -132,16 +132,16 @@ export default function ConfigEditorPage() {
     return (
       <div>
         <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-          <Link href="/tenants" className="hover:text-white transition-colors">Tenants</Link>
+          <Link href="/tenants" className="hover:text-gray-900 transition-colors">Tenants</Link>
           <span>/</span>
-          <Link href={`/tenants/${id}`} className="hover:text-white transition-colors">{id}</Link>
+          <Link href={`/tenants/${id}`} className="hover:text-gray-900 transition-colors">{id}</Link>
           <span>/</span>
-          <span className="text-white">Config</span>
+          <span className="text-gray-900">Config</span>
         </div>
-        <div className="rounded-xl bg-gray-900 border border-gray-800 p-8 text-center">
+        <div className="rounded-xl bg-white border border-gray-200 p-8 text-center">
           <span className="text-4xl mb-4 block">&#x1F4BB;</span>
-          <h2 className="text-lg font-semibold text-white mb-2">Custom App</h2>
-          <p className="text-sm text-gray-400 mb-4">
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">Custom App</h2>
+          <p className="text-sm text-gray-500 mb-4">
             This is a custom app — its code lives in an external repository. Edit the code directly in the repo.
           </p>
           {repoUrl && (
@@ -149,7 +149,7 @@ export default function ConfigEditorPage() {
               href={repoUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center px-4 py-2.5 rounded-lg bg-[#2563EB] hover:bg-[#1d4ed8] text-sm font-medium text-white transition-colors"
+              className="inline-flex items-center px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-sm font-medium text-white transition-colors"
             >
               Open Repository
             </a>
@@ -163,15 +163,15 @@ export default function ConfigEditorPage() {
     <div>
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-        <Link href="/tenants" className="hover:text-white transition-colors">Tenants</Link>
+        <Link href="/tenants" className="hover:text-gray-900 transition-colors">Tenants</Link>
         <span>/</span>
-        <Link href={`/tenants/${id}`} className="hover:text-white transition-colors">{id}</Link>
+        <Link href={`/tenants/${id}`} className="hover:text-gray-900 transition-colors">{id}</Link>
         <span>/</span>
-        <span className="text-white">Config</span>
+        <span className="text-gray-900">Config</span>
       </div>
 
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold text-white">Configuration Editor</h1>
+        <h1 className="text-2xl font-semibold text-gray-900">Configuration Editor</h1>
       </div>
 
       {/* Split layout: Editor + Phone Mockup */}
@@ -179,15 +179,15 @@ export default function ConfigEditorPage() {
         {/* Left: Editor */}
         <div className="flex-1 min-w-0">
           {/* Tab Bar */}
-          <div className="flex gap-1 mb-6 border-b border-gray-800 overflow-x-auto">
+          <div className="flex gap-1 mb-6 border-b border-gray-200 overflow-x-auto">
             {TABS.map((tab, i) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(i)}
                 className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${
                   activeTab === i
-                    ? "border-[#2563EB] text-white"
-                    : "border-transparent text-gray-500 hover:text-gray-300"
+                    ? "border-blue-600 text-gray-900"
+                    : "border-transparent text-gray-500 hover:text-gray-700"
                 }`}
               >
                 {tab}
@@ -196,7 +196,7 @@ export default function ConfigEditorPage() {
           </div>
 
           {/* Tab Content */}
-          <div className="rounded-xl bg-gray-900 border border-gray-800 p-6 mb-6">
+          <div className="rounded-xl bg-white border border-gray-200 p-6 mb-6">
             {activeTab === 0 && config && (
               <BrandEditor tenantId={id} config={config} onChange={handleConfigChange} />
             )}
@@ -211,7 +211,7 @@ export default function ConfigEditorPage() {
             )}
             {activeTab === 4 && (
               <div>
-                <h2 className="text-base font-semibold text-white mb-4">Raw JSON Config</h2>
+                <h2 className="text-base font-semibold text-gray-900 mb-4">Raw JSON Config</h2>
                 <p className="text-xs text-gray-500 mb-3">
                   Edit the full configuration JSON directly. Changes here are reflected when you switch tabs.
                 </p>
@@ -227,7 +227,7 @@ export default function ConfigEditorPage() {
                     }
                   }}
                   rows={24}
-                  className="w-full rounded-lg bg-gray-800 border border-gray-700 px-4 py-3 text-sm text-white font-mono focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent resize-y"
+                  className="w-full rounded-lg bg-gray-100 border border-gray-300 px-4 py-3 text-sm text-gray-900 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
                   spellCheck={false}
                 />
               </div>
@@ -236,49 +236,49 @@ export default function ConfigEditorPage() {
 
           {/* Status banners */}
           {error && (
-            <div className="rounded-lg bg-red-900/30 border border-red-800 px-3 py-2 text-sm text-red-400 mb-4">
+            <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-600 mb-4">
               {error}
             </div>
           )}
           {success && (
-            <div className="rounded-lg bg-green-900/30 border border-green-800 px-3 py-2 text-sm text-green-400 mb-4">
+            <div className="rounded-lg bg-emerald-50 border border-green-200 px-3 py-2 text-sm text-emerald-700 mb-4">
               Draft saved successfully.
             </div>
           )}
           {prInfo && (
-            <div className="rounded-lg bg-green-900/30 border border-green-800 px-3 py-2 text-sm text-green-400 mb-4">
+            <div className="rounded-lg bg-emerald-50 border border-green-200 px-3 py-2 text-sm text-emerald-700 mb-4">
               Config saved! PR opened:{" "}
-              <a href={prInfo.url} target="_blank" rel="noopener noreferrer" className="underline font-medium hover:text-green-300">
+              <a href={prInfo.url} target="_blank" rel="noopener noreferrer" className="underline font-medium hover:text-emerald-600">
                 #{prInfo.number}
               </a>
             </div>
           )}
 
           {/* Save actions */}
-          <div className="rounded-lg bg-gray-800/50 border border-gray-700 px-4 py-3 mb-4">
-            <p className="text-xs text-gray-400 leading-relaxed">
-              <strong className="text-gray-300">Save Draft</strong> saves to the database without building.{" "}
-              <strong className="text-gray-300">Save &amp; Deploy</strong> saves and creates a PR to trigger a new build.
+          <div className="rounded-lg bg-gray-50 border border-gray-300 px-4 py-3 mb-4">
+            <p className="text-xs text-gray-500 leading-relaxed">
+              <strong className="text-gray-600">Save Draft</strong> saves to the database without building.{" "}
+              <strong className="text-gray-600">Save &amp; Deploy</strong> saves and creates a PR to trigger a new build.
             </p>
           </div>
           <div className="flex justify-end gap-3">
             <button
               onClick={() => router.push(`/tenants/${id}`)}
-              className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white transition-colors"
+              className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSaveDraft}
               disabled={saving || deploying}
-              className="px-6 py-2.5 rounded-lg border border-gray-700 hover:border-gray-600 text-sm font-medium text-gray-300 hover:text-white transition-colors disabled:opacity-50"
+              className="px-6 py-2.5 rounded-lg border border-gray-300 hover:border-gray-400 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors disabled:opacity-50"
             >
               {saving ? "Saving..." : "Save Draft"}
             </button>
             <button
               onClick={handleSaveAndDeploy}
               disabled={saving || deploying}
-              className="px-6 py-2.5 rounded-lg bg-[#2563EB] hover:bg-[#1d4ed8] text-sm font-medium text-white transition-colors disabled:opacity-50"
+              className="px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-sm font-medium text-white transition-colors disabled:opacity-50"
             >
               {deploying ? "Saving & committing..." : "Save & Deploy"}
             </button>
