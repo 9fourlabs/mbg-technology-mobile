@@ -59,7 +59,7 @@ jobs:
         working-directory: ./custom-app
         env:
           APP_VERSION: ${{ inputs.version }}
-        run: eas build --profile preview --platform all --non-interactive
+        run: eas build --profile preview --platform android --non-interactive
 
       - name: Build production
         if: inputs.profile == 'production'
