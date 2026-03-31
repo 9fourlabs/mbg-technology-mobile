@@ -51,7 +51,7 @@ export async function GET(
     // Load build record
     const { data: build, error: buildError } = await supabase
       .from("builds")
-      .select("id, tenant_id, status, workflow_run_id, build_url, error_message")
+      .select("id, tenant_id, status, workflow_run_id, build_url, error_message, created_at")
       .eq("id", buildId)
       .eq("tenant_id", tenantId)
       .single();
@@ -124,28 +124,41 @@ export async function GET(
     downloadUrlIos = freshBuild?.download_url_ios ?? null;
 
     // If completed and missing either URL, try fetching from EAS
+    // Match EAS builds by timestamp — find the closest EAS build to this admin build's created_at
     if (status === "completed" && (!downloadUrl || !downloadUrlIos)) {
       try {
-        const easBuilds = await getEASBuilds(10);
+        const easBuilds = await getEASBuilds(20);
         const updateFields: Record<string, string> = {};
+        const buildCreatedAt = new Date(build.created_at).getTime();
 
+        // Only consider EAS builds within 30 minutes of the admin build trigger
+        const MAX_TIME_DIFF = 30 * 60 * 1000;
+
+        // Find the closest matching Android build by timestamp
         if (!downloadUrl) {
-          const androidMatch = easBuilds.find(
-            (b) => b.status === "finished" && b.platform === "android" && b.downloadUrl
-          );
-          if (androidMatch?.downloadUrl) {
-            downloadUrl = androidMatch.downloadUrl;
+          const androidCandidates = easBuilds
+            .filter((b) => b.status === "finished" && b.platform === "android" && b.downloadUrl)
+            .map((b) => ({ ...b, timeDiff: Math.abs(new Date(b.createdAt).getTime() - buildCreatedAt) }))
+            .filter((b) => b.timeDiff < MAX_TIME_DIFF)
+            .sort((a, c) => a.timeDiff - c.timeDiff);
+
+          if (androidCandidates.length > 0 && androidCandidates[0].downloadUrl) {
+            downloadUrl = androidCandidates[0].downloadUrl;
             updateFields.download_url = downloadUrl;
           }
         }
 
+        // Find the closest matching iOS build by timestamp
         if (!downloadUrlIos) {
-          const iosMatch = easBuilds.find(
-            (b) => b.status === "finished" && b.platform === "ios" && b.downloadUrl
-          );
-          if (iosMatch) {
+          const iosCandidates = easBuilds
+            .filter((b) => b.status === "finished" && b.platform === "ios")
+            .map((b) => ({ ...b, timeDiff: Math.abs(new Date(b.createdAt).getTime() - buildCreatedAt) }))
+            .filter((b) => b.timeDiff < MAX_TIME_DIFF)
+            .sort((a, c) => a.timeDiff - c.timeDiff);
+
+          if (iosCandidates.length > 0) {
             // Use Expo install page URL (handles itms-services:// for iOS OTA install)
-            downloadUrlIos = getExpoInstallUrl(iosMatch.id);
+            downloadUrlIos = getExpoInstallUrl(iosCandidates[0].id);
             updateFields.download_url_ios = downloadUrlIos;
           }
         }
