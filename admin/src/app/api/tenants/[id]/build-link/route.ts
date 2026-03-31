@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { getExpoInstallUrl } from "@/lib/eas";
 import { getEASBuildById } from "@/lib/eas";
 
@@ -46,7 +46,11 @@ export async function POST(
       );
     }
 
-    const supabase = await createClient();
+    // Use service role — this endpoint is called by GitHub Actions, not a browser
+    const supabase = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
 
     // Verify the build belongs to this tenant
     const { data: build, error: buildError } = await supabase
