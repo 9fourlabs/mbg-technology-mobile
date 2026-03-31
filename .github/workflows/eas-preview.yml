@@ -14,6 +14,11 @@ on:
         required: false
         default: "1.0.0"
         type: string
+      build_id:
+        description: "Admin build record UUID (for artifact linking)"
+        required: false
+        default: ""
+        type: string
 
 permissions:
   pull-requests: write
@@ -96,6 +101,69 @@ jobs:
           # Extract the workflow URL from output
           WORKFLOW_URL=$(echo "$OUTPUT" | grep -oP 'https://expo\.dev/accounts/[^\s]+' | head -1)
           echo "workflow_url=$WORKFLOW_URL" >> $GITHUB_OUTPUT
+
+      - name: Wait for EAS builds and report IDs back to admin
+        if: inputs.build_id != ''
+        env:
+          ADMIN_URL: ${{ secrets.ADMIN_URL }}
+          ADMIN_BUILD_LINK_SECRET: ${{ secrets.ADMIN_BUILD_LINK_SECRET }}
+        run: |
+          BUILD_ID="${{ inputs.build_id }}"
+          TENANT="${{ matrix.tenant }}"
+          echo "Waiting for EAS builds to appear for tenant: $TENANT (admin build: $BUILD_ID)"
+
+          # Poll EAS build list until we find finished builds for this run
+          # The builds we're looking for were just triggered, so they'll be the most recent
+          MAX_ATTEMPTS=40  # ~20 minutes (30s intervals)
+          ATTEMPT=0
+          ANDROID_ID=""
+          IOS_ID=""
+
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            ATTEMPT=$((ATTEMPT + 1))
+            echo "Poll attempt $ATTEMPT/$MAX_ATTEMPTS..."
+
+            # Get recent builds as JSON
+            BUILDS_JSON=$(eas build:list --limit 6 --json --non-interactive 2>/dev/null || echo "[]")
+
+            # Extract finished Android build ID (most recent)
+            ANDROID_ID=$(echo "$BUILDS_JSON" | jq -r '[.[] | select(.platform == "ANDROID" and .status == "FINISHED")] | first | .id // empty')
+            IOS_ID=$(echo "$BUILDS_JSON" | jq -r '[.[] | select(.platform == "IOS" and .status == "FINISHED")] | first | .id // empty')
+
+            if [ -n "$ANDROID_ID" ] && [ -n "$IOS_ID" ]; then
+              echo "Both builds finished!"
+              echo "  Android: $ANDROID_ID"
+              echo "  iOS: $IOS_ID"
+              break
+            fi
+
+            # Check if any builds errored
+            ERRORED=$(echo "$BUILDS_JSON" | jq -r '[.[] | select(.status == "ERRORED")] | length')
+            if [ "$ERRORED" -gt "0" ]; then
+              echo "Some builds errored, reporting what we have..."
+              break
+            fi
+
+            echo "  Android: ${ANDROID_ID:-pending}  iOS: ${IOS_ID:-pending}"
+            sleep 30
+          done
+
+          # Report back to admin API
+          if [ -n "$ADMIN_URL" ] && [ -n "$ADMIN_BUILD_LINK_SECRET" ] && ([ -n "$ANDROID_ID" ] || [ -n "$IOS_ID" ]); then
+            echo "Reporting EAS build IDs to admin..."
+            curl -s -X POST "$ADMIN_URL/api/tenants/$TENANT/build-link" \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer $ADMIN_BUILD_LINK_SECRET" \
+              -d "{
+                \"build_id\": \"$BUILD_ID\",
+                \"eas_build_id_android\": \"$ANDROID_ID\",
+                \"eas_build_id_ios\": \"$IOS_ID\"
+              }"
+            echo ""
+            echo "Done."
+          else
+            echo "Skipping admin callback (no ADMIN_URL or no build IDs found)"
+          fi
 
       - name: Comment PR with build link
         if: github.event_name == 'pull_request'

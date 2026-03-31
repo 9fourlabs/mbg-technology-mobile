@@ -56,6 +56,29 @@ export async function POST(
     const appVersion = (tenant as Record<string, unknown>).app_version as string ?? "1.0.0";
     const isCustom = (tenant as Record<string, unknown>).app_type === "custom";
 
+    // Create build record FIRST so we have a UUID to pass through the pipeline
+    const { data: build, error: buildError } = await supabase
+      .from("builds")
+      .insert({
+        tenant_id: tenantId,
+        profile,
+        status: "pending",
+        platform: "all",
+        app_version: appVersion,
+      })
+      .select("id")
+      .single();
+
+    if (buildError) {
+      console.error("Failed to insert build record:", buildError);
+      return NextResponse.json(
+        { error: "Failed to create build record." },
+        { status: 500 }
+      );
+    }
+
+    const adminBuildId = build.id;
+
     // Custom app path — dispatch the custom workflow with repo info
     let workflowFile: string;
 
@@ -77,9 +100,11 @@ export async function POST(
         profile,
         version: appVersion,
         expo_project_id: tenant.expo_project_id ?? "",
+        build_id: adminBuildId,
+        tenant_id: tenantId,
       });
     } else {
-      // Template app path — existing behavior
+      // Template app path
       workflowFile =
         profile === "preview" ? "eas-preview.yml" : "eas-promote.yml";
 
@@ -87,59 +112,39 @@ export async function POST(
         await triggerWorkflowDispatch(workflowFile, "main", {
           tenant: tenantId,
           version: appVersion,
+          build_id: adminBuildId,
         });
       } else {
         await triggerWorkflowDispatch(workflowFile, "main", {
           tenant: tenantId,
           platform: "all",
           version: appVersion,
+          build_id: adminBuildId,
         });
       }
     }
 
-    // Wait briefly for GitHub to register the run, then capture it
-    let workflowRunId: string | null = null;
-    let buildUrl: string | null = null;
-
+    // Wait briefly for GitHub to register the run, then update the build record
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     try {
       const latestRun = await getLatestWorkflowRun(workflowFile);
       if (latestRun) {
-        workflowRunId = String(latestRun.id);
-        buildUrl = latestRun.html_url;
+        await supabase
+          .from("builds")
+          .update({
+            workflow_run_id: String(latestRun.id),
+            build_url: latestRun.html_url,
+          })
+          .eq("id", adminBuildId);
       }
     } catch (err) {
       console.warn("Failed to capture workflow run ID:", err);
-      // Non-fatal: build record will still be created without the run ID
-    }
-
-    // Insert build record
-    const { data: build, error: buildError } = await supabase
-      .from("builds")
-      .insert({
-        tenant_id: tenantId,
-        profile,
-        status: "pending",
-        platform: "all",
-        workflow_run_id: workflowRunId,
-        build_url: buildUrl,
-        app_version: appVersion,
-      })
-      .select("id")
-      .single();
-
-    if (buildError) {
-      console.error("Failed to insert build record:", buildError);
-      return NextResponse.json(
-        { error: "Build was triggered but failed to save the build record." },
-        { status: 500 }
-      );
     }
 
     return NextResponse.json({
       success: true,
-      build_id: build.id,
+      build_id: adminBuildId,
       message: `${profile === "preview" ? "Preview" : "Production"} build triggered successfully.`,
     });
   } catch (error) {
