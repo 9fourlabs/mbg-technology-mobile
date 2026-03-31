@@ -6,6 +6,7 @@ interface TenantCardProps {
   status: string;
   business_name?: string;
   updated_at: string;
+  app_type?: string;
 }
 
 const templateColors: Record<string, string> = {
@@ -25,13 +26,17 @@ const statusColors: Record<string, string> = {
   production: "bg-green-900/50 text-green-400",
 };
 
+const customColor = "bg-cyan-900/50 text-cyan-400";
+
 export default function TenantCard({
   id,
   template_type,
   status,
   business_name,
   updated_at,
+  app_type,
 }: TenantCardProps) {
+  const isCustom = app_type === "custom";
   return (
     <div className="rounded-xl bg-gray-900 border border-gray-800 p-6 hover:border-gray-700 transition-colors">
       {/* Business name + tenant ID */}
@@ -45,9 +50,9 @@ export default function TenantCard({
       {/* Template + Status badges */}
       <div className="flex items-center gap-2 mt-3">
         <span
-          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${templateColors[template_type] ?? "bg-gray-700 text-gray-300"}`}
+          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${isCustom ? customColor : (templateColors[template_type] ?? "bg-gray-700 text-gray-300")}`}
         >
-          {template_type}
+          {isCustom ? "Custom App" : template_type}
         </span>
         <span
           className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[status] ?? "bg-gray-700 text-gray-300"}`}

@@ -1,0 +1,85 @@
+name: EAS Custom App Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      repo_url:
+        description: "GitHub repo URL for the custom app"
+        required: true
+        type: string
+      branch:
+        description: "Branch to build from"
+        required: false
+        default: "main"
+        type: string
+      profile:
+        description: "Build profile (preview or production)"
+        required: true
+        default: "preview"
+        type: choice
+        options:
+          - preview
+          - production
+      version:
+        description: "App version (semver)"
+        required: false
+        default: "1.0.0"
+        type: string
+      expo_project_id:
+        description: "Expo project ID (optional, uses repo default if not set)"
+        required: false
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+    steps:
+      - name: Clone custom repo
+        run: |
+          git clone --branch ${{ inputs.branch }} --depth 1 ${{ inputs.repo_url }} ./custom-app
+          echo "Cloned ${{ inputs.repo_url }} @ ${{ inputs.branch }}"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        working-directory: ./custom-app
+        run: npm ci
+
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
+
+      - name: Build preview
+        if: inputs.profile == 'preview'
+        working-directory: ./custom-app
+        run: |
+          BUILD_ARGS="--profile preview --platform all --non-interactive"
+          if [ -n "${{ inputs.expo_project_id }}" ]; then
+            BUILD_ARGS="$BUILD_ARGS --project-id ${{ inputs.expo_project_id }}"
+          fi
+          APP_VERSION="${{ inputs.version }}" eas build $BUILD_ARGS
+
+      - name: Build production
+        if: inputs.profile == 'production'
+        working-directory: ./custom-app
+        run: |
+          BUILD_ARGS="--profile production --platform all --non-interactive"
+          if [ -n "${{ inputs.expo_project_id }}" ]; then
+            BUILD_ARGS="$BUILD_ARGS --project-id ${{ inputs.expo_project_id }}"
+          fi
+          APP_VERSION="${{ inputs.version }}" eas build $BUILD_ARGS
+
+      - name: Submit to stores
+        if: inputs.profile == 'production'
+        working-directory: ./custom-app
+        run: |
+          SUBMIT_ARGS="--profile production --platform all --non-interactive"
+          if [ -n "${{ inputs.expo_project_id }}" ]; then
+            SUBMIT_ARGS="$SUBMIT_ARGS --project-id ${{ inputs.expo_project_id }}"
+          fi
+          APP_VERSION="${{ inputs.version }}" eas submit $SUBMIT_ARGS

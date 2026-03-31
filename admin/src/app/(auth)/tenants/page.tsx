@@ -24,7 +24,7 @@ export default async function TenantsPage({
   // Fetch filtered tenants for the list
   let query = supabase
     .from("tenants")
-    .select("id, template_type, status, business_name, updated_at")
+    .select("id, template_type, status, business_name, updated_at, app_type")
     .order("updated_at", { ascending: false });
 
   if (params.q) {
@@ -115,6 +115,7 @@ export default async function TenantsPage({
               status={tenant.status}
               business_name={tenant.business_name}
               updated_at={tenant.updated_at}
+              app_type={tenant.app_type}
             />
           ))}
         </div>

@@ -23,21 +23,73 @@ export async function POST(request: NextRequest) {
 
     // Parse body
     const body = await request.json();
-    const { tenant_id, template_type, business_name, brand } = body as {
+    const {
+      tenant_id,
+      template_type,
+      business_name,
+      brand,
+      app_type = "template",
+      repo_url,
+      repo_branch = "main",
+    } = body as {
       tenant_id: string;
-      template_type: TemplateId;
+      template_type?: TemplateId;
       business_name: string;
-      brand: {
+      brand?: {
         primaryColor: string;
         backgroundColor: string;
         textColor: string;
         logoUrl: string;
       };
+      app_type?: "template" | "custom";
+      repo_url?: string;
+      repo_branch?: string;
     };
 
-    if (!tenant_id || !template_type || !business_name) {
+    if (!tenant_id || !business_name) {
       return NextResponse.json(
-        { error: "Missing required fields: tenant_id, template_type, business_name" },
+        { error: "Missing required fields: tenant_id, business_name" },
+        { status: 400 },
+      );
+    }
+
+    // Custom app path — just insert the record, no config generation or PR
+    if (app_type === "custom") {
+      if (!repo_url) {
+        return NextResponse.json(
+          { error: "Custom apps require a repo_url" },
+          { status: 400 },
+        );
+      }
+
+      const { error: insertError } = await supabase.from("tenants").insert({
+        id: tenant_id,
+        business_name,
+        template_type: "custom",
+        status: "draft",
+        config: {},
+        app_type: "custom",
+        repo_url,
+        repo_branch,
+      });
+
+      if (insertError) {
+        return NextResponse.json(
+          { error: insertError.message },
+          { status: 400 },
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        tenant_id,
+      });
+    }
+
+    // Template app path — existing behavior
+    if (!template_type) {
+      return NextResponse.json(
+        { error: "Template apps require template_type" },
         { status: 400 },
       );
     }
@@ -60,6 +112,7 @@ export async function POST(request: NextRequest) {
       template_type,
       status: "draft",
       config,
+      app_type: "template",
     });
 
     if (insertError) {

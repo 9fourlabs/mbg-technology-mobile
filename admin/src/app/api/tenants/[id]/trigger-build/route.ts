@@ -34,7 +34,7 @@ export async function POST(
     // Load tenant
     const { data: tenant, error: tenantError } = await supabase
       .from("tenants")
-      .select("id, expo_project_id, template_type, app_version")
+      .select("id, expo_project_id, template_type, app_version, app_type, repo_url, repo_branch")
       .eq("id", tenantId)
       .single();
 
@@ -53,23 +53,48 @@ export async function POST(
       );
     }
 
-    // Trigger the appropriate GitHub Actions workflow
-    const workflowFile =
-      profile === "preview" ? "eas-preview.yml" : "eas-promote.yml";
-
     const appVersion = (tenant as Record<string, unknown>).app_version as string ?? "1.0.0";
+    const isCustom = (tenant as Record<string, unknown>).app_type === "custom";
 
-    if (profile === "preview") {
+    // Custom app path — dispatch the custom workflow with repo info
+    let workflowFile: string;
+
+    if (isCustom) {
+      const repoUrl = (tenant as Record<string, unknown>).repo_url as string;
+      const repoBranch = ((tenant as Record<string, unknown>).repo_branch as string) ?? "main";
+
+      if (!repoUrl) {
+        return NextResponse.json(
+          { error: "Custom app has no repo URL configured." },
+          { status: 400 }
+        );
+      }
+
+      workflowFile = "eas-custom.yml";
       await triggerWorkflowDispatch(workflowFile, "main", {
-        tenant: tenantId,
+        repo_url: repoUrl,
+        branch: repoBranch,
+        profile,
         version: appVersion,
+        expo_project_id: tenant.expo_project_id ?? "",
       });
     } else {
-      await triggerWorkflowDispatch(workflowFile, "main", {
-        tenant: tenantId,
-        platform: "all",
-        version: appVersion,
-      });
+      // Template app path — existing behavior
+      workflowFile =
+        profile === "preview" ? "eas-preview.yml" : "eas-promote.yml";
+
+      if (profile === "preview") {
+        await triggerWorkflowDispatch(workflowFile, "main", {
+          tenant: tenantId,
+          version: appVersion,
+        });
+      } else {
+        await triggerWorkflowDispatch(workflowFile, "main", {
+          tenant: tenantId,
+          platform: "all",
+          version: appVersion,
+        });
+      }
     }
 
     // Wait briefly for GitHub to register the run, then capture it

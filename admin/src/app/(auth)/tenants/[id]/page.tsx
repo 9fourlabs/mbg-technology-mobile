@@ -55,6 +55,10 @@ export default async function TenantDetailPage({
     notFound();
   }
 
+  const isCustom = (tenant as Record<string, unknown>).app_type === "custom";
+  const repoUrl = (tenant as Record<string, unknown>).repo_url as string | null;
+  const repoBranch = ((tenant as Record<string, unknown>).repo_branch as string) ?? "main";
+
   const config = tenant.config as Record<string, unknown> | null;
   const brand = (config?.brand ?? {}) as Record<string, string>;
   const tabs = (config?.tabs ?? []) as Record<string, unknown>[];
@@ -124,18 +128,32 @@ export default async function TenantDetailPage({
 
       {/* Quick Actions Bar */}
       <div className="flex flex-wrap items-center gap-3 mb-8 p-4 rounded-xl bg-gray-900 border border-gray-800">
-        <Link
-          href={`/tenants/${id}/config`}
-          className="inline-flex items-center px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
-        >
-          Edit Config
-        </Link>
-        <Link
-          href={`/tenants/${id}/content`}
-          className="inline-flex items-center px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
-        >
-          Manage Content
-        </Link>
+        {!isCustom && (
+          <Link
+            href={`/tenants/${id}/config`}
+            className="inline-flex items-center px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+          >
+            Edit Config
+          </Link>
+        )}
+        {!isCustom && (
+          <Link
+            href={`/tenants/${id}/content`}
+            className="inline-flex items-center px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+          >
+            Manage Content
+          </Link>
+        )}
+        {isCustom && repoUrl && (
+          <a
+            href={repoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+          >
+            View Repo
+          </a>
+        )}
         <Link
           href={`/tenants/${id}/builds`}
           className="inline-flex items-center px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
@@ -193,9 +211,39 @@ export default async function TenantDetailPage({
       {/* Production Readiness Checklist */}
       <ReadinessChecklist tenantId={id} />
 
-      {/* App Overview: Brand + Config Summary */}
-      <h2 className="text-lg font-semibold text-white mb-4">App Overview</h2>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      {/* Custom App: Repository Info */}
+      {isCustom && repoUrl && (
+        <div className="rounded-xl bg-gray-900 border border-gray-800 p-6 mb-8">
+          <h2 className="text-base font-semibold text-white mb-4">Repository</h2>
+          <div className="space-y-0">
+            <div className="flex justify-between py-2.5 border-b border-gray-800">
+              <span className="text-sm text-gray-400">Repo URL</span>
+              <a
+                href={repoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-[#2563EB] hover:underline font-mono"
+              >
+                {repoUrl.replace("https://github.com/", "")}
+              </a>
+            </div>
+            <div className="flex justify-between py-2.5 border-b border-gray-800">
+              <span className="text-sm text-gray-400">Branch</span>
+              <span className="text-sm text-white font-mono">{repoBranch}</span>
+            </div>
+            <div className="flex justify-between py-2.5">
+              <span className="text-sm text-gray-400">Type</span>
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-cyan-900/50 text-cyan-400">
+                Custom App
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* App Overview: Brand + Config Summary (template only) */}
+      {!isCustom && <h2 className="text-lg font-semibold text-white mb-4">App Overview</h2>}
+      {!isCustom && <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Brand Preview */}
         <div className="rounded-xl bg-gray-900 border border-gray-800 p-6">
           <h3 className="text-base font-semibold text-white mb-4">Brand</h3>
@@ -304,7 +352,7 @@ export default async function TenantDetailPage({
             </div>
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* Latest Build */}
       <h2 className="text-lg font-semibold text-white mb-4">Latest Build</h2>

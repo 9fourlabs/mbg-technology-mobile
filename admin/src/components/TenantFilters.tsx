@@ -12,6 +12,7 @@ const TEMPLATE_TYPES = [
   "content",
   "forms",
   "directory",
+  "custom",
 ];
 
 export default function TenantFilters({

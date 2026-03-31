@@ -17,7 +17,7 @@ export default async function ReadinessChecklist({
 
   const { data: tenant } = await supabase
     .from("tenants")
-    .select("id, config, expo_project_id, supabase_project_id, template_type")
+    .select("id, config, expo_project_id, supabase_project_id, template_type, app_type, repo_url")
     .eq("id", tenantId)
     .single();
 
@@ -35,7 +35,9 @@ export default async function ReadinessChecklist({
     .eq("profile", "preview")
     .eq("status", "completed");
 
-  const needsContent = [
+  const isCustom = (tenant as Record<string, unknown>).app_type === "custom";
+
+  const needsContent = !isCustom && [
     "booking",
     "commerce",
     "content",
@@ -43,32 +45,51 @@ export default async function ReadinessChecklist({
     "loyalty",
   ].includes(tenant.template_type);
 
-  const checks: CheckItem[] = [
-    {
-      label: "Config saved",
-      passed: !!config && tabs.length > 0,
-      href: `/tenants/${tenantId}/config`,
-      hint: "Save at least one tab in the config editor",
-    },
-    {
-      label: "Brand configured",
-      passed: !!brand.primaryColor,
-      href: `/tenants/${tenantId}/config`,
-      hint: "Set a primary color and optionally a logo",
-    },
-    {
-      label: "Expo Project ID assigned",
-      passed: !!tenant.expo_project_id,
-      href: `/tenants/${tenantId}/config`,
-      hint: "Required for production builds and app store submission",
-    },
-    {
-      label: "Preview build succeeded",
-      passed: (successfulBuilds ?? 0) > 0,
-      href: `/tenants/${tenantId}/builds`,
-      hint: "Deploy at least one successful preview build before going to production",
-    },
-  ];
+  const checks: CheckItem[] = isCustom
+    ? [
+        {
+          label: "Repo URL configured",
+          passed: !!(tenant as Record<string, unknown>).repo_url,
+          hint: "Custom apps need a GitHub repo URL",
+        },
+        {
+          label: "Expo Project ID assigned",
+          passed: !!tenant.expo_project_id,
+          hint: "Required for production builds and app store submission",
+        },
+        {
+          label: "Preview build succeeded",
+          passed: (successfulBuilds ?? 0) > 0,
+          href: `/tenants/${tenantId}/builds`,
+          hint: "Deploy at least one successful preview build before going to production",
+        },
+      ]
+    : [
+        {
+          label: "Config saved",
+          passed: !!config && tabs.length > 0,
+          href: `/tenants/${tenantId}/config`,
+          hint: "Save at least one tab in the config editor",
+        },
+        {
+          label: "Brand configured",
+          passed: !!brand.primaryColor,
+          href: `/tenants/${tenantId}/config`,
+          hint: "Set a primary color and optionally a logo",
+        },
+        {
+          label: "Expo Project ID assigned",
+          passed: !!tenant.expo_project_id,
+          href: `/tenants/${tenantId}/config`,
+          hint: "Required for production builds and app store submission",
+        },
+        {
+          label: "Preview build succeeded",
+          passed: (successfulBuilds ?? 0) > 0,
+          href: `/tenants/${tenantId}/builds`,
+          hint: "Deploy at least one successful preview build before going to production",
+        },
+      ];
 
   if (needsContent) {
     checks.push({

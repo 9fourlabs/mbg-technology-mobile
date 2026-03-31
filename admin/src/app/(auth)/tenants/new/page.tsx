@@ -15,7 +15,8 @@ const TEMPLATE_TYPES = [
   { id: "directory", label: "Directory", emoji: "\u{1F4D6}", color: "border-indigo-500", description: "A searchable directory with categories and detail pages. Member directories, location finders." },
 ];
 
-const STEPS = ["Template", "Identity", "Brand", "Design", "Review"];
+const TEMPLATE_STEPS = ["App Type", "Template", "Identity", "Brand", "Design", "Review"];
+const CUSTOM_STEPS = ["App Type", "Identity", "Repository", "Review"];
 
 const DESIGN_PRESETS = [
   { id: "modern", label: "Modern", desc: "Clean & fresh", accent: "#2563EB" },
@@ -44,6 +45,7 @@ interface DesignData {
 }
 
 interface FormData {
+  app_type: "template" | "custom";
   template_type: string;
   tenant_id: string;
   business_name: string;
@@ -52,6 +54,8 @@ interface FormData {
   text_color: string;
   logo_url: string;
   design: DesignData;
+  repo_url: string;
+  repo_branch: string;
 }
 
 export default function NewTenantPage() {
@@ -60,6 +64,7 @@ export default function NewTenantPage() {
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState<FormData>({
+    app_type: "template",
     template_type: "",
     tenant_id: "",
     business_name: "",
@@ -76,26 +81,36 @@ export default function NewTenantPage() {
       tabBarStyle: "pills",
       typography: { headingSize: "medium", bodySize: "medium" },
     },
+    repo_url: "",
+    repo_branch: "main",
   });
+
+  const isCustom = form.app_type === "custom";
+  const STEPS = isCustom ? CUSTOM_STEPS : TEMPLATE_STEPS;
 
   const updateForm = (updates: Partial<FormData>) => {
     setForm((prev) => ({ ...prev, ...updates }));
   };
 
   const canProceed = () => {
-    switch (step) {
-      case 0:
-        return form.template_type !== "";
-      case 1:
-        return form.tenant_id.length >= 3 && form.business_name.length >= 1;
-      case 2:
-        return form.primary_color !== "";
-      case 3:
-        return form.design.preset !== "";
-      case 4:
-        return true;
-      default:
-        return false;
+    if (step === 0) return true; // app_type always has a default
+
+    if (isCustom) {
+      switch (step) {
+        case 1: return form.tenant_id.length >= 3 && form.business_name.length >= 1;
+        case 2: return form.repo_url.length > 0;
+        case 3: return true;
+        default: return false;
+      }
+    } else {
+      switch (step) {
+        case 1: return form.template_type !== "";
+        case 2: return form.tenant_id.length >= 3 && form.business_name.length >= 1;
+        case 3: return form.primary_color !== "";
+        case 4: return form.design.preset !== "";
+        case 5: return true;
+        default: return false;
+      }
     }
   };
 
@@ -126,21 +141,32 @@ export default function NewTenantPage() {
     setCreating(true);
 
     try {
+      const payload = isCustom
+        ? {
+            tenant_id: form.tenant_id,
+            business_name: form.business_name,
+            app_type: "custom",
+            repo_url: form.repo_url,
+            repo_branch: form.repo_branch,
+          }
+        : {
+            tenant_id: form.tenant_id,
+            template_type: form.template_type,
+            business_name: form.business_name,
+            app_type: "template",
+            brand: {
+              primaryColor: form.primary_color,
+              backgroundColor: form.background_color,
+              textColor: form.text_color,
+              logoUrl: form.logo_url,
+            },
+            design: form.design,
+          };
+
       const res = await fetch("/api/tenants/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          tenant_id: form.tenant_id,
-          template_type: form.template_type,
-          business_name: form.business_name,
-          brand: {
-            primaryColor: form.primary_color,
-            backgroundColor: form.background_color,
-            textColor: form.text_color,
-            logoUrl: form.logo_url,
-          },
-          design: form.design,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -151,11 +177,15 @@ export default function NewTenantPage() {
         return;
       }
 
-      // Show success banner with PR link, then redirect after a short delay
-      setSuccessPrUrl(data.pr_url);
-      setTimeout(() => {
+      // Show success banner with PR link (template) or redirect immediately (custom)
+      if (data.pr_url) {
+        setSuccessPrUrl(data.pr_url);
+        setTimeout(() => {
+          router.push(`/tenants/${form.tenant_id}`);
+        }, 3000);
+      } else {
         router.push(`/tenants/${form.tenant_id}`);
-      }, 3000);
+      }
     } catch (err) {
       setError("Failed to create tenant. Please try again.");
       setCreating(false);
@@ -168,7 +198,7 @@ export default function NewTenantPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-semibold text-white">Create a New Client App</h1>
         <p className="text-sm text-gray-400 mt-1">
-          Set up a branded mobile app for your client in {STEPS.length} easy steps. No coding needed.
+          Set up a mobile app for your client in a few easy steps.
         </p>
       </div>
 
@@ -203,8 +233,48 @@ export default function NewTenantPage() {
 
       {/* Step Content */}
       <div className="rounded-xl bg-gray-900 border border-gray-800 p-6">
-        {/* Step 1: Template */}
+        {/* Step 0: App Type */}
         {step === 0 && (
+          <div>
+            <h2 className="text-lg font-semibold text-white mb-1">What kind of app?</h2>
+            <p className="text-sm text-gray-400 mb-4">
+              Choose whether to use a pre-built template or connect a custom codebase.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <button
+                onClick={() => updateForm({ app_type: "template" })}
+                className={`flex items-start gap-3 p-5 rounded-xl border-2 text-left transition-colors ${
+                  form.app_type === "template" ? "border-[#2563EB] bg-gray-800" : "border-gray-800 hover:border-gray-700"
+                }`}
+              >
+                <span className="text-2xl mt-0.5">&#x1F4CB;</span>
+                <div>
+                  <span className="text-sm font-medium text-white block">Template App</span>
+                  <span className="text-xs text-gray-400 mt-1 block leading-relaxed">
+                    Use a pre-built template with config-driven branding, tabs, and content. No coding needed.
+                  </span>
+                </div>
+              </button>
+              <button
+                onClick={() => updateForm({ app_type: "custom" })}
+                className={`flex items-start gap-3 p-5 rounded-xl border-2 text-left transition-colors ${
+                  form.app_type === "custom" ? "border-[#2563EB] bg-gray-800" : "border-gray-800 hover:border-gray-700"
+                }`}
+              >
+                <span className="text-2xl mt-0.5">&#x1F4BB;</span>
+                <div>
+                  <span className="text-sm font-medium text-white block">Custom App</span>
+                  <span className="text-xs text-gray-400 mt-1 block leading-relaxed">
+                    Connect an existing Expo/React Native repo. Build and deploy it through this admin panel.
+                  </span>
+                </div>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Template Step 1: Template selection */}
+        {!isCustom && step === 1 && (
           <div>
             <h2 className="text-lg font-semibold text-white mb-1">
               Choose a template
@@ -238,8 +308,8 @@ export default function NewTenantPage() {
           </div>
         )}
 
-        {/* Step 2: Identity */}
-        {step === 1 && (
+        {/* Custom Step 1 / Template Step 2: Identity */}
+        {((isCustom && step === 1) || (!isCustom && step === 2)) && (
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-white mb-1">
               Client details
@@ -286,8 +356,84 @@ export default function NewTenantPage() {
           </div>
         )}
 
-        {/* Step 3: Brand */}
-        {step === 2 && (
+        {/* Custom Step 2: Repository */}
+        {isCustom && step === 2 && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold text-white mb-1">Repository</h2>
+            <p className="text-sm text-gray-400 mb-4">
+              Point to the GitHub repo containing your Expo/React Native app.
+            </p>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1.5">GitHub Repo URL</label>
+              <input
+                type="url"
+                value={form.repo_url}
+                onChange={(e) => updateForm({ repo_url: e.target.value })}
+                placeholder="https://github.com/org/repo"
+                className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2.5 text-sm text-white placeholder-gray-500 font-mono focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Must be a public repo or one accessible with your GitHub token.
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-1.5">Branch</label>
+              <input
+                type="text"
+                value={form.repo_branch}
+                onChange={(e) => updateForm({ repo_branch: e.target.value })}
+                placeholder="main"
+                className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2.5 text-sm text-white placeholder-gray-500 font-mono focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent"
+              />
+            </div>
+            <div className="rounded-lg bg-gray-800/50 border border-gray-700 p-4">
+              <h3 className="text-sm font-medium text-white mb-2">Requirements</h3>
+              <ul className="space-y-1.5 text-xs text-gray-400">
+                <li>&#x2022; Repo must have <code className="text-gray-300">eas.json</code> and <code className="text-gray-300">app.config.ts</code> (or app.json)</li>
+                <li>&#x2022; Dependencies installable via <code className="text-gray-300">npm ci</code></li>
+                <li>&#x2022; EAS project must be under the MBG Expo org (or use a shared EXPO_TOKEN)</li>
+              </ul>
+            </div>
+          </div>
+        )}
+
+        {/* Custom Step 3: Review */}
+        {isCustom && step === 3 && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold text-white mb-4">Review & Create</h2>
+            <div className="space-y-3">
+              <div className="flex justify-between py-2 border-b border-gray-800">
+                <span className="text-sm text-gray-400">App Type</span>
+                <span className="text-sm text-white">Custom App</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-gray-800">
+                <span className="text-sm text-gray-400">Tenant ID</span>
+                <span className="text-sm text-white font-mono">{form.tenant_id}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-gray-800">
+                <span className="text-sm text-gray-400">Business Name</span>
+                <span className="text-sm text-white">{form.business_name}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-gray-800">
+                <span className="text-sm text-gray-400">Repository</span>
+                <span className="text-sm text-[#2563EB] font-mono truncate max-w-xs">{form.repo_url}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-gray-800">
+                <span className="text-sm text-gray-400">Branch</span>
+                <span className="text-sm text-white font-mono">{form.repo_branch}</span>
+              </div>
+            </div>
+
+            {error && (
+              <div className="rounded-lg bg-red-900/30 border border-red-800 px-3 py-2 text-sm text-red-400">
+                {error}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Template Step 3: Brand */}
+        {!isCustom && step === 3 && (
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-white mb-1">
               Brand basics
@@ -422,8 +568,8 @@ export default function NewTenantPage() {
           </div>
         )}
 
-        {/* Step 4: Design */}
-        {step === 3 && (
+        {/* Template Step 4: Design */}
+        {!isCustom && step === 4 && (
           <div className="space-y-6">
             <h2 className="text-lg font-semibold text-white mb-4">
               Design customization
@@ -543,8 +689,8 @@ export default function NewTenantPage() {
           </div>
         )}
 
-        {/* Step 5: Review */}
-        {step === 4 && (
+        {/* Template Step 5: Review */}
+        {!isCustom && step === 5 && (
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-white mb-4">
               Review & Create

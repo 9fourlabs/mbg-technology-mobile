@@ -19,6 +19,8 @@ export default function ConfigEditorPage() {
   const [configJson, setConfigJson] = useState("");
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isCustomApp, setIsCustomApp] = useState(false);
+  const [repoUrl, setRepoUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [deploying, setDeploying] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,12 +32,19 @@ export default function ConfigEditorPage() {
       const supabase = createClient();
       const { data, error: fetchError } = await supabase
         .from("tenants")
-        .select("config")
+        .select("config, app_type, repo_url")
         .eq("id", id)
         .single();
 
       if (fetchError) {
         setError(fetchError.message);
+        setLoading(false);
+        return;
+      }
+
+      if (data.app_type === "custom") {
+        setIsCustomApp(true);
+        setRepoUrl(data.repo_url);
         setLoading(false);
         return;
       }
@@ -115,6 +124,37 @@ export default function ConfigEditorPage() {
     return (
       <div className="flex items-center justify-center py-20">
         <p className="text-gray-500">Loading config...</p>
+      </div>
+    );
+  }
+
+  if (isCustomApp) {
+    return (
+      <div>
+        <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
+          <Link href="/tenants" className="hover:text-white transition-colors">Tenants</Link>
+          <span>/</span>
+          <Link href={`/tenants/${id}`} className="hover:text-white transition-colors">{id}</Link>
+          <span>/</span>
+          <span className="text-white">Config</span>
+        </div>
+        <div className="rounded-xl bg-gray-900 border border-gray-800 p-8 text-center">
+          <span className="text-4xl mb-4 block">&#x1F4BB;</span>
+          <h2 className="text-lg font-semibold text-white mb-2">Custom App</h2>
+          <p className="text-sm text-gray-400 mb-4">
+            This is a custom app — its code lives in an external repository. Edit the code directly in the repo.
+          </p>
+          {repoUrl && (
+            <a
+              href={repoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-4 py-2.5 rounded-lg bg-[#2563EB] hover:bg-[#1d4ed8] text-sm font-medium text-white transition-colors"
+            >
+              Open Repository
+            </a>
+          )}
+        </div>
       </div>
     );
   }
