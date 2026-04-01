@@ -91,6 +91,15 @@ jobs:
       - name: Install EAS CLI
         run: npm install -g eas-cli
 
+      - name: Snapshot existing EAS builds before trigger
+        if: inputs.build_id != ''
+        id: pre-builds
+        run: |
+          # Record IDs of all currently finished builds so we can detect NEW ones later
+          EXISTING=$(eas build:list --limit 10 --json --non-interactive 2>/dev/null | jq -r '[.[] | select(.status == "FINISHED")] | map(.id) | join(",")' || echo "")
+          echo "existing_ids=$EXISTING" >> $GITHUB_OUTPUT
+          echo "Existing finished build IDs: $EXISTING"
+
       - name: Run EAS preview workflow (tenant)
         id: eas-workflow
         run: |
@@ -102,7 +111,7 @@ jobs:
           WORKFLOW_URL=$(echo "$OUTPUT" | grep -oP 'https://expo\.dev/accounts/[^\s]+' | head -1)
           echo "workflow_url=$WORKFLOW_URL" >> $GITHUB_OUTPUT
 
-      - name: Wait for EAS builds and report IDs back to admin
+      - name: Wait for NEW EAS builds and report IDs back to admin
         if: inputs.build_id != ''
         env:
           ADMIN_URL: ${{ secrets.ADMIN_URL }}
@@ -110,10 +119,10 @@ jobs:
         run: |
           BUILD_ID="${{ inputs.build_id }}"
           TENANT="${{ matrix.tenant }}"
-          echo "Waiting for EAS builds to appear for tenant: $TENANT (admin build: $BUILD_ID)"
+          EXISTING_IDS="${{ steps.pre-builds.outputs.existing_ids }}"
+          echo "Waiting for NEW EAS builds for tenant: $TENANT (admin build: $BUILD_ID)"
+          echo "Will ignore these existing IDs: $EXISTING_IDS"
 
-          # Poll EAS build list until we find finished builds for this run
-          # The builds we're looking for were just triggered, so they'll be the most recent
           MAX_ATTEMPTS=40  # ~20 minutes (30s intervals)
           ATTEMPT=0
           ANDROID_ID=""
@@ -124,27 +133,35 @@ jobs:
             echo "Poll attempt $ATTEMPT/$MAX_ATTEMPTS..."
 
             # Get recent builds as JSON
-            BUILDS_JSON=$(eas build:list --limit 6 --json --non-interactive 2>/dev/null || echo "[]")
+            BUILDS_JSON=$(eas build:list --limit 10 --json --non-interactive 2>/dev/null || echo "[]")
 
-            # Extract finished Android build ID (most recent)
-            ANDROID_ID=$(echo "$BUILDS_JSON" | jq -r '[.[] | select(.platform == "ANDROID" and .status == "FINISHED")] | first | .id // empty')
-            IOS_ID=$(echo "$BUILDS_JSON" | jq -r '[.[] | select(.platform == "IOS" and .status == "FINISHED")] | first | .id // empty')
+            # Filter to only NEW finished builds (not in the pre-existing snapshot)
+            ANDROID_ID=$(echo "$BUILDS_JSON" | jq -r --arg existing "$EXISTING_IDS" '
+              ($existing | split(",")) as $skip |
+              [.[] | select(.platform == "ANDROID" and .status == "FINISHED" and ([.id] | inside($skip) | not))] |
+              first | .id // empty')
+            IOS_ID=$(echo "$BUILDS_JSON" | jq -r --arg existing "$EXISTING_IDS" '
+              ($existing | split(",")) as $skip |
+              [.[] | select(.platform == "IOS" and .status == "FINISHED" and ([.id] | inside($skip) | not))] |
+              first | .id // empty')
 
             if [ -n "$ANDROID_ID" ] && [ -n "$IOS_ID" ]; then
-              echo "Both builds finished!"
+              echo "Both NEW builds finished!"
               echo "  Android: $ANDROID_ID"
               echo "  iOS: $IOS_ID"
               break
             fi
 
-            # Check if any builds errored
-            ERRORED=$(echo "$BUILDS_JSON" | jq -r '[.[] | select(.status == "ERRORED")] | length')
-            if [ "$ERRORED" -gt "0" ]; then
-              echo "Some builds errored, reporting what we have..."
+            # Check if any new builds errored
+            NEW_ERRORED=$(echo "$BUILDS_JSON" | jq -r --arg existing "$EXISTING_IDS" '
+              ($existing | split(",")) as $skip |
+              [.[] | select(.status == "ERRORED" and ([.id] | inside($skip) | not))] | length')
+            if [ "$NEW_ERRORED" -gt "0" ]; then
+              echo "Some new builds errored, reporting what we have..."
               break
             fi
 
-            echo "  Android: ${ANDROID_ID:-pending}  iOS: ${IOS_ID:-pending}"
+            echo "  Android: ${ANDROID_ID:-waiting}  iOS: ${IOS_ID:-waiting}"
             sleep 30
           done
 
