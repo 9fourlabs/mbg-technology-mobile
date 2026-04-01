@@ -24,8 +24,15 @@
       "id": "jobs",
       "label": "Jobs",
       "headerTitle": "Our Jobs",
-      "headerBody": "We have many jobs that we do. ",
-      "cards": []
+      "headerBody": "We have many jobs that we do.",
+      "cards": [
+        {
+          "id": "job-1",
+          "title": "Our Services",
+          "body": "Check out what we offer.",
+          "imageUri": "https://images.unsplash.com/photo-1521737604893-d14cc237f11d"
+        }
+      ]
     }
   ],
   "brand": {
