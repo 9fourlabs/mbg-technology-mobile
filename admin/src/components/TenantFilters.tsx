@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { TEMPLATE_LABELS } from "@/lib/labels";
 
 const TEMPLATE_TYPES = [
   "informational",
@@ -60,7 +61,7 @@ export default function TenantFilters({
         <option value="">All Types</option>
         {TEMPLATE_TYPES.map((t) => (
           <option key={t} value={t}>
-            {t.charAt(0).toUpperCase() + t.slice(1)}
+            {TEMPLATE_LABELS[t] ?? t}
           </option>
         ))}
       </select>

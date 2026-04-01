@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TEMPLATE_LABELS, STATUS_LABELS } from "@/lib/labels";
 
 interface TenantCardProps {
   id: string;
@@ -20,13 +21,19 @@ const templateColors: Record<string, string> = {
   directory: "bg-indigo-50 text-indigo-600",
 };
 
-const statusColors: Record<string, string> = {
-  draft: "bg-gray-200 text-gray-600",
-  preview: "bg-amber-50 text-amber-700",
-  production: "bg-emerald-50 text-emerald-700",
+const statusDotColors: Record<string, string> = {
+  draft: "bg-gray-400",
+  preview: "bg-amber-500",
+  production: "bg-emerald-500",
 };
 
-const customColor = "bg-cyan-50 text-cyan-600";
+/** Primary CTA label based on app status */
+function ctaLabel(status: string): string {
+  if (status === "draft") return "Set Up";
+  if (status === "preview") return "Share";
+  if (status === "production") return "Manage";
+  return "Open";
+}
 
 export default function TenantCard({
   id,
@@ -37,50 +44,41 @@ export default function TenantCard({
   app_type,
 }: TenantCardProps) {
   const isCustom = app_type === "custom";
-  return (
-    <div className="rounded-xl bg-white border border-gray-200 p-6 hover:border-gray-300 transition-colors">
-      {/* Business name + tenant ID */}
-      <h3 className="text-base font-semibold text-gray-900">
-        {business_name || id}
-      </h3>
-      {business_name && (
-        <p className="text-xs text-gray-500 mt-0.5">{id}</p>
-      )}
+  const templateLabel = isCustom
+    ? "Custom App"
+    : TEMPLATE_LABELS[template_type] ?? template_type;
+  const statusLabel = STATUS_LABELS[status] ?? status;
 
-      {/* Template + Status badges */}
-      <div className="flex items-center gap-2 mt-3">
-        <span
-          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${isCustom ? customColor : (templateColors[template_type] ?? "bg-gray-200 text-gray-600")}`}
-        >
-          {isCustom ? "Custom App" : template_type}
-        </span>
-        <span
-          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[status] ?? "bg-gray-200 text-gray-600"}`}
-        >
-          {status}
-        </span>
+  return (
+    <Link
+      href={`/tenants/${id}`}
+      className="block rounded-xl bg-white border border-gray-200 p-6 hover:border-blue-300 hover:shadow-sm transition-all group"
+    >
+      {/* Header: name + status dot */}
+      <div className="flex items-start justify-between">
+        <div>
+          <h3 className="text-base font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+            {business_name || id}
+          </h3>
+          <p className="text-xs text-gray-400 mt-0.5">{templateLabel}</p>
+        </div>
+        <div className="flex items-center gap-1.5 mt-1">
+          <span className={`w-2 h-2 rounded-full ${statusDotColors[status] ?? "bg-gray-400"}`} />
+          <span className="text-xs text-gray-500">{statusLabel}</span>
+        </div>
       </div>
 
       {/* Updated date */}
-      <p className="text-xs text-gray-500 mt-3">
+      <p className="text-xs text-gray-400 mt-4">
         Updated {new Date(updated_at).toLocaleDateString()}
       </p>
 
-      {/* Action buttons */}
-      <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-200">
-        <Link
-          href={`/tenants/${id}`}
-          className="inline-flex items-center px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-xs font-medium text-white transition-colors"
-        >
-          View
-        </Link>
-        <Link
-          href={`/tenants/${id}/builds`}
-          className="inline-flex items-center px-3 py-1.5 rounded-lg border border-gray-300 hover:border-gray-400 text-xs font-medium text-gray-600 hover:text-gray-900 transition-colors"
-        >
-          Builds
-        </Link>
+      {/* CTA */}
+      <div className="mt-4 pt-4 border-t border-gray-100">
+        <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-blue-600 group-hover:bg-blue-700 text-xs font-medium text-white transition-colors">
+          {ctaLabel(status)} &rarr;
+        </span>
       </div>
-    </div>
+    </Link>
   );
 }

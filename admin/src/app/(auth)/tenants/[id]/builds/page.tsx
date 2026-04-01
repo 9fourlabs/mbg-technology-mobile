@@ -69,22 +69,9 @@ export default async function BuildsPage({
     <div>
       <TenantTabBar tenantId={id} tenantName={tenant.business_name || id} appType={(tenant as any).app_type} />
 
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Builds</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            {tenant.business_name || id}
-          </p>
-        </div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <h1 className="text-2xl font-semibold text-gray-900">Builds</h1>
         <div className="flex items-center gap-3">
-          <a
-            href={expoBuildsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-blue-600 hover:text-blue-700 transition-colors"
-          >
-            View All Builds on Expo &rarr;
-          </a>
           <SharePreviewLink tenantId={id} />
           <DeployButtons
             tenantId={id}
@@ -143,12 +130,9 @@ export default async function BuildsPage({
           <table className="w-full">
             <thead>
               <tr className="text-left text-xs text-gray-500 border-b border-gray-200">
-                <th className="px-6 py-3 font-medium">Build ID</th>
-                <th className="px-6 py-3 font-medium">Profile</th>
+                <th className="px-6 py-3 font-medium">Type</th>
                 <th className="px-6 py-3 font-medium">Status</th>
-                <th className="px-6 py-3 font-medium">Artifacts</th>
-                <th className="px-6 py-3 font-medium">Platform</th>
-                <th className="px-6 py-3 font-medium">Version</th>
+                <th className="px-6 py-3 font-medium">Downloads</th>
                 <th className="px-6 py-3 font-medium">Started</th>
                 <th className="px-6 py-3 font-medium">Duration</th>
               </tr>
@@ -156,21 +140,15 @@ export default async function BuildsPage({
             <tbody className="divide-y divide-gray-200">
               {builds.map((build) => (
                 <tr key={build.id} className="text-sm">
-                  <td className="px-6 py-3 font-mono text-xs">
-                    {build.build_url ? (
-                      <a
-                        href={build.build_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-700 underline"
-                      >
-                        {build.id.slice(0, 8)}
-                      </a>
-                    ) : (
-                      <span className="text-gray-900">{build.id.slice(0, 8)}</span>
-                    )}
+                  <td className="px-6 py-3">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                      build.profile === "production"
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-amber-50 text-amber-700"
+                    }`}>
+                      {build.profile === "production" ? "Production" : "Preview"}
+                    </span>
                   </td>
-                  <td className="px-6 py-3 text-gray-500">{build.profile}</td>
                   <td className="px-6 py-3">
                     <BuildStatusPoller
                       build={{
@@ -180,90 +158,38 @@ export default async function BuildsPage({
                       }}
                       tenantId={id}
                     />
+                    {build.status === "failed" && build.error_message && (
+                      <p className="text-xs text-red-600 mt-1 truncate max-w-[200px]" title={build.error_message}>
+                        {build.error_message}
+                      </p>
+                    )}
                   </td>
                   <td className="px-6 py-3">
                     {build.status === "completed" && build.download_url ? (
                       <div className="flex items-center gap-2">
-                        <a
-                          href={build.download_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors"
-                        >
-                          APK
-                        </a>
+                        <a href={build.download_url} target="_blank" rel="noopener noreferrer"
+                          className="text-xs font-medium text-blue-600 hover:text-blue-700">APK</a>
                         {build.download_url_ios && (
-                          <a
-                            href={build.download_url_ios}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors"
-                          >
-                            iOS
-                          </a>
+                          <a href={build.download_url_ios} target="_blank" rel="noopener noreferrer"
+                            className="text-xs font-medium text-blue-600 hover:text-blue-700">iOS</a>
                         )}
                         <BuildArtifacts
                           downloadUrl={build.download_url}
                           downloadUrlIos={build.download_url_ios}
                           buildId={build.id}
                         />
-                        {build.build_url && (
-                          <a
-                            href={build.build_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-gray-500 hover:text-gray-500 transition-colors"
-                          >
-                            Build Log
-                          </a>
-                        )}
                       </div>
                     ) : build.status === "completed" ? (
-                      <div className="flex items-center gap-2">
-                        <BuildStatusPoller
-                          build={{
-                            id: build.id,
-                            status: build.status,
-                            workflow_run_id: build.workflow_run_id,
-                          }}
-                          tenantId={id}
-                          artifactsOnly
-                        />
-                        {build.build_url && (
-                          <a
-                            href={build.build_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-gray-500 hover:text-gray-500 transition-colors"
-                          >
-                            Build Log
-                          </a>
-                        )}
-                      </div>
+                      <BuildStatusPoller
+                        build={{ id: build.id, status: build.status, workflow_run_id: build.workflow_run_id }}
+                        tenantId={id}
+                        artifactsOnly
+                      />
                     ) : build.status === "failed" ? (
-                      <div className="flex items-center gap-2">
-                        <RetryBuildButton
-                          tenantId={id}
-                          profile={build.profile}
-                        />
-                        {build.error_message && (
-                          <span
-                            className="text-xs text-red-600 truncate max-w-[200px]"
-                            title={build.error_message}
-                          >
-                            {build.error_message}
-                          </span>
-                        )}
-                      </div>
+                      <RetryBuildButton tenantId={id} profile={build.profile} />
                     ) : (
-                      <span className="text-gray-500">---</span>
+                      <span className="text-gray-400">&mdash;</span>
                     )}
-                  </td>
-                  <td className="px-6 py-3 text-gray-500">
-                    {build.platform ?? "android"}
-                  </td>
-                  <td className="px-6 py-3 text-gray-500 font-mono text-xs">
-                    {build.app_version ?? "-"}
                   </td>
                   <td className="px-6 py-3 text-gray-500">
                     {new Date(build.created_at).toLocaleString()}

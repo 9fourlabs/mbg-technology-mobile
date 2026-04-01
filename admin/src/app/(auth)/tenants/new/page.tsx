@@ -5,14 +5,14 @@ import { useRouter } from "next/navigation";
 import ImageUploader from "@/components/ImageUploader";
 
 const TEMPLATE_TYPES = [
-  { id: "informational", label: "Informational", emoji: "\u{1F4CB}", color: "border-gray-500", description: "A simple branded app with pages of content. Perfect for businesses that want a mobile presence." },
-  { id: "authenticated", label: "Authenticated", emoji: "\u{1F512}", color: "border-blue-500", description: "Like Informational, but users can create accounts and log in. Good for membership organizations." },
-  { id: "booking", label: "Booking", emoji: "\u{1F4C5}", color: "border-green-500", description: "Lets customers book appointments and manage their schedule. Ideal for salons, consultants, trainers." },
-  { id: "commerce", label: "Commerce", emoji: "\u{1F6D2}", color: "border-yellow-500", description: "An online store with product catalog, shopping cart, and checkout. For retail, food, merchandise." },
-  { id: "loyalty", label: "Loyalty", emoji: "\u{2B50}", color: "border-purple-500", description: "A digital loyalty card with points, rewards, and tier progression. Great for coffee shops, restaurants." },
-  { id: "content", label: "Content", emoji: "\u{1F4F0}", color: "border-orange-500", description: "A content feed with articles, categories, and bookmarks. For newsletters, blogs, training content." },
-  { id: "forms", label: "Forms", emoji: "\u{1F4DD}", color: "border-teal-500", description: "Custom forms for collecting information from users. Insurance intake, surveys, applications." },
-  { id: "directory", label: "Directory", emoji: "\u{1F4D6}", color: "border-indigo-500", description: "A searchable directory with categories and detail pages. Member directories, location finders." },
+  { id: "informational", label: "Info Pages", emoji: "\u{1F4CB}", color: "border-gray-500", description: "A simple branded app with pages of content. Perfect for businesses that want a mobile presence." },
+  { id: "authenticated", label: "Member Portal", emoji: "\u{1F512}", color: "border-blue-500", description: "Content with user login and accounts. Good for membership organizations and client portals." },
+  { id: "booking", label: "Booking & Scheduling", emoji: "\u{1F4C5}", color: "border-green-500", description: "Lets customers book appointments and manage their schedule. Ideal for salons, consultants, trainers." },
+  { id: "commerce", label: "Online Store", emoji: "\u{1F6D2}", color: "border-yellow-500", description: "An online store with product catalog, shopping cart, and checkout. For retail, food, merchandise." },
+  { id: "loyalty", label: "Loyalty & Rewards", emoji: "\u{2B50}", color: "border-purple-500", description: "A digital loyalty card with points, rewards, and tier progression. Great for coffee shops, restaurants." },
+  { id: "content", label: "Blog & Articles", emoji: "\u{1F4F0}", color: "border-orange-500", description: "A content feed with articles, categories, and bookmarks. For newsletters, blogs, training content." },
+  { id: "forms", label: "Forms & Surveys", emoji: "\u{1F4DD}", color: "border-teal-500", description: "Custom forms for collecting information from users. Insurance intake, surveys, applications." },
+  { id: "directory", label: "Directory & Listings", emoji: "\u{1F4D6}", color: "border-indigo-500", description: "A searchable directory with categories and detail pages. Member directories, location finders." },
 ];
 
 const TEMPLATE_STEPS = ["Choose Type", "Pick a Template", "Name Your App", "Colors & Logo", "Visual Style", "Review & Create"];
