@@ -214,6 +214,34 @@ export async function createTenantPullRequest(
 }
 
 /**
+ * Commit tenant config files directly to main (no PR).
+ * Used by the build flow to ensure config is available before building.
+ */
+export async function commitTenantConfigToMain(
+  tenantId: string,
+  tsContent: string,
+  jsonContent: string,
+): Promise<{ sha: string }> {
+  // Commit .json config directly to main
+  await commitFile(
+    `configs/tenants/${tenantId}.json`,
+    jsonContent,
+    `chore: update ${tenantId} config for build`,
+    "main",
+  );
+
+  // Commit .ts config directly to main
+  const tsResult = await commitFile(
+    `configs/tenants-src/${tenantId}.ts`,
+    tsContent,
+    `chore: update ${tenantId} compiled config for build`,
+    "main",
+  );
+
+  return { sha: tsResult.commit.sha };
+}
+
+/**
  * Update the tenantProjects.ts file to add or update a tenant's Expo project ID.
  */
 export async function updateTenantProjects(

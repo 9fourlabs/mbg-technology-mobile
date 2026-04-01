@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { triggerWorkflowDispatch, getLatestWorkflowRun } from "@/lib/github";
+import { triggerWorkflowDispatch, getLatestWorkflowRun, commitTenantConfigToMain } from "@/lib/github";
+import { configToTypeScript } from "@/lib/config-generator";
+import type { AppTemplate } from "@/lib/types";
 
 export async function POST(
   request: NextRequest,
@@ -34,7 +36,7 @@ export async function POST(
     // Load tenant
     const { data: tenant, error: tenantError } = await supabase
       .from("tenants")
-      .select("id, expo_project_id, template_type, app_version, app_type, repo_url, repo_branch")
+      .select("id, expo_project_id, template_type, app_version, app_type, repo_url, repo_branch, config")
       .eq("id", tenantId)
       .single();
 
@@ -55,6 +57,19 @@ export async function POST(
 
     const appVersion = (tenant as Record<string, unknown>).app_version as string ?? "1.0.0";
     const isCustom = (tenant as Record<string, unknown>).app_type === "custom";
+
+    // For template apps: ensure config JSON is committed to main before building
+    if (!isCustom && tenant.config && Object.keys(tenant.config as object).length > 0) {
+      try {
+        const config = tenant.config as AppTemplate;
+        const tsContent = configToTypeScript(tenantId, config);
+        const jsonContent = JSON.stringify(config, null, 2);
+        await commitTenantConfigToMain(tenantId, tsContent, jsonContent);
+      } catch (err) {
+        console.warn("Failed to commit config to main (build may use stale config):", err);
+        // Non-fatal: proceed with the build anyway
+      }
+    }
 
     // Create build record FIRST so we have a UUID to pass through the pipeline
     const { data: build, error: buildError } = await supabase
