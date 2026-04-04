@@ -310,20 +310,51 @@ export async function getWorkflowRun(runId: string) {
 
 /**
  * Get the most recent workflow run for a given workflow file.
+ * When `afterDate` is provided, retries until a run created after that
+ * timestamp is found (handles the delay between dispatch and run creation).
  */
-export async function getLatestWorkflowRun(workflowFile: string) {
+export async function getLatestWorkflowRun(
+  workflowFile: string,
+  afterDate?: Date,
+) {
   const repo = getRepo();
-  const res = await fetch(
-    `${API}/repos/${repo}/actions/workflows/${workflowFile}/runs?per_page=1&branch=main`,
-    {
-      method: "GET",
-      headers: headers(),
+  const maxAttempts = afterDate ? 5 : 1;
+  const delayMs = 3000;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const res = await fetch(
+      `${API}/repos/${repo}/actions/workflows/${workflowFile}/runs?per_page=5&branch=main`,
+      {
+        method: "GET",
+        headers: headers(),
+      }
+    );
+    const data = await handleResponse<{
+      workflow_runs: Array<{
+        id: number;
+        html_url: string;
+        status: string;
+        created_at: string;
+      }>;
+    }>(res);
+
+    if (afterDate) {
+      const fresh = data.workflow_runs.find(
+        (r) => new Date(r.created_at) >= afterDate
+      );
+      if (fresh) return fresh;
+
+      // Wait before retrying — the run may not have been created yet
+      if (attempt < maxAttempts - 1) {
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    } else {
+      return data.workflow_runs[0] ?? null;
     }
-  );
-  const data = await handleResponse<{
-    workflow_runs: Array<{ id: number; html_url: string; status: string }>;
-  }>(res);
-  return data.workflow_runs[0] ?? null;
+  }
+
+  // Fallback: return the latest run even if it predates afterDate
+  return null;
 }
 
 /**

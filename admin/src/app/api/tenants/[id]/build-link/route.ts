@@ -97,6 +97,10 @@ export async function POST(
       );
     }
 
+    // Mark the build as completed now that EAS artifacts are linked
+    updateFields.status = "completed";
+    updateFields.updated_at = new Date().toISOString();
+
     const { error: updateError } = await supabase
       .from("builds")
       .update(updateFields)

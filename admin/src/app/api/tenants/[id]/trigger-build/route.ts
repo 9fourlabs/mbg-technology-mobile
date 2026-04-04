@@ -140,10 +140,11 @@ export async function POST(
     }
 
     // Wait briefly for GitHub to register the run, then update the build record
+    const dispatchedAt = new Date();
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     try {
-      const latestRun = await getLatestWorkflowRun(workflowFile);
+      const latestRun = await getLatestWorkflowRun(workflowFile, dispatchedAt);
       if (latestRun) {
         await supabase
           .from("builds")
