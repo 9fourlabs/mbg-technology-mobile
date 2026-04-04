@@ -27,7 +27,13 @@ export const bobsBurgersTemplate: InformationalTemplate = {
       "label": "Jobs",
       "headerTitle": "Our Jobs",
       "headerBody": "We have many jobs that we do. ",
-      "cards": []
+      "cards": [
+        {
+          "id": "jobs-placeholder",
+          "title": "Our Services",
+          "body": "Check out the services we offer."
+        }
+      ]
     }
   ],
   "brand": {
