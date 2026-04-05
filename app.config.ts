@@ -6,6 +6,10 @@ import { resolve } from "path";
 // Set APP_TENANT=mbg (or another tenant key) to swap branding/content.
 const tenant = process.env.APP_TENANT ?? "mbg";
 
+// Android package names and iOS bundle IDs cannot contain hyphens.
+// Replace hyphens with dots for valid identifiers (e.g., sample-booking → sample.booking).
+const tenantSafe = tenant.replace(/-/g, ".");
+
 // For demos/previews we can reuse the same native identifiers across tenants.
 // This prevents EAS from requiring new signing credentials per tenant.
 //
@@ -66,7 +70,7 @@ const config: ExpoConfig = {
         ? sharedIosBundleId
         : tenant === "mbg"
           ? "com.mbg.mbgtechnologymobile"
-          : `com.mbg.info.${tenant}`,
+          : `com.mbg.info.${tenantSafe}`,
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
     },
@@ -86,7 +90,7 @@ const config: ExpoConfig = {
         ? sharedAndroidPackage
         : tenant === "mbg"
           ? "com.mbg.mbgtechnologymobile"
-          : `com.mbg.info.${tenant}`,
+          : `com.mbg.info.${tenantSafe}`,
   },
   plugins: [
     "expo-secure-store",
