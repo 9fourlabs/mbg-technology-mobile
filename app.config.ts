@@ -95,7 +95,10 @@ const config: ExpoConfig = {
   plugins: [
     "expo-secure-store",
     "expo-notifications",
-    ["@sentry/react-native/expo", { organization: "ninefour-labs", project: "mbg-mobile" }],
+    // Sentry Expo plugin omitted: AGP 5.12.2 (from @sentry/react-native v7) is
+    // incompatible with Gradle 9.0.0 (Expo SDK 55). JS-level error tracking still
+    // works via Sentry.init() in index.ts. Re-enable when upgrading to Expo SDK 56+
+    // which pairs with @sentry/react-native v8 and a compatible AGP version.
   ],
   web: {
     favicon: resolveAsset(tenant, "favicon.png"),
