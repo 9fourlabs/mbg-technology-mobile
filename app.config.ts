@@ -94,7 +94,10 @@ const config: ExpoConfig = {
   },
   plugins: [
     "expo-secure-store",
-    "expo-notifications",
+    // expo-notifications plugin temporarily removed: existing iOS provisioning
+    // profile lacks push notification capability. Re-enable after regenerating
+    // the profile with push capability in Apple Developer portal.
+    // JS-level notification APIs still work for foreground notifications.
     // Sentry Expo plugin omitted: AGP 5.12.2 (from @sentry/react-native v7) is
     // incompatible with Gradle 9.0.0 (Expo SDK 55). JS-level error tracking still
     // works via Sentry.init() in index.ts. Re-enable when upgrading to Expo SDK 56+
