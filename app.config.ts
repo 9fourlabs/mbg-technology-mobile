@@ -28,25 +28,25 @@ function resolveAsset(tenantKey: string, filename: string): string {
 }
 
 /**
- * Try to load the tenant JSON config and pull splashBackgroundColor from brand.
+ * Load the full tenant JSON config so we can read appStore + brand metadata.
  */
-function loadSplashBackgroundColor(tenantKey: string): string {
+function loadTenantConfig(tenantKey: string): Record<string, any> | null {
   const configPath = resolve(__dirname, `configs/tenants/${tenantKey}.json`);
   try {
     if (existsSync(configPath)) {
-      const raw = JSON.parse(readFileSync(configPath, "utf8"));
-      if (raw?.brand?.splashBackgroundColor) {
-        return raw.brand.splashBackgroundColor;
-      }
+      return JSON.parse(readFileSync(configPath, "utf8"));
     }
   } catch {
-    // fall through to default
+    // fall through
   }
-  return "#ffffff";
+  return null;
 }
 
+const tenantConfig = loadTenantConfig(tenant);
+const appStore = tenantConfig?.appStore;
+
 const config: ExpoConfig = {
-  name: tenant === "mbg" ? "MBG Technology" : "Informational App",
+  name: appStore?.appName ?? (tenant === "mbg" ? "MBG Technology" : tenant.split("-").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")),
   slug: nativeIdMode === "shared" || tenant === "mbg" ? "mbg-technology" : `info-${tenant}`,
   version: process.env.APP_VERSION ?? "1.0.0",
   orientation: "portrait",
@@ -55,7 +55,7 @@ const config: ExpoConfig = {
   splash: {
     image: resolveAsset(tenant, "splash-icon.png"),
     resizeMode: "contain",
-    backgroundColor: loadSplashBackgroundColor(tenant),
+    backgroundColor: appStore?.splashBackgroundColor ?? tenantConfig?.brand?.splashBackgroundColor ?? "#ffffff",
   },
   ios: {
     supportsTablet: true,
@@ -73,7 +73,7 @@ const config: ExpoConfig = {
   },
   android: {
     adaptiveIcon: {
-      backgroundColor: "#E6F4FE",
+      backgroundColor: appStore?.adaptiveIconBackgroundColor ?? "#E6F4FE",
       foregroundImage: resolveAsset(tenant, "android-icon-foreground.png"),
       backgroundImage: resolveAsset(tenant, "android-icon-background.png"),
       monochromeImage: resolveAsset(tenant, "android-icon-monochrome.png"),
@@ -88,7 +88,11 @@ const config: ExpoConfig = {
           ? "com.mbg.mbgtechnologymobile"
           : `com.mbg.info.${tenant}`,
   },
-  plugins: ["expo-secure-store"],
+  plugins: [
+    "expo-secure-store",
+    "expo-notifications",
+    ["@sentry/react-native/expo", { organization: "ninefour-labs", project: "mbg-mobile" }],
+  ],
   web: {
     favicon: resolveAsset(tenant, "favicon.png"),
   },

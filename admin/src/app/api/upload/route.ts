@@ -10,7 +10,7 @@ const ALLOWED_TYPES = [
   "image/svg+xml",
 ];
 
-const ALLOWED_CATEGORIES = ["logo", "card", "product", "post", "directory"];
+const ALLOWED_CATEGORIES = ["logo", "card", "product", "post", "directory", "app-icon", "splash", "hero"];
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
 

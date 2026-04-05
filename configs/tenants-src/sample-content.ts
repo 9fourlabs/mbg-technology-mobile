@@ -1,0 +1,106 @@
+import type { ContentTemplate } from "../../src/templates/types";
+
+export const sampleContentTemplate: ContentTemplate = {
+  templateId: "content",
+  brand: {
+    logoUri:
+      "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=600&q=80",
+    primaryColor: "#059669",
+    backgroundColor: "#0F1A14",
+    textColor: "#FFFFFF",
+    mutedTextColor: "#6EE7B7",
+  },
+  auth: {
+    supabaseUrl: "https://YOUR_PROJECT.supabase.co",
+    supabaseAnonKey: "YOUR_ANON_KEY",
+  },
+  content: {
+    categories: [
+      { id: "workouts", name: "Workouts" },
+      { id: "nutrition", name: "Nutrition" },
+      { id: "mindfulness", name: "Mindfulness" },
+      { id: "recovery", name: "Recovery" },
+    ],
+    displayMode: "feed",
+    allowBookmarks: true,
+  },
+  tabs: [
+    {
+      id: "home",
+      label: "Home",
+      headerTitle: "FitLife Journal",
+      headerBody: "Your daily guide to a healthier, stronger you.",
+      cards: [
+        {
+          id: "hero",
+          imageUri:
+            "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80",
+          title: "Welcome to FitLife Journal",
+          body: "Expert articles on workouts, nutrition, mindfulness, and recovery -- all in one place.",
+          action: {
+            type: "open_url",
+            url: "https://example.com/fitlife",
+            label: "Start reading",
+            variant: "primary",
+          },
+        },
+        {
+          id: "cat-workouts",
+          imageUri:
+            "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1200&q=80",
+          title: "Workouts",
+          body: "From HIIT to yoga, find routines that fit your schedule and goals.",
+        },
+        {
+          id: "cat-nutrition",
+          imageUri:
+            "https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=1200&q=80",
+          title: "Nutrition",
+          body: "Meal plans, recipes, and the science behind fueling your body right.",
+        },
+        {
+          id: "cat-mindfulness",
+          imageUri:
+            "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1200&q=80",
+          title: "Mindfulness",
+          body: "Guided meditations, breathing techniques, and mental wellness tips.",
+        },
+        {
+          id: "cat-recovery",
+          imageUri:
+            "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=1200&q=80",
+          title: "Recovery",
+          body: "Stretching routines, sleep optimization, and injury prevention advice.",
+        },
+      ],
+    },
+    {
+      id: "articles",
+      label: "Articles",
+      headerTitle: "Articles",
+      headerBody: "Browse the latest content across all categories.",
+      cards: [
+        {
+          id: "articles-placeholder",
+          title: "Latest Articles",
+          body: "Fresh content added weekly across all categories.",
+        },
+      ],
+    },
+    {
+      id: "bookmarks",
+      label: "Saved",
+      headerTitle: "Saved Articles",
+      headerBody: "Your bookmarked articles for quick access.",
+      cards: [],
+    },
+    {
+      id: "profile",
+      label: "Profile",
+      headerTitle: "Your Profile",
+      headerBody: "Manage your reading preferences and account settings.",
+      cards: [],
+    },
+  ],
+  protectedTabs: ["bookmarks", "profile"],
+};

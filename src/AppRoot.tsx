@@ -1,5 +1,6 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import Constants from "expo-constants";
+import * as Sentry from "@sentry/react-native";
 import { getTemplate } from "./templates";
 import TemplateApp from "./TemplateApp";
 import AuthenticatedTemplateApp from "./AuthenticatedTemplateApp";
@@ -9,10 +10,17 @@ import LoyaltyTemplateApp from "./LoyaltyTemplateApp";
 import ContentTemplateApp from "./ContentTemplateApp";
 import FormsTemplateApp from "./FormsTemplateApp";
 import DirectoryTemplateApp from "./DirectoryTemplateApp";
+import { usePushNotifications } from "./hooks/usePushNotifications";
 
 export default function AppRoot() {
   const tenant = String((Constants.expoConfig?.extra as any)?.tenant ?? "mbg");
   const template = useMemo(() => getTemplate(tenant), [tenant]);
+  usePushNotifications();
+
+  useEffect(() => {
+    Sentry.setTag("tenant", tenant);
+    Sentry.setTag("templateId", template.templateId);
+  }, [tenant, template.templateId]);
 
   switch (template.templateId) {
     case "booking":

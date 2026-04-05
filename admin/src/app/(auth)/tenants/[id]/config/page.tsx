@@ -7,10 +7,11 @@ import BrandEditor from "./brand-editor";
 import DesignEditor from "./design-editor";
 import TabsEditor from "./tabs-editor";
 import TemplateSettingsEditor from "./template-settings-editor";
+import AppStoreEditor from "./appstore-editor";
 import PhoneMockup from "./phone-mockup";
 import TenantTabBar from "@/components/TenantTabBar";
 
-const TABS = ["Brand", "Design", "Pages", "Features", "Advanced"];
+const TABS = ["Brand", "Design", "Pages", "Features", "App Store", "Advanced"];
 
 export default function ConfigEditorPage() {
   const { id } = useParams<{ id: string }>();
@@ -74,7 +75,7 @@ export default function ConfigEditorPage() {
     setSaving(true);
 
     try {
-      const parsed = activeTab === 4 ? JSON.parse(configJson) : config;
+      const parsed = activeTab === 5 ? JSON.parse(configJson) : config;
       const supabase = createClient();
       const { error: updateError } = await supabase
         .from("tenants")
@@ -102,7 +103,7 @@ export default function ConfigEditorPage() {
     setDeploying(true);
 
     try {
-      const parsed = activeTab === 4 ? JSON.parse(configJson) : config;
+      const parsed = activeTab === 5 ? JSON.parse(configJson) : config;
 
       const res = await fetch(`/api/tenants/${id}/save-config`, {
         method: "POST",
@@ -201,7 +202,10 @@ export default function ConfigEditorPage() {
             {activeTab === 3 && config && (
               <TemplateSettingsEditor config={config} onChange={handleConfigChange} />
             )}
-            {activeTab === 4 && (
+            {activeTab === 4 && config && (
+              <AppStoreEditor tenantId={id} config={config as any} onChange={handleConfigChange as any} />
+            )}
+            {activeTab === 5 && (
               <div>
                 <h2 className="text-base font-semibold text-gray-900 mb-4">Advanced Config</h2>
                 <p className="text-xs text-gray-500 mb-3">

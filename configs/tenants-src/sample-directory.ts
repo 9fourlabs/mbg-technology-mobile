@@ -1,0 +1,94 @@
+import type { DirectoryTemplate } from "../../src/templates/types";
+
+export const sampleDirectoryTemplate: DirectoryTemplate = {
+  templateId: "directory",
+  brand: {
+    logoUri:
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80",
+    primaryColor: "#4F46E5",
+    backgroundColor: "#0F0F2D",
+    textColor: "#FFFFFF",
+    mutedTextColor: "#A5B4FC",
+  },
+  auth: {
+    supabaseUrl: "https://YOUR_PROJECT.supabase.co",
+    supabaseAnonKey: "YOUR_ANON_KEY",
+  },
+  directory: {
+    itemLabel: "Business",
+    itemLabelPlural: "Businesses",
+    fields: [
+      { key: "name", label: "Business Name", type: "text", searchable: true },
+      { key: "email", label: "Email", type: "email" },
+      { key: "phone", label: "Phone", type: "phone" },
+      { key: "website", label: "Website", type: "url" },
+      { key: "address", label: "Address", type: "address" },
+    ],
+    categories: [
+      { id: "all", name: "All" },
+      { id: "restaurants", name: "Restaurants" },
+      { id: "retail", name: "Retail" },
+      { id: "professional-services", name: "Professional Services" },
+    ],
+    enableMap: false,
+  },
+  tabs: [
+    {
+      id: "home",
+      label: "Home",
+      headerTitle: "Chamber Connect",
+      headerBody: "Your local business directory powered by the Chamber of Commerce.",
+      cards: [
+        {
+          id: "welcome",
+          imageUri:
+            "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=1200&q=80",
+          title: "Welcome to Chamber Connect",
+          body: "Discover local businesses, connect with professionals, and support your community.",
+          action: {
+            type: "open_url",
+            url: "https://example.com/chamber-connect",
+            label: "Explore",
+            variant: "primary",
+          },
+        },
+        {
+          id: "featured-restaurants",
+          imageUri:
+            "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80",
+          title: "Restaurants",
+          body: "Browse local dining options from casual eateries to fine dining establishments.",
+        },
+        {
+          id: "featured-retail",
+          imageUri:
+            "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80",
+          title: "Retail Shops",
+          body: "Find unique boutiques, specialty stores, and everyday essentials nearby.",
+        },
+        {
+          id: "featured-professional",
+          imageUri:
+            "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80",
+          title: "Professional Services",
+          body: "Accountants, lawyers, consultants, and more -- all members of your local chamber.",
+        },
+      ],
+    },
+    {
+      id: "browse",
+      label: "Browse",
+      headerTitle: "Browse Businesses",
+      headerBody: "Search and filter the full member directory.",
+      cards: [],
+    },
+    {
+      id: "profile",
+      label: "Profile",
+      headerTitle: "Your Profile",
+      headerBody: "Manage your account and business listing.",
+      cards: [],
+    },
+  ],
+  protectedTabs: ["browse", "profile"],
+};

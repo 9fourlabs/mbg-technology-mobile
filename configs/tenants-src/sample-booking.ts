@@ -1,0 +1,125 @@
+import type { BookingTemplate } from "../../src/templates/types";
+
+export const sampleBookingTemplate: BookingTemplate = {
+  templateId: "booking",
+  brand: {
+    logoUri:
+      "https://images.unsplash.com/photo-1540555700478-4be289fbec6d?auto=format&fit=crop&w=600&q=80",
+    primaryColor: "#0D9488",
+    backgroundColor: "#0F172A",
+    textColor: "#FFFFFF",
+    mutedTextColor: "#94A3B8",
+  },
+  auth: {
+    supabaseUrl: "https://YOUR_PROJECT.supabase.co",
+    supabaseAnonKey: "YOUR_ANON_KEY",
+  },
+  booking: {
+    services: [
+      {
+        id: "swedish-massage",
+        name: "Swedish Massage",
+        duration: 60,
+        price: 85,
+        description: "A classic full-body massage to ease tension and promote relaxation.",
+      },
+      {
+        id: "deep-tissue",
+        name: "Deep Tissue Massage",
+        duration: 90,
+        price: 120,
+        description: "Targeted pressure to release chronic muscle knots and tightness.",
+      },
+      {
+        id: "facial-treatment",
+        name: "Facial Treatment",
+        duration: 45,
+        price: 65,
+        description: "Rejuvenating facial with cleansing, exfoliation, and hydration.",
+      },
+      {
+        id: "hot-stone",
+        name: "Hot Stone Therapy",
+        duration: 75,
+        price: 110,
+        description: "Heated basalt stones melt away stress and improve circulation.",
+      },
+    ],
+    businessHours: [
+      { day: 1, start: "09:00", end: "19:00" },
+      { day: 2, start: "09:00", end: "19:00" },
+      { day: 3, start: "09:00", end: "19:00" },
+      { day: 4, start: "09:00", end: "19:00" },
+      { day: 5, start: "09:00", end: "19:00" },
+      { day: 6, start: "09:00", end: "19:00" },
+    ],
+    slotDuration: 30,
+    advanceBookingDays: 21,
+  },
+  tabs: [
+    {
+      id: "home",
+      label: "Home",
+      headerTitle: "Serenity Spa",
+      headerBody: "Relax. Restore. Rejuvenate.",
+      cards: [
+        {
+          id: "hero",
+          imageUri:
+            "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=1200&q=80",
+          title: "Welcome to Serenity Spa",
+          body: "Book your next appointment and let our expert therapists take care of the rest.",
+          action: {
+            type: "open_url",
+            url: "https://example.com/serenity-spa",
+            label: "Learn more",
+            variant: "primary",
+          },
+        },
+        {
+          id: "services-overview",
+          imageUri:
+            "https://images.unsplash.com/photo-1600334129128-685c5582fd35?auto=format&fit=crop&w=1200&q=80",
+          title: "Our Services",
+          body: "From Swedish massage to hot stone therapy, we offer a full menu of treatments tailored to your needs.",
+        },
+        {
+          id: "ambiance",
+          imageUri:
+            "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1200&q=80",
+          title: "A Tranquil Escape",
+          body: "Step into a calming environment designed to soothe your senses from the moment you arrive.",
+        },
+        {
+          id: "gift-cards",
+          imageUri:
+            "https://images.unsplash.com/photo-1596178060810-72f53ce9a65c?auto=format&fit=crop&w=1200&q=80",
+          title: "Gift Cards Available",
+          body: "Give the gift of relaxation to someone special.",
+        },
+      ],
+    },
+    {
+      id: "book",
+      label: "Book",
+      headerTitle: "Book an Appointment",
+      headerBody: "Choose a service, pick a time, and we will take care of the rest.",
+      cards: [],
+    },
+    {
+      id: "appointments",
+      label: "My Appts",
+      headerTitle: "My Appointments",
+      headerBody: "View and manage your upcoming and past appointments.",
+      cards: [],
+    },
+    {
+      id: "profile",
+      label: "Profile",
+      headerTitle: "Your Profile",
+      headerBody: "Manage your account settings and preferences.",
+      cards: [],
+    },
+  ],
+  protectedTabs: ["book", "appointments", "profile"],
+};

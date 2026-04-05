@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 
 interface CheckItem {
   label: string;
+  step: number;
   passed: boolean;
   href?: string;
   hint?: string;
@@ -25,6 +26,7 @@ export default async function ReadinessChecklist({
 
   const config = tenant.config as Record<string, unknown> | null;
   const brand = (config?.brand ?? {}) as Record<string, string>;
+  const appStore = (config?.appStore ?? {}) as Record<string, string>;
   const tabs = (config?.tabs ?? []) as unknown[];
 
   // Check for at least one successful preview build
@@ -37,28 +39,53 @@ export default async function ReadinessChecklist({
 
   const isCustom = (tenant as Record<string, unknown>).app_type === "custom";
 
-  const needsContent = !isCustom && [
-    "booking",
-    "commerce",
-    "content",
-    "directory",
-    "loyalty",
-  ].includes(tenant.template_type);
+  const logoUri = brand.logoUri ?? "";
+  const isLogoPlaceholder =
+    logoUri.includes("example.com") || logoUri.includes("unsplash");
+
+  const primaryColor = brand.primaryColor ?? "";
+  const isDefaultColor =
+    !primaryColor ||
+    primaryColor === "#2563EB" ||
+    primaryColor === "#FF9900";
+
+  const appName = appStore.appName ?? "";
+  const isDefaultAppName =
+    !appName || appName === "My App";
 
   const checks: CheckItem[] = isCustom
     ? [
         {
+          step: 1,
           label: "Repo URL configured",
           passed: !!(tenant as Record<string, unknown>).repo_url,
+          href: `/tenants/${tenantId}/config`,
           hint: "Custom apps need a GitHub repo URL",
         },
         {
-          label: "App ID configured",
+          step: 2,
+          label: "Brand configured",
+          passed: !isDefaultColor,
+          href: `/tenants/${tenantId}/config`,
+          hint: "Set a primary brand color that is not the default",
+        },
+        {
+          step: 3,
+          label: "App store info set",
+          passed: !isDefaultAppName,
+          href: `/tenants/${tenantId}/config`,
+          hint: "Set your app name for the app stores",
+        },
+        {
+          step: 4,
+          label: "Expo Project ID",
           passed: !!tenant.expo_project_id,
+          href: `/tenants/${tenantId}/config`,
           hint: "Required for production builds and app store submission",
         },
         {
-          label: "Preview build complete",
+          step: 5,
+          label: "Preview build completed",
           passed: (successfulBuilds ?? 0) > 0,
           href: `/tenants/${tenantId}/builds`,
           hint: "Deploy at least one successful preview build before going to production",
@@ -66,39 +93,48 @@ export default async function ReadinessChecklist({
       ]
     : [
         {
-          label: "Settings saved",
-          passed: !!config && tabs.length > 0,
+          step: 1,
+          label: "Brand configured",
+          passed: !isDefaultColor,
           href: `/tenants/${tenantId}/config`,
-          hint: "Save at least one tab in the config editor",
+          hint: "Set a primary brand color that is not the default",
         },
         {
-          label: "Brand colors set",
-          passed: !!brand.primaryColor,
+          step: 2,
+          label: "App store info set",
+          passed: !isDefaultAppName,
           href: `/tenants/${tenantId}/config`,
-          hint: "Set a primary color and optionally a logo",
+          hint: "Set your app name for the app stores",
         },
         {
-          label: "App ID configured",
-          passed: !!tenant.expo_project_id,
-          href: `/tenants/${tenantId}/config`,
-          hint: "Required for production builds and app store submission",
+          step: 3,
+          label: "Logo uploaded",
+          passed: !!logoUri && !isLogoPlaceholder,
+          href: `/tenants/${tenantId}/assets`,
+          hint: "Upload a logo that is not a placeholder",
         },
         {
-          label: "Preview build complete",
+          step: 4,
+          label: "Pages configured",
+          passed: tabs.length > 1,
+          href: `/tenants/${tenantId}/config`,
+          hint: "Configure more than one tab/page for your app",
+        },
+        {
+          step: 5,
+          label: "Preview build completed",
           passed: (successfulBuilds ?? 0) > 0,
           href: `/tenants/${tenantId}/builds`,
           hint: "Deploy at least one successful preview build before going to production",
         },
+        {
+          step: 6,
+          label: "Expo Project ID",
+          passed: !!tenant.expo_project_id,
+          href: `/tenants/${tenantId}/config`,
+          hint: "Required for production builds and app store submission",
+        },
       ];
-
-  if (needsContent) {
-    checks.push({
-      label: "Supabase project linked",
-      passed: !!tenant.supabase_project_id,
-      href: `/tenants/${tenantId}/config`,
-      hint: "Content-based templates need a Supabase project for data",
-    });
-  }
 
   const passedCount = checks.filter((c) => c.passed).length;
   const allPassed = passedCount === checks.length;
@@ -129,15 +165,15 @@ export default async function ReadinessChecklist({
                   ✓
                 </span>
               ) : (
-                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-50 text-red-600 text-xs">
-                  ✗
+                <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-100 text-gray-400 text-xs">
+                  {check.step}
                 </span>
               )}
             </span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <span
-                  className={`text-sm ${check.passed ? "text-gray-600" : "text-gray-900 font-medium"}`}
+                  className={`text-sm ${check.passed ? "text-gray-500 line-through" : "text-gray-900 font-medium"}`}
                 >
                   {check.label}
                 </span>

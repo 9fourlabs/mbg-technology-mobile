@@ -69,6 +69,52 @@ export default async function TenantDetailPage({
 
   const latestBuild = builds && builds.length > 0 ? builds[0] : null;
 
+  // Onboarding step completion checks (for draft guidance card)
+  const config = tenant.config as Record<string, unknown> | null;
+  const brand = (config?.brand ?? {}) as Record<string, string>;
+  const appStore = (config?.appStore ?? {}) as Record<string, string>;
+  const tabs = (config?.tabs ?? []) as unknown[];
+
+  const hasCompletedPreviewBuild =
+    builds?.some(
+      (b: Record<string, unknown>) =>
+        b.profile === "preview" && b.status === "completed"
+    ) ?? false;
+
+  const onboardingSteps = [
+    {
+      label: "Customize your brand",
+      done:
+        !!brand.primaryColor &&
+        brand.primaryColor !== "#2563EB" &&
+        brand.primaryColor !== "#FF9900",
+      href: `/tenants/${id}/config`,
+    },
+    {
+      label: "Set app store details",
+      done:
+        !!appStore.appName &&
+        appStore.appName !== "My App",
+      href: `/tenants/${id}/config`,
+    },
+    {
+      label: "Upload your logo and assets",
+      done:
+        !!brand.logoUri && !brand.logoUri.includes("example.com"),
+      href: `/tenants/${id}/assets`,
+    },
+    {
+      label: "Configure your pages",
+      done: tabs.length > 1,
+      href: `/tenants/${id}/config`,
+    },
+    {
+      label: "Create a preview build",
+      done: hasCompletedPreviewBuild,
+      href: `/tenants/${id}/builds`,
+    },
+  ];
+
   // Fetch activity
   const { data: activity } = await supabase
     .from("activity_log")
@@ -139,6 +185,33 @@ export default async function TenantDetailPage({
                 </>
               )}
             </p>
+            {!isCustom && (
+              <ol className="space-y-2 mb-5">
+                {onboardingSteps.map((step, i) => (
+                  <li key={step.label} className="flex items-center gap-2.5">
+                    {step.done ? (
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 text-xs flex-shrink-0">
+                        ✓
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-200 text-blue-800 text-xs font-medium flex-shrink-0">
+                        {i + 1}
+                      </span>
+                    )}
+                    <Link
+                      href={step.href}
+                      className={`text-sm hover:underline ${
+                        step.done
+                          ? "text-blue-700/60 line-through"
+                          : "text-blue-900 font-medium"
+                      }`}
+                    >
+                      {step.label}
+                    </Link>
+                  </li>
+                ))}
+              </ol>
+            )}
             {!isCustom ? (
               <Link
                 href={`/tenants/${id}/config`}

@@ -47,6 +47,7 @@ export type InformationalTemplate = {
   templateId: "informational";
   brand: BrandConfig;
   design?: DesignConfig;
+  appStore?: AppStoreMetadata;
   tabs: TemplateTab[];
 };
 
@@ -59,6 +60,7 @@ export type AuthenticatedTemplate = {
   templateId: "authenticated";
   brand: BrandConfig;
   design?: DesignConfig;
+  appStore?: AppStoreMetadata;
   auth: AuthConfig;
   tabs: TemplateTab[];
   protectedTabs?: string[];
@@ -85,6 +87,7 @@ export type BookingTemplate = {
   templateId: "booking";
   brand: BrandConfig;
   design?: DesignConfig;
+  appStore?: AppStoreMetadata;
   auth: AuthConfig;
   booking: BookingConfig;
   tabs: TemplateTab[];
@@ -105,6 +108,7 @@ export type CommerceTemplate = {
   templateId: "commerce";
   brand: BrandConfig;
   design?: DesignConfig;
+  appStore?: AppStoreMetadata;
   auth: AuthConfig;
   commerce: CommerceConfig;
   tabs: TemplateTab[];
@@ -139,6 +143,7 @@ export type LoyaltyTemplate = {
   templateId: "loyalty";
   brand: BrandConfig;
   design?: DesignConfig;
+  appStore?: AppStoreMetadata;
   auth: AuthConfig;
   loyalty: LoyaltyConfig;
   tabs: TemplateTab[];
@@ -156,6 +161,7 @@ export type ContentTemplate = {
   templateId: "content";
   brand: BrandConfig;
   design?: DesignConfig;
+  appStore?: AppStoreMetadata;
   auth: AuthConfig;
   content: ContentConfig;
   tabs: TemplateTab[];
@@ -192,6 +198,7 @@ export type FormsTemplate = {
   templateId: "forms";
   brand: BrandConfig;
   design?: DesignConfig;
+  appStore?: AppStoreMetadata;
   auth: AuthConfig;
   forms: FormsConfig;
   tabs: TemplateTab[];
@@ -218,10 +225,21 @@ export type DirectoryTemplate = {
   templateId: "directory";
   brand: BrandConfig;
   design?: DesignConfig;
+  appStore?: AppStoreMetadata;
   auth: AuthConfig;
   directory: DirectoryConfig;
   tabs: TemplateTab[];
   protectedTabs?: string[];
+};
+
+// APP STORE METADATA
+export type AppStoreMetadata = {
+  appName: string;
+  appDescription?: string;
+  appKeywords?: string[];
+  iconUri?: string;
+  adaptiveIconBackgroundColor?: string;
+  splashBackgroundColor?: string;
 };
 
 // UNION

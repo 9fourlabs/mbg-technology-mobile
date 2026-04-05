@@ -56,6 +56,10 @@ export function generateDefaultConfig(templateType: TemplateId): AppTemplate {
         templateId: "informational",
         brand: { ...defaultBrand, primaryColor: "#FF9900", backgroundColor: "#000000", textColor: "#FFFFFF", mutedTextColor: "#999999" },
         design: { preset: "modern" },
+        appStore: {
+          appName: "My App",
+          appDescription: "Built with MBG Technology",
+        },
         tabs: [homeTab],
       };
 
@@ -65,6 +69,10 @@ export function generateDefaultConfig(templateType: TemplateId): AppTemplate {
         auth: { ...authBlock },
         brand: { ...defaultBrand },
         design: { preset: "modern" },
+        appStore: {
+          appName: "My Portal",
+          appDescription: "Built with MBG Technology",
+        },
         tabs: [
           homeTab,
           {
@@ -85,6 +93,10 @@ export function generateDefaultConfig(templateType: TemplateId): AppTemplate {
         auth: { ...authBlock },
         brand: { ...defaultBrand },
         design: { preset: "modern" },
+        appStore: {
+          appName: "My Salon",
+          appDescription: "Built with MBG Technology",
+        },
         booking: {
           services: [
             { id: "service-1", name: "Standard Service", duration: 30, price: 50 },
@@ -116,6 +128,10 @@ export function generateDefaultConfig(templateType: TemplateId): AppTemplate {
         auth: { ...authBlock },
         brand: { ...defaultBrand },
         design: { preset: "modern" },
+        appStore: {
+          appName: "My Store",
+          appDescription: "Built with MBG Technology",
+        },
         commerce: {
           stripePublishableKey: "pk_test_YOUR_KEY",
           currency: "usd",
@@ -143,6 +159,10 @@ export function generateDefaultConfig(templateType: TemplateId): AppTemplate {
         auth: { ...authBlock },
         brand: { ...defaultBrand },
         design: { preset: "modern" },
+        appStore: {
+          appName: "My Rewards",
+          appDescription: "Built with MBG Technology",
+        },
         loyalty: {
           pointsPerVisit: 10,
           programName: "Rewards Program",
@@ -172,6 +192,10 @@ export function generateDefaultConfig(templateType: TemplateId): AppTemplate {
         auth: { ...authBlock },
         brand: { ...defaultBrand },
         design: { preset: "modern" },
+        appStore: {
+          appName: "My Content",
+          appDescription: "Built with MBG Technology",
+        },
         content: {
           categories: [
             { id: "news", name: "News" },
@@ -196,6 +220,10 @@ export function generateDefaultConfig(templateType: TemplateId): AppTemplate {
         auth: { ...authBlock },
         brand: { ...defaultBrand },
         design: { preset: "modern" },
+        appStore: {
+          appName: "My Forms",
+          appDescription: "Built with MBG Technology",
+        },
         forms: {
           forms: [
             {
@@ -226,6 +254,10 @@ export function generateDefaultConfig(templateType: TemplateId): AppTemplate {
         auth: { ...authBlock },
         brand: { ...defaultBrand },
         design: { preset: "modern" },
+        appStore: {
+          appName: "My Directory",
+          appDescription: "Built with MBG Technology",
+        },
         directory: {
           itemLabel: "Member",
           itemLabelPlural: "Members",

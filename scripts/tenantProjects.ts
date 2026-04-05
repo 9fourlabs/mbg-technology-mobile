@@ -26,5 +26,13 @@ export const tenantProjects: Record<string, string> = {
   "acme-dental": "PLACEHOLDER_CREATE_EXPO_PROJECT",
   "acme-portal": "PLACEHOLDER_CREATE_EXPO_PROJECT",
   "bobs-burgers": "PLACEHOLDER_CREATE_EXPO_PROJECT",
+
+  // Sample template tenants — demonstration configs for each advanced template type.
+  "sample-booking": "PLACEHOLDER_CREATE_EXPO_PROJECT",
+  "sample-commerce": "PLACEHOLDER_CREATE_EXPO_PROJECT",
+  "sample-loyalty": "PLACEHOLDER_CREATE_EXPO_PROJECT",
+  "sample-content": "PLACEHOLDER_CREATE_EXPO_PROJECT",
+  "sample-forms": "PLACEHOLDER_CREATE_EXPO_PROJECT",
+  "sample-directory": "PLACEHOLDER_CREATE_EXPO_PROJECT",
 };
 

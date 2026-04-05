@@ -13,6 +13,8 @@ const TABS = [
   { label: "Overview", path: "" },
   { label: "Design", path: "/config" },
   { label: "Content", path: "/content" },
+  { label: "Assets", path: "/assets" },
+  { label: "Analytics", path: "/analytics" },
   { label: "Builds", path: "/builds" },
 ];
 
@@ -29,6 +31,8 @@ export default function TenantTabBar({
     if (tab.path === "/content" && appType === "custom") return false;
     // Hide Design tab for custom apps (they edit code directly)
     if (tab.path === "/config" && appType === "custom") return false;
+    // Hide Assets tab for custom apps
+    if (tab.path === "/assets" && appType === "custom") return false;
     return true;
   });
 
