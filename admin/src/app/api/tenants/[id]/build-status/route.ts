@@ -95,11 +95,26 @@ export async function GET(
             }
           }
 
+          // GitHub workflow succeeded but no EAS build IDs were linked — this
+          // means the EAS builds errored and the callback was never made.
+          // Mark as failed so the UI doesn't show "completed" with no downloads.
+          if (
+            newStatus === "completed" &&
+            !build.eas_build_id_android &&
+            !build.eas_build_id_ios
+          ) {
+            updateFields.status = "failed";
+            updateFields.error_message =
+              errorMessage ?? "EAS builds failed — no artifacts were produced. Check the EAS dashboard for details.";
+            errorMessage = updateFields.error_message as string;
+            status = "failed";
+          }
+
           await supabase
             .from("builds")
             .update(updateFields)
             .eq("id", buildId);
-          status = newStatus;
+          status = (updateFields.status as string) ?? newStatus;
           updated = true;
         }
       } catch (err) {

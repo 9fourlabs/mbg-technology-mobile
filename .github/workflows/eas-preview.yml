@@ -95,10 +95,12 @@ jobs:
         if: inputs.build_id != ''
         id: pre-builds
         run: |
-          # Record IDs of all currently finished builds so we can detect NEW ones later
-          EXISTING=$(eas build:list --limit 10 --json --non-interactive 2>/dev/null | jq -r '[.[] | select(.status == "FINISHED")] | map(.id) | join(",")' || echo "")
+          # Record IDs of all currently finished AND errored builds so we can detect truly NEW ones later.
+          # Previously only FINISHED builds were captured, which caused old ERRORED builds to be
+          # misidentified as new errors — breaking the poll loop before real builds could complete.
+          EXISTING=$(eas build:list --limit 20 --json --non-interactive 2>/dev/null | jq -r '[.[] | select(.status == "FINISHED" or .status == "ERRORED")] | map(.id) | join(",")' || echo "")
           echo "existing_ids=$EXISTING" >> $GITHUB_OUTPUT
-          echo "Existing finished build IDs: $EXISTING"
+          echo "Existing build IDs (finished+errored): $EXISTING"
 
       - name: Run EAS preview workflow (tenant)
         id: eas-workflow
