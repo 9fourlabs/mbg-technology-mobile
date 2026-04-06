@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { getExpoInstallUrl } from "@/lib/eas";
 import { getEASBuildById } from "@/lib/eas";
+import { uploadToAppetize, updateAppetizeApp } from "@/lib/appetize";
 
 /**
  * POST /api/tenants/[id]/build-link
@@ -95,6 +96,48 @@ export async function POST(
         { error: "No EAS build IDs provided" },
         { status: 400 }
       );
+    }
+
+    // Upload Android APK to Appetize.io for browser-based preview.
+    // If the tenant already has an Appetize app, update it (keeps the same
+    // embed URL so share links stay stable). Otherwise create a new one.
+    if (updateFields.download_url && process.env.APPETIZE_API_KEY) {
+      try {
+        // Check if tenant already has an Appetize app
+        const { data: tenantRow } = await supabase
+          .from("tenants")
+          .select("appetize_public_key, business_name")
+          .eq("id", tenantId)
+          .single();
+
+        let appetizeKey: string;
+
+        if (tenantRow?.appetize_public_key) {
+          // Update existing Appetize app with new build
+          await updateAppetizeApp(
+            tenantRow.appetize_public_key,
+            updateFields.download_url as string,
+          );
+          appetizeKey = tenantRow.appetize_public_key;
+        } else {
+          // Create new Appetize app
+          appetizeKey = await uploadToAppetize(
+            updateFields.download_url as string,
+            "android",
+            `${tenantRow?.business_name ?? tenantId} — preview`,
+          );
+          // Save to tenant so future builds reuse the same embed URL
+          await supabase
+            .from("tenants")
+            .update({ appetize_public_key: appetizeKey })
+            .eq("id", tenantId);
+        }
+
+        updateFields.appetize_public_key = appetizeKey;
+      } catch (err) {
+        // Non-fatal: share page falls back to QR code / direct download
+        console.warn("Appetize upload failed (share page will use fallback):", err);
+      }
     }
 
     // Mark the build as completed now that EAS artifacts are linked
