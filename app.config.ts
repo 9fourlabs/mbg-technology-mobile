@@ -51,7 +51,15 @@ const appStore = tenantConfig?.appStore;
 
 const config: ExpoConfig = {
   name: appStore?.appName ?? (tenant === "mbg" ? "MBG Technology" : tenant.split("-").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")),
-  slug: nativeIdMode === "shared" || tenant === "mbg" ? "mbg-technology" : `info-${tenant}`,
+  // Slug must match the EAS project. For preview builds (which use the shared
+  // MBG project regardless of NATIVE_ID_MODE), keep the slug stable. For
+  // production builds with a tenant-specific Expo project ID, use a tenant slug.
+  // The EAS_PROJECT_ID env var is set by the release workflow when a tenant has
+  // its own Expo project; its absence means we're using the shared project.
+  slug:
+    tenant === "mbg" || !process.env.EAS_PROJECT_ID
+      ? "mbg-technology"
+      : `info-${tenant}`,
   version: process.env.APP_VERSION ?? "1.0.0",
   orientation: "portrait",
   icon: resolveAsset(tenant, "icon.png"),
@@ -110,7 +118,9 @@ const config: ExpoConfig = {
     tenant,
     nativeIdMode,
     eas: {
-      projectId: "8f0869f4-6354-4c29-956a-abf07a54c9b6",
+      // Use tenant-specific Expo project ID when provided (production builds),
+      // otherwise fall back to the shared MBG project (preview builds).
+      projectId: process.env.EAS_PROJECT_ID ?? "8f0869f4-6354-4c29-956a-abf07a54c9b6",
     },
   },
 };

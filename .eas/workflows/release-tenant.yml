@@ -46,6 +46,7 @@ jobs:
           APP_TENANT="${{ inputs.tenant }}" \
           NATIVE_ID_MODE="tenant" \
           APP_VERSION="${{ inputs.version }}" \
+          EAS_PROJECT_ID="${{ needs.prepare.outputs.project_id }}" \
           eas build --profile production --platform ios --non-interactive \
           --project-id "${{ needs.prepare.outputs.project_id }}"
 
@@ -60,6 +61,7 @@ jobs:
           APP_TENANT="${{ inputs.tenant }}" \
           NATIVE_ID_MODE="tenant" \
           APP_VERSION="${{ inputs.version }}" \
+          EAS_PROJECT_ID="${{ needs.prepare.outputs.project_id }}" \
           eas submit --profile production --platform ios --non-interactive \
           --project-id "${{ needs.prepare.outputs.project_id }}"
 
@@ -74,6 +76,7 @@ jobs:
           APP_TENANT="${{ inputs.tenant }}" \
           NATIVE_ID_MODE="tenant" \
           APP_VERSION="${{ inputs.version }}" \
+          EAS_PROJECT_ID="${{ needs.prepare.outputs.project_id }}" \
           eas build --profile production --platform android --non-interactive \
           --project-id "${{ needs.prepare.outputs.project_id }}"
 
@@ -88,6 +91,7 @@ jobs:
           APP_TENANT="${{ inputs.tenant }}" \
           NATIVE_ID_MODE="tenant" \
           APP_VERSION="${{ inputs.version }}" \
+          EAS_PROJECT_ID="${{ needs.prepare.outputs.project_id }}" \
           eas submit --profile production --platform android --non-interactive \
           --project-id "${{ needs.prepare.outputs.project_id }}"
 
