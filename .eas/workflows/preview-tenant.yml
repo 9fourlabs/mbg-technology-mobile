@@ -30,7 +30,8 @@ jobs:
       profile: preview
     env:
       APP_TENANT: ${{ inputs.tenant }}
-      NATIVE_ID_MODE: tenant
+      NATIVE_ID_MODE_ANDROID: tenant
+      NATIVE_ID_MODE_IOS: shared
       APP_VERSION: ${{ inputs.version }}
 
   build_ios:
@@ -41,5 +42,6 @@ jobs:
       profile: preview
     env:
       APP_TENANT: ${{ inputs.tenant }}
-      NATIVE_ID_MODE: tenant
+      NATIVE_ID_MODE_ANDROID: tenant
+      NATIVE_ID_MODE_IOS: shared
       APP_VERSION: ${{ inputs.version }}

@@ -129,41 +129,64 @@ jobs:
           ATTEMPT=0
           ANDROID_ID=""
           IOS_ID=""
+          ANDROID_DONE=""  # "finished", "errored", or ""
+          IOS_DONE=""
 
           while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
             ATTEMPT=$((ATTEMPT + 1))
             echo "Poll attempt $ATTEMPT/$MAX_ATTEMPTS..."
 
             # Get recent builds as JSON
-            BUILDS_JSON=$(eas build:list --limit 10 --json --non-interactive 2>/dev/null || echo "[]")
+            BUILDS_JSON=$(eas build:list --limit 20 --json --non-interactive 2>/dev/null || echo "[]")
 
-            # Filter to only NEW finished builds (not in the pre-existing snapshot)
-            ANDROID_ID=$(echo "$BUILDS_JSON" | jq -r --arg existing "$EXISTING_IDS" '
-              ($existing | split(",")) as $skip |
-              [.[] | select(.platform == "ANDROID" and .status == "FINISHED" and ([.id] | inside($skip) | not))] |
-              first | .id // empty')
-            IOS_ID=$(echo "$BUILDS_JSON" | jq -r --arg existing "$EXISTING_IDS" '
-              ($existing | split(",")) as $skip |
-              [.[] | select(.platform == "IOS" and .status == "FINISHED" and ([.id] | inside($skip) | not))] |
-              first | .id // empty')
+            # Check for NEW finished builds (not in the pre-existing snapshot)
+            if [ -z "$ANDROID_DONE" ]; then
+              ANDROID_ID=$(echo "$BUILDS_JSON" | jq -r --arg existing "$EXISTING_IDS" '
+                ($existing | split(",")) as $skip |
+                [.[] | select(.platform == "ANDROID" and .status == "FINISHED" and ([.id] | inside($skip) | not))] |
+                first | .id // empty')
+              if [ -n "$ANDROID_ID" ]; then ANDROID_DONE="finished"; fi
+            fi
 
-            if [ -n "$ANDROID_ID" ] && [ -n "$IOS_ID" ]; then
-              echo "Both NEW builds finished!"
-              echo "  Android: $ANDROID_ID"
-              echo "  iOS: $IOS_ID"
+            if [ -z "$IOS_DONE" ]; then
+              IOS_ID=$(echo "$BUILDS_JSON" | jq -r --arg existing "$EXISTING_IDS" '
+                ($existing | split(",")) as $skip |
+                [.[] | select(.platform == "IOS" and .status == "FINISHED" and ([.id] | inside($skip) | not))] |
+                first | .id // empty')
+              if [ -n "$IOS_ID" ]; then IOS_DONE="finished"; fi
+            fi
+
+            # Check for NEW errored builds per platform (don't break immediately —
+            # wait for the other platform to finish or error too)
+            if [ -z "$ANDROID_DONE" ]; then
+              ANDROID_ERR=$(echo "$BUILDS_JSON" | jq -r --arg existing "$EXISTING_IDS" '
+                ($existing | split(",")) as $skip |
+                [.[] | select(.platform == "ANDROID" and .status == "ERRORED" and ([.id] | inside($skip) | not))] | length')
+              if [ "$ANDROID_ERR" -gt "0" ]; then
+                echo "  Android build errored"
+                ANDROID_DONE="errored"
+              fi
+            fi
+
+            if [ -z "$IOS_DONE" ]; then
+              IOS_ERR=$(echo "$BUILDS_JSON" | jq -r --arg existing "$EXISTING_IDS" '
+                ($existing | split(",")) as $skip |
+                [.[] | select(.platform == "IOS" and .status == "ERRORED" and ([.id] | inside($skip) | not))] | length')
+              if [ "$IOS_ERR" -gt "0" ]; then
+                echo "  iOS build errored"
+                IOS_DONE="errored"
+              fi
+            fi
+
+            # Both platforms resolved (finished or errored) — stop polling
+            if [ -n "$ANDROID_DONE" ] && [ -n "$IOS_DONE" ]; then
+              echo "Both platforms resolved:"
+              echo "  Android: ${ANDROID_DONE} ${ANDROID_ID:+(ID: $ANDROID_ID)}"
+              echo "  iOS: ${IOS_DONE} ${IOS_ID:+(ID: $IOS_ID)}"
               break
             fi
 
-            # Check if any new builds errored
-            NEW_ERRORED=$(echo "$BUILDS_JSON" | jq -r --arg existing "$EXISTING_IDS" '
-              ($existing | split(",")) as $skip |
-              [.[] | select(.status == "ERRORED" and ([.id] | inside($skip) | not))] | length')
-            if [ "$NEW_ERRORED" -gt "0" ]; then
-              echo "Some new builds errored, reporting what we have..."
-              break
-            fi
-
-            echo "  Android: ${ANDROID_ID:-waiting}  iOS: ${IOS_ID:-waiting}"
+            echo "  Android: ${ANDROID_DONE:-waiting}  iOS: ${IOS_DONE:-waiting}"
             sleep 30
           done
 

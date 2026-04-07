@@ -15,7 +15,14 @@ const tenantSafe = tenant.replace(/-/g, ".");
 //
 // - shared: use the MBG iOS bundle id + Android package for ALL tenants (previews)
 // - tenant: include tenant in bundle id/package (production-style isolation)
+//
+// NATIVE_ID_MODE controls both platforms. Per-platform overrides are available
+// via NATIVE_ID_MODE_ANDROID and NATIVE_ID_MODE_IOS for cases like preview
+// builds where Android needs tenant isolation (apps coexist on device) but iOS
+// must stay shared (ad-hoc provisioning is bound to the shared bundle ID).
 const nativeIdMode = process.env.NATIVE_ID_MODE ?? "tenant";
+const androidIdMode = process.env.NATIVE_ID_MODE_ANDROID ?? nativeIdMode;
+const iosIdMode = process.env.NATIVE_ID_MODE_IOS ?? nativeIdMode;
 
 const sharedAndroidPackage = "com.mbg.mbgtechnologymobile";
 const sharedIosBundleId = "com.mbg.mbgtechnologymobile";
@@ -74,7 +81,7 @@ const config: ExpoConfig = {
     // For production-style isolation, each tenant should have a unique bundleIdentifier.
     // For shared preview, keep the identifier stable across tenants.
     bundleIdentifier:
-      nativeIdMode === "shared"
+      iosIdMode === "shared"
         ? sharedIosBundleId
         : tenant === "mbg"
           ? "com.mbg.mbgtechnologymobile"
@@ -94,7 +101,7 @@ const config: ExpoConfig = {
     // For production-style isolation, each tenant should have a unique package.
     // For shared preview, keep the identifier stable across tenants.
     package:
-      nativeIdMode === "shared"
+      androidIdMode === "shared"
         ? sharedAndroidPackage
         : tenant === "mbg"
           ? "com.mbg.mbgtechnologymobile"
