@@ -50,13 +50,13 @@ export default function TenantFilters({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search apps..."
-          className="w-full rounded-lg bg-white border border-gray-200 px-4 py-2.5 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500"
         />
       </form>
       <select
         value={currentTemplate ?? ""}
         onChange={(e) => updateParams("template", e.target.value)}
-        className="rounded-lg bg-white border border-gray-200 px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        className="py-2.5 px-4 pe-9 block border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500"
       >
         <option value="">All Types</option>
         {TEMPLATE_TYPES.map((t) => (

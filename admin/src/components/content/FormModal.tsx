@@ -76,16 +76,28 @@ export default function FormModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center"
+      className="fixed inset-0 z-80 overflow-x-hidden overflow-y-auto bg-gray-900/60 backdrop-blur-sm flex items-center justify-center"
       onClick={onClose}
     >
       <div
-        className="bg-white border border-gray-200 rounded-xl p-6 w-full max-w-lg max-h-[80vh] overflow-y-auto"
+        className="bg-white border border-gray-200 shadow-xl rounded-xl w-full max-w-lg m-4 max-h-[80vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">{title}</h2>
+        {/* Header */}
+        <div className="flex justify-between items-center py-3 px-4 border-b border-gray-200">
+          <h3 className="font-semibold text-gray-800">{title}</h3>
+          <button
+            type="button"
+            className="size-8 inline-flex justify-center items-center gap-x-2 rounded-full border border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200 focus:outline-none focus:bg-gray-200"
+            onClick={onClose}
+          >
+            <span className="sr-only">Close</span>
+            <svg className="shrink-0 size-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
 
-        <div className="flex flex-col gap-4">
+        {/* Body */}
+        <div className="p-4 overflow-y-auto flex flex-col gap-4">
           {visibleColumns.map((col) => (
             <FormField
               key={col.key}
@@ -98,12 +110,13 @@ export default function FormModal({
           ))}
         </div>
 
-        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-200">
+        {/* Footer */}
+        <div className="flex justify-end items-center gap-x-2 py-3 px-4 border-t border-gray-200">
           <button
             type="button"
             onClick={onClose}
             disabled={saving}
-            className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors rounded-lg border border-gray-300 hover:border-gray-600"
+            className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
           >
             Cancel
           </button>
@@ -111,7 +124,7 @@ export default function FormModal({
             type="button"
             onClick={handleSubmit}
             disabled={saving}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-lg"
+            className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none"
           >
             {saving ? "Saving..." : "Save"}
           </button>

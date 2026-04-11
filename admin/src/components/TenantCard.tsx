@@ -52,7 +52,7 @@ export default function TenantCard({
   return (
     <Link
       href={`/tenants/${id}`}
-      className="block rounded-xl bg-white border border-gray-200 p-6 hover:border-blue-300 hover:shadow-sm transition-all group"
+      className="block bg-white border border-gray-200 rounded-xl p-6 shadow-2xs hover:border-blue-300 hover:shadow-sm transition-all group"
     >
       {/* Header: name + status dot */}
       <div className="flex items-start justify-between">
@@ -60,7 +60,9 @@ export default function TenantCard({
           <h3 className="text-base font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
             {business_name || id}
           </h3>
-          <p className="text-xs text-gray-400 mt-0.5">{templateLabel}</p>
+          <span className={`mt-1 py-1 px-2 inline-flex items-center text-xs font-medium rounded-full ${templateColors[template_type] ?? "bg-gray-50 text-gray-500"}`}>
+            {templateLabel}
+          </span>
         </div>
         <div className="flex items-center gap-1.5 mt-1">
           <span className={`w-2 h-2 rounded-full ${statusDotColors[status] ?? "bg-gray-400"}`} />
@@ -75,8 +77,9 @@ export default function TenantCard({
 
       {/* CTA */}
       <div className="mt-4 pt-4 border-t border-gray-100">
-        <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-blue-600 group-hover:bg-blue-700 text-xs font-medium text-white transition-colors">
-          {ctaLabel(status)} &rarr;
+        <span className="py-2 px-3 inline-flex items-center gap-x-1 text-xs font-medium rounded-lg bg-blue-600 text-white group-hover:bg-blue-700 transition-colors">
+          {ctaLabel(status)}
+          <svg className="size-3.5" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
         </span>
       </div>
     </Link>

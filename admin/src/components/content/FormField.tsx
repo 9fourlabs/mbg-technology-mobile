@@ -23,7 +23,7 @@ type Props = {
 const IMAGE_KEY_PATTERN = /image|logo|photo|avatar|thumbnail|banner|icon/i;
 
 const inputClass =
-  "bg-gray-100 border border-gray-300 rounded-lg px-3 py-2 text-gray-900 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none w-full";
+  "py-2.5 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none";
 
 export default function FormField({ column, value, onChange, error, tenantId }: Props) {
   const [jsonError, setJsonError] = useState<string | null>(null);

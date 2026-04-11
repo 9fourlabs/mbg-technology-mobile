@@ -197,7 +197,7 @@ export function DataTable({ tenantId, schema }: Props) {
         <div className="flex justify-end mb-4">
           <button
             onClick={handleCreate}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+            className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:bg-blue-700"
           >
             Add {schema.labelSingular}
           </button>
@@ -210,41 +210,42 @@ export function DataTable({ tenantId, schema }: Props) {
           <p className="text-gray-400 text-sm">No {schema.label} found</p>
         </div>
       ) : (
-        <div className="overflow-x-auto border border-gray-200 rounded-lg">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200">
+        <div className="overflow-x-auto border border-gray-200 rounded-xl shadow-2xs">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
                 {visibleColumns.map((col) => (
                   <th
                     key={col.key}
-                    className="text-xs font-medium text-gray-500 uppercase text-left px-4 py-3"
+                    scope="col"
+                    className="px-6 py-3 text-start text-xs font-semibold uppercase text-gray-500"
                   >
                     {col.label}
                   </th>
                 ))}
                 {!schema.readOnly && (
-                  <th className="text-xs font-medium text-gray-500 uppercase text-right px-4 py-3">
+                  <th scope="col" className="px-6 py-3 text-end text-xs font-semibold uppercase text-gray-500">
                     Actions
                   </th>
                 )}
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-200">
               {data.map((row, i) => (
                 <tr
                   key={(row.id as string) ?? i}
-                  className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                  className="hover:bg-gray-50 transition-colors"
                 >
                   {visibleColumns.map((col) => (
                     <td
                       key={col.key}
-                      className="text-sm text-gray-600 px-4 py-3"
+                      className="size-px whitespace-nowrap px-6 py-3 text-sm text-gray-600"
                     >
                       {formatCellValue(row[col.key], col.type)}
                     </td>
                   ))}
                   {!schema.readOnly && (
-                    <td className="text-right px-4 py-3">
+                    <td className="size-px whitespace-nowrap text-end px-6 py-3">
                       {deleteConfirm === (row.id as string) ? (
                         <span className="flex items-center justify-end gap-2">
                           <span className="text-xs text-gray-500">
@@ -298,17 +299,17 @@ export function DataTable({ tenantId, schema }: Props) {
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page <= 1}
-            className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-900 border border-gray-300 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
           >
             Previous
           </button>
-          <span className="text-sm text-gray-400">
+          <span className="text-sm text-gray-500">
             Page {page} of {totalPages}
           </span>
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page >= totalPages}
-            className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-900 border border-gray-300 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="py-2 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
           >
             Next
           </button>

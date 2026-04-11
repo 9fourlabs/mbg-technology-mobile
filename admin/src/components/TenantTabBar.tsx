@@ -58,16 +58,17 @@ export default function TenantTabBar({
 
       {/* Tab bar */}
       <div className="border-b border-gray-200">
-        <nav className="flex gap-0 -mb-px">
+        <nav className="flex gap-x-1 -mb-px" aria-label="Tabs" role="tablist">
           {visibleTabs.map((tab) => (
             <Link
               key={tab.path}
               href={basePath + tab.path}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+              className={`py-3 px-4 inline-flex items-center gap-x-2 border-b-2 text-sm whitespace-nowrap focus:outline-none ${
                 isActive(tab.path)
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  ? "font-semibold border-blue-600 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-blue-600 hover:border-blue-300"
               }`}
+              role="tab"
             >
               {tab.label}
             </Link>

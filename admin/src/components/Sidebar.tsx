@@ -16,7 +16,6 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [userEmail, setUserEmail] = useState<string | null>(null);
-  const [showHelp, setShowHelp] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -24,6 +23,19 @@ export default function Sidebar() {
       setUserEmail(user?.email ?? null);
     });
   }, []);
+
+  // Auto-close sidebar on mobile when navigating
+  useEffect(() => {
+    const el = document.querySelector("#hs-admin-sidebar");
+    if (el && window.innerWidth < 1024) {
+      import("preline").then(({ HSOverlay }) => {
+        const instance = HSOverlay?.getInstance(el as HTMLElement);
+        if (instance && instance.isOpen) {
+          instance.close();
+        }
+      });
+    }
+  }, [pathname]);
 
   const handleSignOut = async () => {
     const supabase = createClient();
@@ -37,76 +49,101 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="flex flex-col w-64 min-h-screen bg-white border-r border-gray-200">
-      {/* Brand */}
-      <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-200">
-        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600 text-white font-bold text-sm">
-          M
-        </div>
-        <div>
-          <h1 className="text-base font-semibold text-gray-900">MBG Admin</h1>
-          <p className="text-xs text-gray-400">Mobile Platform</p>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                isActive(item.href)
-                  ? "bg-blue-50 text-blue-700"
-                  : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
-              }`}
-            >
-              <Icon className="h-5 w-5 shrink-0" />
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* Help section */}
-      <div className="px-3 pb-2">
-        <button
-          onClick={() => setShowHelp(!showHelp)}
-          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-        >
-          <HelpIcon className="h-5 w-5 shrink-0" />
-          Help
-        </button>
-        {showHelp && (
-          <div className="mx-3 mt-2 mb-2 p-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-500 leading-relaxed">
-            <p className="font-medium text-gray-700 mb-1">
-              What is this platform?
-            </p>
-            <p>
-              MBG App Platform lets you create branded mobile apps for your
-              clients without any coding. Pick a template, add your
-              client&apos;s branding, and publish to app stores.
-            </p>
+    <div
+      id="hs-admin-sidebar"
+      className="hs-overlay [--auto-close:lg] hs-overlay-open:translate-x-0 -translate-x-full transition-all duration-300 transform w-64 h-full fixed inset-y-0 start-0 z-60 bg-white border-e border-gray-200 lg:block lg:translate-x-0 lg:end-auto lg:bottom-0"
+      role="dialog"
+      tabIndex={-1}
+      aria-label="Sidebar"
+    >
+      <div className="flex flex-col h-full">
+        {/* ── Brand ── */}
+        <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-200">
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600 text-white font-bold text-sm">
+            M
           </div>
-        )}
-      </div>
+          <div>
+            <h1 className="text-base font-semibold text-gray-900">MBG Admin</h1>
+            <p className="text-xs text-gray-400">Mobile Platform</p>
+          </div>
+        </div>
 
-      {/* User section */}
-      <div className="px-4 py-4 border-t border-gray-200">
-        <p className="text-xs text-gray-400 truncate mb-2">
-          {userEmail ?? "Loading..."}
-        </p>
-        <button
-          onClick={handleSignOut}
-          className="flex items-center gap-2 w-full text-left text-sm text-gray-500 hover:text-gray-900 transition-colors"
-        >
-          <LogoutIcon className="h-4 w-4 shrink-0" />
-          Sign Out
-        </button>
+        {/* ── Navigation ── */}
+        <nav className="flex-1 overflow-y-auto px-4 py-4">
+          <ul className="space-y-1">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.href);
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className={`flex items-center gap-x-3 py-2 px-2.5 text-sm rounded-lg transition-colors ${
+                      active
+                        ? "bg-blue-50 text-blue-700 font-semibold"
+                        : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+                    }`}
+                  >
+                    <Icon className="size-5 shrink-0" />
+                    {item.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+
+          {/* ── Help accordion ── */}
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="hs-accordion-group">
+              <div className="hs-accordion" id="hs-help-accordion">
+                <button
+                  className="hs-accordion-toggle flex items-center gap-x-3 w-full py-2 px-2.5 text-sm text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+                  aria-expanded="false"
+                  aria-controls="hs-help-accordion-content"
+                >
+                  <HelpIcon className="size-5 shrink-0" />
+                  <span>Help</span>
+                  <svg className="hs-accordion-active:rotate-180 ms-auto size-4 text-gray-400 transition-transform" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </button>
+                <div
+                  id="hs-help-accordion-content"
+                  className="hs-accordion-content hidden w-full overflow-hidden transition-[height] duration-300"
+                  role="region"
+                  aria-labelledby="hs-help-accordion"
+                >
+                  <div className="mx-2.5 mt-2 p-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-500 leading-relaxed">
+                    <p className="font-medium text-gray-700 mb-1">
+                      What is this platform?
+                    </p>
+                    <p>
+                      MBG App Platform lets you create branded mobile apps for
+                      your clients without any coding. Pick a template, add your
+                      client&apos;s branding, and publish to app stores.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        {/* ── User section ── */}
+        <div className="px-4 py-4 border-t border-gray-200">
+          <p className="text-xs text-gray-400 truncate mb-2">
+            {userEmail ?? "Loading..."}
+          </p>
+          <button
+            onClick={handleSignOut}
+            className="flex items-center gap-x-2 w-full text-left text-sm text-gray-500 hover:text-gray-900 transition-colors rounded-lg py-1"
+          >
+            <LogoutIcon className="size-4 shrink-0" />
+            Sign Out
+          </button>
+        </div>
       </div>
-    </aside>
+    </div>
   );
 }
 
