@@ -66,6 +66,8 @@ export default function BuildStatusPoller({
   const [downloadUrlIos, setDownloadUrlIos] = useState<string | null>(null);
   const [expoInstallUrl, setExpoInstallUrl] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [parsedError, setParsedError] = useState<string | null>(null);
+  const [buildUrl, setBuildUrl] = useState<string | null>(null);
   const [showQR, setShowQR] = useState<"android" | "ios" | null>(null);
   const [pollCount, setPollCount] = useState(0);
 
@@ -98,6 +100,12 @@ export default function BuildStatusPoller({
         }
         if (active && data.error_message) {
           setErrorMessage(data.error_message);
+        }
+        if (active && data.parsed_error) {
+          setParsedError(data.parsed_error);
+        }
+        if (active && data.build_url) {
+          setBuildUrl(data.build_url);
         }
         if (active && artifactsOnly) {
           setPollCount((c) => c + 1);
@@ -199,12 +207,24 @@ export default function BuildStatusPoller({
   return (
     <span className="inline-flex items-center gap-2">
       <StatusDot status={status} />
-      {status === "failed" && errorMessage && (
-        <span
-          className="text-xs text-red-600 truncate max-w-[180px]"
-          title={errorMessage}
-        >
-          {errorMessage}
+      {status === "failed" && (parsedError || errorMessage) && (
+        <span className="inline-flex items-center gap-1.5">
+          <span
+            className="text-xs text-red-600 truncate max-w-[200px]"
+            title={errorMessage ?? undefined}
+          >
+            {parsedError || errorMessage}
+          </span>
+          {buildUrl && (
+            <a
+              href={buildUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-600 hover:underline whitespace-nowrap"
+            >
+              View Log
+            </a>
+          )}
         </span>
       )}
       {status === "completed" && (downloadUrl || downloadUrlIos) && (

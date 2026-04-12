@@ -10,7 +10,15 @@ export async function POST(
 ) {
   try {
     const { id: tenantId } = await params;
-    const { config } = (await request.json()) as { config: AppTemplate };
+    const body = (await request.json()) as {
+      config: AppTemplate;
+      expo_project_id?: string | null;
+      supabase_url?: string | null;
+      supabase_anon_key?: string | null;
+      expected_updated_at?: string | null;
+    };
+
+    const { config, expo_project_id, supabase_url, supabase_anon_key, expected_updated_at } = body;
 
     if (!config) {
       return NextResponse.json(
@@ -30,10 +38,10 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Load tenant to get template_type
+    // Load tenant to get template_type and check concurrency
     const { data: tenant, error: tenantError } = await supabase
       .from("tenants")
-      .select("id, template_type")
+      .select("id, template_type, updated_at")
       .eq("id", tenantId)
       .single();
 
@@ -44,10 +52,25 @@ export async function POST(
       );
     }
 
+    // Optimistic concurrency check: if caller sent expected_updated_at and
+    // the DB has a different value, someone else edited since they loaded.
+    if (expected_updated_at && tenant.updated_at && tenant.updated_at !== expected_updated_at) {
+      return NextResponse.json(
+        { error: "This app was modified by someone else. Reload the page to see their changes." },
+        { status: 409 }
+      );
+    }
+
+    // Build update payload — always update config, optionally update tenant-level fields
+    const updatePayload: Record<string, unknown> = { config };
+    if (expo_project_id !== undefined) updatePayload.expo_project_id = expo_project_id;
+    if (supabase_url !== undefined) updatePayload.supabase_url = supabase_url;
+    if (supabase_anon_key !== undefined) updatePayload.supabase_anon_key = supabase_anon_key;
+
     // Update config in Supabase
     const { error: updateError } = await supabase
       .from("tenants")
-      .update({ config })
+      .update(updatePayload)
       .eq("id", tenantId);
 
     if (updateError) {

@@ -3,6 +3,9 @@
 interface TemplateSettingsEditorProps {
   config: Record<string, unknown>;
   onChange: (config: Record<string, unknown>) => void;
+  supabaseUrl: string;
+  supabaseAnonKey: string;
+  onSupabaseChange: (field: "supabaseUrl" | "supabaseAnonKey", value: string) => void;
 }
 
 function TextInput({
@@ -32,7 +35,7 @@ function TextInput({
   );
 }
 
-export default function TemplateSettingsEditor({ config, onChange }: TemplateSettingsEditorProps) {
+export default function TemplateSettingsEditor({ config, onChange, supabaseUrl, supabaseAnonKey, onSupabaseChange }: TemplateSettingsEditorProps) {
   const templateId = (config?.templateId as string) ?? "informational";
   const tabs = (config?.tabs ?? []) as Array<{ id: string; label: string }>;
 
@@ -64,9 +67,36 @@ export default function TemplateSettingsEditor({ config, onChange }: TemplateSet
         Settings specific to the <span className="text-gray-900 font-medium">{templateId}</span> template.
       </p>
 
+      {/* Supabase integration (admin-level, for content management) */}
+      <div className="space-y-4 mb-6 pb-6 border-b border-gray-200">
+        <h3 className="text-sm font-semibold text-gray-900">Supabase Integration</h3>
+        <p className="text-xs text-gray-400">
+          Link a Supabase project to enable content management from the admin panel.
+          Get these from your{" "}
+          <a href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+            Supabase dashboard
+          </a>{" "}
+          → Project Settings → API.
+        </p>
+        <TextInput
+          label="Supabase URL (Admin)"
+          value={supabaseUrl}
+          onChange={(v) => onSupabaseChange("supabaseUrl", v)}
+          placeholder="https://xxxxx.supabase.co"
+          mono
+        />
+        <TextInput
+          label="Supabase Anon Key (Admin)"
+          value={supabaseAnonKey}
+          onChange={(v) => onSupabaseChange("supabaseAnonKey", v)}
+          placeholder="eyJ..."
+          mono
+        />
+      </div>
+
       {/* Auth settings (all non-informational templates) */}
       <div className="space-y-4 mb-6">
-        <h3 className="text-sm font-semibold text-gray-900">Authentication</h3>
+        <h3 className="text-sm font-semibold text-gray-900">Authentication (Mobile App)</h3>
         <TextInput
           label="Supabase URL"
           value={auth.supabaseUrl ?? ""}

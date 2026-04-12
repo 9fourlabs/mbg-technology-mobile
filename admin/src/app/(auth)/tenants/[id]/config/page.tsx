@@ -29,13 +29,18 @@ export default function ConfigEditorPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [prInfo, setPrInfo] = useState<{ url: string; number: number } | null>(null);
+  // Tenant-level fields (stored separately from JSONB config)
+  const [expoProjectId, setExpoProjectId] = useState("");
+  const [supabaseUrl, setSupabaseUrl] = useState("");
+  const [supabaseAnonKey, setSupabaseAnonKey] = useState("");
+  const [updatedAt, setUpdatedAt] = useState<string | null>(null);
 
   useEffect(() => {
     const loadConfig = async () => {
       const supabase = createClient();
       const { data, error: fetchError } = await supabase
         .from("tenants")
-        .select("config, app_type, repo_url, business_name")
+        .select("config, app_type, repo_url, business_name, expo_project_id, supabase_url, supabase_anon_key, updated_at")
         .eq("id", id)
         .single();
 
@@ -57,6 +62,10 @@ export default function ConfigEditorPage() {
 
       setConfig(data.config ?? {});
       setConfigJson(JSON.stringify(data.config ?? {}, null, 2));
+      setExpoProjectId(data.expo_project_id ?? "");
+      setSupabaseUrl(data.supabase_url ?? "");
+      setSupabaseAnonKey(data.supabase_anon_key ?? "");
+      setUpdatedAt(data.updated_at ?? null);
       setLoading(false);
     };
     loadConfig();
@@ -79,7 +88,12 @@ export default function ConfigEditorPage() {
       const supabase = createClient();
       const { error: updateError } = await supabase
         .from("tenants")
-        .update({ config: parsed })
+        .update({
+          config: parsed,
+          expo_project_id: expoProjectId || null,
+          supabase_url: supabaseUrl || null,
+          supabase_anon_key: supabaseAnonKey || null,
+        })
         .eq("id", id);
 
       if (updateError) {
@@ -108,7 +122,13 @@ export default function ConfigEditorPage() {
       const res = await fetch(`/api/tenants/${id}/save-config`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ config: parsed }),
+        body: JSON.stringify({
+          config: parsed,
+          expo_project_id: expoProjectId || null,
+          supabase_url: supabaseUrl || null,
+          supabase_anon_key: supabaseAnonKey || null,
+          expected_updated_at: updatedAt,
+        }),
       });
 
       const data = await res.json();
@@ -200,10 +220,25 @@ export default function ConfigEditorPage() {
               <TabsEditor tenantId={id} config={config} onChange={handleConfigChange} />
             )}
             {activeTab === 3 && config && (
-              <TemplateSettingsEditor config={config} onChange={handleConfigChange} />
+              <TemplateSettingsEditor
+                config={config}
+                onChange={handleConfigChange}
+                supabaseUrl={supabaseUrl}
+                supabaseAnonKey={supabaseAnonKey}
+                onSupabaseChange={(field, value) => {
+                  if (field === "supabaseUrl") setSupabaseUrl(value);
+                  else setSupabaseAnonKey(value);
+                }}
+              />
             )}
             {activeTab === 4 && config && (
-              <AppStoreEditor tenantId={id} config={config as any} onChange={handleConfigChange as any} />
+              <AppStoreEditor
+                tenantId={id}
+                config={config as any}
+                onChange={handleConfigChange as any}
+                expoProjectId={expoProjectId}
+                onExpoProjectIdChange={setExpoProjectId}
+              />
             )}
             {activeTab === 5 && (
               <div>

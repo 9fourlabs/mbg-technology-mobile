@@ -74,9 +74,10 @@ export async function POST(request: NextRequest) {
       });
 
       if (insertError) {
+        const isDupe = insertError.code === "23505" || insertError.message?.includes("duplicate");
         return NextResponse.json(
-          { error: insertError.message },
-          { status: 400 },
+          { error: isDupe ? "A tenant with this ID already exists. Choose a different ID." : insertError.message },
+          { status: isDupe ? 409 : 400 },
         );
       }
 

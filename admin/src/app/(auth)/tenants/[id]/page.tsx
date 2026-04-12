@@ -145,6 +145,11 @@ export default async function TenantDetailPage({
             {tenant.template_type}
           </span>
         </div>
+        <p className="text-xs text-gray-400 mt-1">
+          {tenant.status === "draft" && "Configure your app, then create a preview build"}
+          {tenant.status === "preview" && "Share with your client for approval before going live"}
+          {tenant.status === "production" && "App is built and ready for store submission"}
+        </p>
         <div>
           {tenant.status === "draft" && (
             <DeployPreviewButton tenantId={id} />

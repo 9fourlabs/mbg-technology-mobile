@@ -7,9 +7,11 @@ interface Props {
   tenantId: string;
   config: AppTemplate;
   onChange: (updated: AppTemplate) => void;
+  expoProjectId: string;
+  onExpoProjectIdChange: (id: string) => void;
 }
 
-export default function AppStoreEditor({ tenantId, config, onChange }: Props) {
+export default function AppStoreEditor({ tenantId, config, onChange, expoProjectId, onExpoProjectIdChange }: Props) {
   const appStore: AppStoreMetadata = (config as Record<string, unknown>).appStore as AppStoreMetadata ?? {
     appName: "",
   };
@@ -126,6 +128,27 @@ export default function AppStoreEditor({ tenantId, config, onChange }: Props) {
             onChange={(e) => update({ splashBackgroundColor: e.target.value })}
             className="flex-1 rounded-lg bg-gray-100 border border-gray-300 px-4 py-2.5 text-sm text-gray-900 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="#ffffff"
+          />
+        </div>
+      </div>
+      {/* ── Expo Project ID ── */}
+      <div className="mt-8 pt-6 border-t border-gray-200">
+        <h2 className="text-base font-semibold text-gray-900 mb-1">Expo Project</h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Required for production builds. Find yours at{" "}
+          <a href="https://expo.dev" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+            expo.dev
+          </a>{" "}
+          → your project → Project ID.
+        </p>
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-1">Expo Project ID</label>
+          <input
+            type="text"
+            value={expoProjectId}
+            onChange={(e) => onExpoProjectIdChange(e.target.value.trim())}
+            className="w-full py-2.5 px-4 border-gray-200 rounded-lg text-sm font-mono focus:border-blue-500 focus:ring-blue-500"
+            placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
           />
         </div>
       </div>

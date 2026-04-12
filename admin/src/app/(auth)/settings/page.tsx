@@ -32,7 +32,9 @@ export default async function SettingsPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-semibold text-gray-900">Settings</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Platform configuration and team management
+          Platform configuration and team management.
+          Platform-level settings are configured via environment variables on your deployment.
+          Per-app settings (Expo Project ID, Supabase credentials) are configured in each app&apos;s Design tab.
         </p>
       </div>
 

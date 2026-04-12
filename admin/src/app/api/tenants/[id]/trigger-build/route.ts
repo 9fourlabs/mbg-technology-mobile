@@ -58,6 +58,33 @@ export async function POST(
     const appVersion = (tenant as Record<string, unknown>).app_version as string ?? "1.0.0";
     const isCustom = (tenant as Record<string, unknown>).app_type === "custom";
 
+    // Pre-build validation for template apps
+    if (!isCustom && profile === "preview") {
+      const config = tenant.config as Record<string, unknown> | null;
+      const issues: string[] = [];
+
+      if (!config || Object.keys(config).length === 0) {
+        issues.push("App has no configuration. Go to Design to set up your app.");
+      } else {
+        const brand = config.brand as Record<string, string> | undefined;
+        const tabs = config.tabs as unknown[] | undefined;
+
+        if (!brand?.logoUrl && !brand?.logoUri) {
+          issues.push("Missing logo. Upload one in the Brand tab.");
+        }
+        if (!tabs || tabs.length === 0) {
+          issues.push("No pages configured. Add at least one page in the Pages tab.");
+        }
+      }
+
+      if (issues.length > 0) {
+        return NextResponse.json(
+          { error: "App not ready for preview", details: issues },
+          { status: 400 }
+        );
+      }
+    }
+
     // For template apps: ensure config JSON is committed to main before building
     if (!isCustom && tenant.config && Object.keys(tenant.config as object).length > 0) {
       try {

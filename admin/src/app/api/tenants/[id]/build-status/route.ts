@@ -3,6 +3,30 @@ import { createClient } from "@/lib/supabase/server";
 import { getWorkflowRun, getFailureReason } from "@/lib/github";
 import { getExpoBuildPageUrl, getExpoInstallUrl, getEASBuilds, getEASBuildById } from "@/lib/eas";
 
+/**
+ * Parse raw error messages into user-friendly suggestions.
+ */
+function parseErrorMessage(raw: string | null): string | null {
+  if (!raw) return null;
+  const lower = raw.toLowerCase();
+  if (lower.includes("credentials") || lower.includes("signing") || lower.includes("provisioning")) {
+    return "iOS signing credentials not configured. Configure them in the Expo dashboard or run `eas credentials` locally.";
+  }
+  if (lower.includes("slug") || lower.includes("projectid") || lower.includes("project-id")) {
+    return "EAS project configuration mismatch. Check that app.config.ts slug matches your Expo project.";
+  }
+  if (lower.includes("npm ci") || lower.includes("npm install") || lower.includes("npm err")) {
+    return "Dependency installation failed. Check package.json for errors or incompatible versions.";
+  }
+  if (lower.includes("errored") || lower.includes("eas build")) {
+    return "EAS build failed. Check the EAS dashboard for detailed logs.";
+  }
+  if (lower.includes("timeout")) {
+    return "Build timed out. Try triggering the build again.";
+  }
+  return raw;
+}
+
 function mapGitHubStatus(
   status: string,
   conclusion: string | null
@@ -216,6 +240,7 @@ export async function GET(
       download_url_ios: downloadUrlIos,
       expo_install_url: expoInstallUrl,
       error_message: errorMessage,
+      parsed_error: parseErrorMessage(errorMessage),
       updated,
     });
   } catch (error) {

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import ContentRouter from "@/components/content/ContentRouter";
 import TenantTabBar from "@/components/TenantTabBar";
+import SupabaseLinkForm from "./supabase-link-form";
 
 export default async function ContentPage({
   params,
@@ -13,13 +14,15 @@ export default async function ContentPage({
 
   const { data: tenant } = await supabase
     .from("tenants")
-    .select("id, template_type, business_name, supabase_project_id, app_type")
+    .select("id, template_type, business_name, supabase_project_id, supabase_url, app_type")
     .eq("id", id)
     .single();
 
   if (!tenant) {
     notFound();
   }
+
+  const hasSupabase = !!(tenant.supabase_project_id || tenant.supabase_url);
 
   return (
     <div>
@@ -34,13 +37,8 @@ export default async function ContentPage({
         </p>
       </div>
 
-      {!tenant.supabase_project_id ? (
-        <div className="rounded-xl bg-amber-50 border border-yellow-200 p-6">
-          <p className="text-sm text-amber-700">
-            This tenant doesn&apos;t have a Supabase project linked. Set one up
-            before managing content.
-          </p>
-        </div>
+      {!hasSupabase ? (
+        <SupabaseLinkForm tenantId={id} />
       ) : (
         <ContentRouter
           tenantId={id}

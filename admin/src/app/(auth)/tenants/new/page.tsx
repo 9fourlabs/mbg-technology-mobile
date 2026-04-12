@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import ImageUploader from "@/components/ImageUploader";
 
@@ -63,6 +63,9 @@ export default function NewTenantPage() {
   const [step, setStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [idAvailable, setIdAvailable] = useState<boolean | null>(null);
+  const [idChecking, setIdChecking] = useState(false);
+  const idCheckTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [form, setForm] = useState<FormData>({
     app_type: "template",
     template_type: "",
@@ -88,6 +91,28 @@ export default function NewTenantPage() {
   const isCustom = form.app_type === "custom";
   const STEPS = isCustom ? CUSTOM_STEPS : TEMPLATE_STEPS;
 
+  // Debounced tenant ID availability check
+  useEffect(() => {
+    if (idCheckTimer.current) clearTimeout(idCheckTimer.current);
+    if (!form.tenant_id || form.tenant_id.length < 3 || !validateTenantId(form.tenant_id)) {
+      setIdAvailable(null);
+      return;
+    }
+    setIdChecking(true);
+    idCheckTimer.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/tenants/check-id?id=${encodeURIComponent(form.tenant_id)}`);
+        const data = await res.json();
+        setIdAvailable(data.available);
+      } catch {
+        setIdAvailable(null);
+      } finally {
+        setIdChecking(false);
+      }
+    }, 500);
+    return () => { if (idCheckTimer.current) clearTimeout(idCheckTimer.current); };
+  }, [form.tenant_id]);
+
   const updateForm = (updates: Partial<FormData>) => {
     setForm((prev) => ({ ...prev, ...updates }));
   };
@@ -97,7 +122,7 @@ export default function NewTenantPage() {
 
     if (isCustom) {
       switch (step) {
-        case 1: return form.tenant_id.length >= 3 && form.business_name.length >= 1;
+        case 1: return form.tenant_id.length >= 3 && form.business_name.length >= 1 && idAvailable !== false;
         case 2: return form.repo_url.length > 0;
         case 3: return true;
         default: return false;
@@ -105,7 +130,7 @@ export default function NewTenantPage() {
     } else {
       switch (step) {
         case 1: return form.template_type !== "";
-        case 2: return form.tenant_id.length >= 3 && form.business_name.length >= 1;
+        case 2: return form.tenant_id.length >= 3 && form.business_name.length >= 1 && idAvailable !== false;
         case 3: return form.primary_color !== "";
         case 4: return form.design.preset !== "";
         case 5: return true;
@@ -338,6 +363,11 @@ export default function NewTenantPage() {
               {form.tenant_id.length > 0 && !validateTenantId(form.tenant_id) && (
                 <p className="text-xs text-red-600 mt-1">
                   Invalid tenant ID format.
+                </p>
+              )}
+              {form.tenant_id.length >= 3 && validateTenantId(form.tenant_id) && (
+                <p className={`text-xs mt-1 ${idChecking ? "text-gray-400" : idAvailable === true ? "text-emerald-600" : idAvailable === false ? "text-red-600" : "text-gray-400"}`}>
+                  {idChecking ? "Checking availability..." : idAvailable === true ? "✓ Available" : idAvailable === false ? "✗ This ID is already taken" : ""}
                 </p>
               )}
             </div>

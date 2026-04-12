@@ -72,7 +72,7 @@ export default async function BuildsPage({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">Builds</h1>
         <div className="flex items-center gap-3">
-          <SharePreviewLink tenantId={id} />
+          <SharePreviewLink tenantId={id} hasPreviewBuild={(successfulPreviews ?? 0) > 0} />
           <DeployButtons
             tenantId={id}
             hasExpoProject={hasExpoProject}
@@ -80,6 +80,45 @@ export default async function BuildsPage({
           />
         </div>
       </div>
+
+      {/* ── Next-steps banner ── */}
+      {builds && builds.length > 0 && builds[0].status === "completed" && builds[0].profile === "preview" && (
+        <div className="rounded-lg bg-emerald-50 border border-green-200 p-4 mb-6">
+          <p className="text-sm font-medium text-emerald-800 mb-1">Preview ready!</p>
+          <p className="text-sm text-emerald-700">
+            Share it with your client using the <strong>Share</strong> button above. They can try the app in their browser or install it on their device.
+          </p>
+        </div>
+      )}
+      {builds && builds.length > 0 && builds[0].status === "completed" && builds[0].profile === "production" && (
+        <div className="rounded-lg bg-blue-50 border border-blue-200 p-4 mb-6">
+          <p className="text-sm font-medium text-blue-800 mb-1">Production build ready!</p>
+          <p className="text-sm text-blue-700 mb-2">
+            Download the build artifacts above, then submit to the app stores:
+          </p>
+          <ul className="text-sm text-blue-700 space-y-1">
+            <li>
+              • <a href="https://appstoreconnect.apple.com" target="_blank" rel="noopener noreferrer" className="underline font-medium hover:text-blue-900">Apple App Store Connect</a> (iOS)
+            </li>
+            <li>
+              • <a href="https://play.google.com/console" target="_blank" rel="noopener noreferrer" className="underline font-medium hover:text-blue-900">Google Play Console</a> (Android)
+            </li>
+          </ul>
+        </div>
+      )}
+      {builds && builds.length > 0 && builds[0].status === "failed" && (
+        <div className="rounded-lg bg-red-50 border border-red-200 p-4 mb-6">
+          <p className="text-sm font-medium text-red-800 mb-1">Build failed</p>
+          <p className="text-sm text-red-700">
+            {builds[0].error_message || "Check the build log for details."}{" "}
+            {builds[0].build_url && (
+              <a href={builds[0].build_url} target="_blank" rel="noopener noreferrer" className="underline font-medium">
+                View build log
+              </a>
+            )}
+          </p>
+        </div>
+      )}
 
       {/* Build types explainer */}
       <div className="rounded-xl bg-white border border-gray-200 p-5 mb-6">
