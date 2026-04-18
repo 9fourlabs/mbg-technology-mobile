@@ -248,7 +248,9 @@ export async function updateTenantProjects(
   tenantId: string,
   projectId: string,
 ): Promise<void> {
-  const filePath = "configs/tenantProjects.ts";
+  // Path matches scripts/tenantProjects.ts, the file consumed by
+  // .eas/workflows/release-tenant.yml via scripts/getProjectId.ts.
+  const filePath = "scripts/tenantProjects.ts";
 
   let existingContent = "";
   let existingSha: string | undefined;

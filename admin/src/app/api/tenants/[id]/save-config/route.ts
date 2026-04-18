@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { configToTypeScript } from "@/lib/config-generator";
-import { commitTenantConfig, createTenantPullRequest } from "@/lib/github";
+import {
+  commitTenantConfig,
+  createTenantPullRequest,
+  updateTenantProjects,
+} from "@/lib/github";
 import type { AppTemplate } from "@/lib/types";
 
 export async function POST(
@@ -91,6 +95,23 @@ export async function POST(
       tenantId,
       tenant.template_type
     );
+
+    // If the user provided an Expo project ID, propagate it to the
+    // committed scripts/tenantProjects.ts so production builds resolve
+    // the right project. Without this, builds fall back to the placeholder
+    // and `validateProductionReady.ts` rejects them. Failures are
+    // non-fatal — the tenants table update above is still authoritative
+    // for the admin UI.
+    if (expo_project_id && expo_project_id.trim().length > 0) {
+      try {
+        await updateTenantProjects(tenantId, expo_project_id.trim());
+      } catch (err) {
+        console.warn(
+          `Failed to update scripts/tenantProjects.ts for ${tenantId}:`,
+          err
+        );
+      }
+    }
 
     return NextResponse.json({ success: true, pr_url, pr_number });
   } catch (err) {

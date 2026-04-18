@@ -44,19 +44,39 @@ export async function POST(
       return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
     }
 
-    // Production builds require an expo_project_id
-    if (profile === "production" && !tenant.expo_project_id) {
-      return NextResponse.json(
-        {
-          error:
-            "Production builds require an Expo project ID. Configure one in the tenant settings.",
-        },
-        { status: 400 }
-      );
+    // Production builds require a real (non-placeholder) Expo project ID.
+    // The trigger here checks the admin DB; the workflow itself also runs
+    // scripts/validateProductionReady.ts which re-checks scripts/tenantProjects.ts.
+    if (profile === "production") {
+      const projectId = tenant.expo_project_id;
+      if (!projectId) {
+        return NextResponse.json(
+          {
+            error:
+              "Production builds require an Expo project ID. Open the App Store config tab and paste the project UUID from expo.dev.",
+          },
+          { status: 400 }
+        );
+      }
+      if (typeof projectId === "string" && projectId.startsWith("PLACEHOLDER")) {
+        return NextResponse.json(
+          {
+            error:
+              "Tenant has a placeholder Expo project ID. Create a real project at expo.dev, then paste its UUID into the App Store config tab.",
+          },
+          { status: 400 }
+        );
+      }
     }
 
     const appVersion = (tenant as Record<string, unknown>).app_version as string ?? "1.0.0";
     const isCustom = (tenant as Record<string, unknown>).app_type === "custom";
+
+    // Read per-tenant push opt-in from the config. Default off so a tenant
+    // without push capability set up doesn't break builds. See appstore-editor.tsx.
+    const tenantConfig = (tenant.config ?? {}) as Record<string, unknown>;
+    const tenantAppStore = (tenantConfig.appStore ?? {}) as Record<string, unknown>;
+    const pushEnabled = tenantAppStore.pushEnabled === true ? "1" : "0";
 
     // Pre-build validation for template apps
     if (!isCustom && profile === "preview") {
@@ -155,6 +175,7 @@ export async function POST(
           tenant: tenantId,
           version: appVersion,
           build_id: adminBuildId,
+          push_enabled: pushEnabled,
         });
       } else {
         await triggerWorkflowDispatch(workflowFile, "main", {
@@ -162,6 +183,7 @@ export async function POST(
           platform: "all",
           version: appVersion,
           build_id: adminBuildId,
+          push_enabled: pushEnabled,
         });
       }
     }

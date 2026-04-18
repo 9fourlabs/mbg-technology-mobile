@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
       app_type = "template",
       repo_url,
       repo_branch = "main",
+      brief,
     } = body as {
       tenant_id: string;
       template_type?: TemplateId;
@@ -44,7 +45,17 @@ export async function POST(request: NextRequest) {
       app_type?: "template" | "custom";
       repo_url?: string;
       repo_branch?: string;
+      brief?: {
+        industry?: string;
+        primaryContactName?: string;
+        primaryContactEmail?: string;
+        primaryGoal?: string;
+        specialRequirements?: string;
+        targetLaunchDate?: string;
+      };
     };
+
+    const briefRecord = brief && typeof brief === "object" ? brief : {};
 
     if (!tenant_id || !business_name) {
       return NextResponse.json(
@@ -71,6 +82,7 @@ export async function POST(request: NextRequest) {
         app_type: "custom",
         repo_url,
         repo_branch,
+        brief: briefRecord,
       });
 
       if (insertError) {
@@ -114,6 +126,7 @@ export async function POST(request: NextRequest) {
       status: "draft",
       config,
       app_type: "template",
+      brief: briefRecord,
     });
 
     if (insertError) {

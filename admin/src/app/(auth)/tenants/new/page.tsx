@@ -44,6 +44,15 @@ interface DesignData {
   typography: { headingSize: string; bodySize: string };
 }
 
+interface BriefData {
+  industry: string;
+  primaryContactName: string;
+  primaryContactEmail: string;
+  primaryGoal: string;
+  specialRequirements: string;
+  targetLaunchDate: string;
+}
+
 interface FormData {
   app_type: "template" | "custom";
   template_type: string;
@@ -56,6 +65,7 @@ interface FormData {
   design: DesignData;
   repo_url: string;
   repo_branch: string;
+  brief: BriefData;
 }
 
 export default function NewTenantPage() {
@@ -86,7 +96,19 @@ export default function NewTenantPage() {
     },
     repo_url: "",
     repo_branch: "main",
+    brief: {
+      industry: "",
+      primaryContactName: "",
+      primaryContactEmail: "",
+      primaryGoal: "",
+      specialRequirements: "",
+      targetLaunchDate: "",
+    },
   });
+
+  const updateBrief = (patch: Partial<BriefData>) => {
+    setForm((prev) => ({ ...prev, brief: { ...prev.brief, ...patch } }));
+  };
 
   const isCustom = form.app_type === "custom";
   const STEPS = isCustom ? CUSTOM_STEPS : TEMPLATE_STEPS;
@@ -173,6 +195,7 @@ export default function NewTenantPage() {
             app_type: "custom",
             repo_url: form.repo_url,
             repo_branch: form.repo_branch,
+            brief: form.brief,
           }
         : {
             tenant_id: form.tenant_id,
@@ -186,6 +209,7 @@ export default function NewTenantPage() {
               logoUrl: form.logo_url,
             },
             design: form.design,
+            brief: form.brief,
           };
 
       const res = await fetch("/api/tenants/create", {
@@ -383,6 +407,82 @@ export default function NewTenantPage() {
                 className="w-full rounded-lg bg-gray-100 border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
+
+            {/* Project brief — optional but highly recommended */}
+            <details className="group mt-4 rounded-lg border border-gray-200 bg-gray-50">
+              <summary className="cursor-pointer list-none flex items-center justify-between px-4 py-3">
+                <div>
+                  <div className="text-sm font-medium text-gray-900">Project brief</div>
+                  <div className="text-xs text-gray-500 mt-0.5">
+                    Optional. Capture the client&apos;s goals and requirements so they live with the tenant record.
+                  </div>
+                </div>
+                <span className="text-xs text-gray-400 group-open:rotate-180 transition-transform">▼</span>
+              </summary>
+              <div className="px-4 pb-4 pt-2 space-y-3 border-t border-gray-200">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Industry</label>
+                    <input
+                      type="text"
+                      value={form.brief.industry}
+                      onChange={(e) => updateBrief({ industry: e.target.value })}
+                      placeholder="e.g. dentistry, retail, fitness"
+                      className="w-full rounded-lg bg-white border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Target launch date</label>
+                    <input
+                      type="date"
+                      value={form.brief.targetLaunchDate}
+                      onChange={(e) => updateBrief({ targetLaunchDate: e.target.value })}
+                      className="w-full rounded-lg bg-white border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Primary contact name</label>
+                    <input
+                      type="text"
+                      value={form.brief.primaryContactName}
+                      onChange={(e) => updateBrief({ primaryContactName: e.target.value })}
+                      placeholder="Jane Smith"
+                      className="w-full rounded-lg bg-white border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Primary contact email</label>
+                    <input
+                      type="email"
+                      value={form.brief.primaryContactEmail}
+                      onChange={(e) => updateBrief({ primaryContactEmail: e.target.value })}
+                      placeholder="jane@client.com"
+                      className="w-full rounded-lg bg-white border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Primary goal</label>
+                  <input
+                    type="text"
+                    value={form.brief.primaryGoal}
+                    onChange={(e) => updateBrief({ primaryGoal: e.target.value })}
+                    placeholder="What does success look like for this app?"
+                    className="w-full rounded-lg bg-white border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Special requirements</label>
+                  <textarea
+                    rows={3}
+                    value={form.brief.specialRequirements}
+                    onChange={(e) => updateBrief({ specialRequirements: e.target.value })}
+                    placeholder="Integrations, compliance (HIPAA, PCI), third-party tools, accessibility, etc."
+                    className="w-full rounded-lg bg-white border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+                  />
+                </div>
+              </div>
+            </details>
           </div>
         )}
 
