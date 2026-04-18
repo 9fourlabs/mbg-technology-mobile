@@ -1,0 +1,64 @@
+name: EAS OTA Update
+
+# Trigger an OTA (over-the-air) update for a tenant. This is the fast path for
+# content/JS changes — no native rebuild, updates land on-device in seconds.
+# Full-rebuild path is `eas-preview.yml` / `eas-promote.yml`.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tenant:
+        description: "Tenant key (e.g. mbg, acme-dental)"
+        required: true
+        type: string
+      environment:
+        description: "Target environment"
+        required: true
+        default: "preview"
+        type: choice
+        options:
+          - preview
+          - production
+      message:
+        description: "Update message (shown in EAS dashboard)"
+        required: true
+        type: string
+      platform:
+        description: "Platform to update"
+        required: false
+        default: "all"
+        type: choice
+        options:
+          - ios
+          - android
+          - all
+
+jobs:
+  ota:
+    runs-on: ubuntu-latest
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
+
+      - name: Run EAS OTA workflow (tenant)
+        run: |
+          eas workflow:run .eas/workflows/ota-tenant.yml \
+            --input tenant=${{ inputs.tenant }} \
+            --input environment=${{ inputs.environment }} \
+            --input message="${{ inputs.message }}" \
+            --input platform=${{ inputs.platform }} \
+            --non-interactive

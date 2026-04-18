@@ -11,7 +11,9 @@
     "validate:tenants": "tsx scripts/validateTenants.ts",
     "new-tenant": "tsx scripts/newTenant.ts",
     "generate:keystore": "bash scripts/generateKeystore.sh",
-    "validate:production": "tsx scripts/validateProductionReady.ts"
+    "validate:production": "tsx scripts/validateProductionReady.ts",
+    "ota:preview": "tsx scripts/publishOta.ts preview",
+    "ota:production": "tsx scripts/publishOta.ts production"
   },
   "dependencies": {
     "@react-navigation/native": "^7.2.2",
@@ -20,8 +22,11 @@
     "@supabase/supabase-js": "^2.100.1",
     "expo": "~55.0.11",
     "expo-constants": "~55.0.9",
+    "expo-device": "~55.0.15",
+    "expo-notifications": "~55.0.19",
     "expo-secure-store": "~55.0.11",
     "expo-status-bar": "~55.0.5",
+    "expo-updates": "~55.0.20",
     "react": "19.2.0",
     "react-native": "^0.83.4",
     "react-native-safe-area-context": "~5.6.2",

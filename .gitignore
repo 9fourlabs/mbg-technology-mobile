@@ -19,6 +19,10 @@ expo-env.d.ts
 *.mobileprovision
 keystores/CREDENTIALS.md
 
+# Signing / submission secrets (ASC API key, Play service account, etc.)
+# Consumed by eas.json submit config. Never commit — mirror in team vault.
+secrets/
+
 # Metro
 .metro-health-check*
 

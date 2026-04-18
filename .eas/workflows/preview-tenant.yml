@@ -10,6 +10,12 @@ on:
         type: string
         required: false
         default: "1.0.0"
+      push_enabled:
+        type: string
+        required: false
+        default: "0"
+        # "1" → include expo-notifications native module in this build.
+        # See docs/PUSH_NOTIFICATIONS.md.
 
 jobs:
   prepare:
@@ -22,26 +28,38 @@ jobs:
           npm run build:tenants
           npm run validate:tenants
 
+  # Preview builds share a single Expo project across tenants, so we use a
+  # tenant-scoped channel (`preview-<tenant>`) to keep OTA update streams isolated.
+  # A `preview-acme-dental` build will only receive updates from the
+  # `preview-acme-dental` branch — see docs/OTA_UPDATES.md.
   build_android:
     needs: [prepare]
-    type: build
-    params:
-      platform: android
-      profile: preview
-    env:
-      APP_TENANT: ${{ inputs.tenant }}
-      NATIVE_ID_MODE_ANDROID: tenant
-      NATIVE_ID_MODE_IOS: shared
-      APP_VERSION: ${{ inputs.version }}
+    steps:
+      - uses: eas/checkout
+      - uses: eas/install_node_modules
+      - name: Android preview build
+        env:
+          APP_TENANT: ${{ inputs.tenant }}
+          NATIVE_ID_MODE_ANDROID: tenant
+          NATIVE_ID_MODE_IOS: shared
+          APP_VERSION: ${{ inputs.version }}
+          EXPO_PUSH_ENABLED: ${{ inputs.push_enabled }}
+        run: |
+          eas build --profile preview --platform android --non-interactive \
+            --channel "preview-${{ inputs.tenant }}"
 
   build_ios:
     needs: [prepare]
-    type: build
-    params:
-      platform: ios
-      profile: preview
-    env:
-      APP_TENANT: ${{ inputs.tenant }}
-      NATIVE_ID_MODE_ANDROID: tenant
-      NATIVE_ID_MODE_IOS: shared
-      APP_VERSION: ${{ inputs.version }}
+    steps:
+      - uses: eas/checkout
+      - uses: eas/install_node_modules
+      - name: iOS preview build
+        env:
+          APP_TENANT: ${{ inputs.tenant }}
+          NATIVE_ID_MODE_ANDROID: tenant
+          NATIVE_ID_MODE_IOS: shared
+          APP_VERSION: ${{ inputs.version }}
+          EXPO_PUSH_ENABLED: ${{ inputs.push_enabled }}
+        run: |
+          eas build --profile preview --platform ios --non-interactive \
+            --channel "preview-${{ inputs.tenant }}"

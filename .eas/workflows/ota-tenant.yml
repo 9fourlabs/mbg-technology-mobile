@@ -1,0 +1,89 @@
+name: OTA update (tenant)
+
+# Publish a JS/content-only update to an existing build's channel via EAS Update.
+# This is the fast path for iterating on content in front of a client: no native
+# rebuild, delivered in seconds after the user re-opens the app.
+#
+# Channel strategy (mirrors preview-tenant.yml and release-tenant.yml):
+#   - preview:    channel `preview-<tenant>` in the shared preview Expo project
+#   - production: channel `production` in the tenant-specific Expo project
+#
+# See docs/OTA_UPDATES.md for the full story.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tenant:
+        type: string
+        required: true
+      environment:
+        type: string
+        required: true
+        default: preview
+        # one of: preview, production
+      message:
+        type: string
+        required: true
+      platform:
+        type: string
+        required: false
+        default: all
+        # one of: ios, android, all
+
+jobs:
+  prepare:
+    outputs:
+      project_id: ${{ steps.project.outputs.project_id }}
+      branch: ${{ steps.branch.outputs.branch }}
+    steps:
+      - uses: eas/checkout
+      - uses: eas/install_node_modules
+
+      - name: Build and validate tenant configs
+        run: |
+          npm run build:tenants
+          npm run validate:tenants
+
+      - name: Resolve Expo project ID
+        id: project
+        run: |
+          if [ "${{ inputs.environment }}" = "production" ]; then
+            PROJECT_ID=$(npx --yes tsx scripts/getProjectId.ts "${{ inputs.tenant }}")
+          else
+            # Preview uses the shared MBG project (default from app.config.ts)
+            PROJECT_ID=""
+          fi
+          set-output project_id "$PROJECT_ID"
+
+      - name: Resolve branch name
+        id: branch
+        run: |
+          if [ "${{ inputs.environment }}" = "production" ]; then
+            BRANCH="production"
+          else
+            BRANCH="preview-${{ inputs.tenant }}"
+          fi
+          set-output branch "$BRANCH"
+
+  publish:
+    needs: [prepare]
+    steps:
+      - uses: eas/checkout
+      - uses: eas/install_node_modules
+      - name: Publish OTA update
+        env:
+          APP_TENANT: ${{ inputs.tenant }}
+          NATIVE_ID_MODE: ${{ inputs.environment == 'production' && 'tenant' || 'shared' }}
+          NATIVE_ID_MODE_ANDROID: ${{ inputs.environment == 'production' && 'tenant' || 'tenant' }}
+          NATIVE_ID_MODE_IOS: ${{ inputs.environment == 'production' && 'tenant' || 'shared' }}
+          EAS_PROJECT_ID: ${{ needs.prepare.outputs.project_id }}
+        run: |
+          CMD="eas update --branch ${{ needs.prepare.outputs.branch }} --message \"${{ inputs.message }}\" --non-interactive"
+          if [ "${{ inputs.platform }}" != "all" ]; then
+            CMD="$CMD --platform ${{ inputs.platform }}"
+          fi
+          if [ -n "$EAS_PROJECT_ID" ]; then
+            CMD="$CMD --project-id $EAS_PROJECT_ID"
+          fi
+          echo "Running: $CMD"
+          eval "$CMD"

@@ -1,5 +1,13 @@
 name: EAS Custom App Build
 
+# Builds an app from a customer-provided Expo repo (not the MBG template).
+# The repo must contain its own `eas.json` and `app.config.ts` (or `app.config.js`
+# / `app.json`) and be a complete Expo project. We clone, validate the structure,
+# install deps, and hand off to EAS.
+#
+# Peer of eas-preview.yml for the templated path. Called by the admin portal's
+# trigger-build API when tenant.app_type === "custom".
+
 on:
   workflow_dispatch:
     inputs:
@@ -13,21 +21,40 @@ on:
         default: "main"
         type: string
       profile:
-        description: "Build profile (preview or production)"
+        description: "Build profile"
         required: true
         default: "preview"
         type: choice
         options:
           - preview
           - production
+      platform:
+        description: "Platform(s) to build"
+        required: false
+        default: "all"
+        type: choice
+        options:
+          - ios
+          - android
+          - all
       version:
         description: "App version (semver)"
         required: false
         default: "1.0.0"
         type: string
       expo_project_id:
-        description: "Expo project ID (optional, uses repo default if not set)"
+        description: "Expo project ID (optional; required for production)"
         required: false
+        type: string
+      tenant_id:
+        description: "Tenant ID (for admin callback)"
+        required: false
+        default: ""
+        type: string
+      build_id:
+        description: "Admin build record UUID (for artifact linking)"
+        required: false
+        default: ""
         type: string
 
 jobs:
@@ -39,8 +66,39 @@ jobs:
     steps:
       - name: Clone custom repo
         run: |
-          git clone --branch ${{ inputs.branch }} --depth 1 ${{ inputs.repo_url }} ./custom-app
+          git clone --branch "${{ inputs.branch }}" --depth 1 "${{ inputs.repo_url }}" ./custom-app
           echo "Cloned ${{ inputs.repo_url }} @ ${{ inputs.branch }}"
+
+      - name: Validate repo structure
+        working-directory: ./custom-app
+        run: |
+          ERRORS=()
+
+          if [ ! -f "package.json" ]; then
+            ERRORS+=("missing package.json")
+          fi
+          if [ ! -f "eas.json" ]; then
+            ERRORS+=("missing eas.json (run 'eas build:configure' in the custom repo first)")
+          fi
+          if [ ! -f "app.config.ts" ] && [ ! -f "app.config.js" ] && [ ! -f "app.json" ]; then
+            ERRORS+=("missing app.config.ts / app.config.js / app.json")
+          fi
+          if ! jq -e '.dependencies.expo // .devDependencies.expo' package.json >/dev/null 2>&1; then
+            ERRORS+=("package.json has no 'expo' dependency — not an Expo project?")
+          fi
+
+          if [ "${#ERRORS[@]}" -gt 0 ]; then
+            echo "::error::Custom repo validation failed:"
+            for err in "${ERRORS[@]}"; do
+              echo "::error::  - $err"
+            done
+            exit 1
+          fi
+
+          echo "Custom repo structure looks valid."
+          echo "  package.json: ok"
+          echo "  eas.json: ok"
+          echo "  app config: $(ls app.config.ts app.config.js app.json 2>/dev/null | head -1)"
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -49,28 +107,152 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./custom-app
-        run: npm ci
+        run: |
+          if [ -f "package-lock.json" ]; then
+            npm ci
+          else
+            npm install
+          fi
 
       - name: Install EAS CLI
         run: npm install -g eas-cli
+
+      - name: Snapshot existing EAS builds before trigger
+        if: inputs.build_id != ''
+        id: pre-builds
+        working-directory: ./custom-app
+        run: |
+          EXISTING=$(eas build:list --limit 20 --json --non-interactive 2>/dev/null \
+            | jq -r '[.[] | select(.status == "FINISHED" or .status == "ERRORED")] | map(.id) | join(",")' \
+            || echo "")
+          echo "existing_ids=$EXISTING" >> $GITHUB_OUTPUT
+          echo "Existing build IDs (finished+errored): $EXISTING"
 
       - name: Build preview
         if: inputs.profile == 'preview'
         working-directory: ./custom-app
         env:
           APP_VERSION: ${{ inputs.version }}
-        run: eas build --profile preview --platform android --non-interactive
+        run: |
+          PLATFORM="${{ inputs.platform }}"
+          # Preview default: build both unless caller overrode
+          [ "$PLATFORM" = "all" ] && PLATFORM="all"
+          CMD="eas build --profile preview --platform $PLATFORM --non-interactive"
+          if [ -n "${{ inputs.expo_project_id }}" ]; then
+            CMD="$CMD --project-id ${{ inputs.expo_project_id }}"
+          fi
+          echo "Running: $CMD"
+          eval "$CMD"
 
       - name: Build production
         if: inputs.profile == 'production'
         working-directory: ./custom-app
         env:
           APP_VERSION: ${{ inputs.version }}
-        run: eas build --profile production --platform all --non-interactive
+        run: |
+          PLATFORM="${{ inputs.platform }}"
+          CMD="eas build --profile production --platform $PLATFORM --non-interactive"
+          if [ -n "${{ inputs.expo_project_id }}" ]; then
+            CMD="$CMD --project-id ${{ inputs.expo_project_id }}"
+          fi
+          echo "Running: $CMD"
+          eval "$CMD"
 
       - name: Submit to stores
         if: inputs.profile == 'production'
         working-directory: ./custom-app
         env:
           APP_VERSION: ${{ inputs.version }}
-        run: eas submit --profile production --platform all --non-interactive
+        run: |
+          PLATFORM="${{ inputs.platform }}"
+          CMD="eas submit --profile production --platform $PLATFORM --non-interactive"
+          if [ -n "${{ inputs.expo_project_id }}" ]; then
+            CMD="$CMD --project-id ${{ inputs.expo_project_id }}"
+          fi
+          echo "Running: $CMD"
+          eval "$CMD"
+
+      - name: Wait for NEW EAS builds and report IDs back to admin
+        if: inputs.build_id != '' && inputs.tenant_id != ''
+        working-directory: ./custom-app
+        env:
+          ADMIN_URL: ${{ secrets.ADMIN_URL }}
+          ADMIN_BUILD_LINK_SECRET: ${{ secrets.ADMIN_BUILD_LINK_SECRET }}
+        run: |
+          BUILD_ID="${{ inputs.build_id }}"
+          TENANT="${{ inputs.tenant_id }}"
+          EXISTING_IDS="${{ steps.pre-builds.outputs.existing_ids }}"
+          echo "Waiting for NEW EAS builds (admin build: $BUILD_ID, tenant: $TENANT)"
+          echo "Will ignore these existing IDs: $EXISTING_IDS"
+
+          MAX_ATTEMPTS=40  # ~20 minutes (30s intervals)
+          ATTEMPT=0
+          ANDROID_ID=""
+          IOS_ID=""
+          ANDROID_DONE=""
+          IOS_DONE=""
+
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+            ATTEMPT=$((ATTEMPT + 1))
+            echo "Poll attempt $ATTEMPT/$MAX_ATTEMPTS..."
+
+            BUILDS_JSON=$(eas build:list --limit 20 --json --non-interactive 2>/dev/null || echo "[]")
+
+            if [ -z "$ANDROID_DONE" ]; then
+              ANDROID_ID=$(echo "$BUILDS_JSON" | jq -r --arg existing "$EXISTING_IDS" '
+                ($existing | split(",")) as $skip |
+                [.[] | select(.platform == "ANDROID" and .status == "FINISHED" and ([.id] | inside($skip) | not))] |
+                first | .id // empty')
+              if [ -n "$ANDROID_ID" ]; then ANDROID_DONE="finished"; fi
+
+              if [ -z "$ANDROID_DONE" ]; then
+                ANDROID_ERR=$(echo "$BUILDS_JSON" | jq -r --arg existing "$EXISTING_IDS" '
+                  ($existing | split(",")) as $skip |
+                  [.[] | select(.platform == "ANDROID" and .status == "ERRORED" and ([.id] | inside($skip) | not))] | length')
+                if [ "$ANDROID_ERR" -gt "0" ]; then
+                  ANDROID_DONE="errored"
+                fi
+              fi
+            fi
+
+            if [ -z "$IOS_DONE" ]; then
+              IOS_ID=$(echo "$BUILDS_JSON" | jq -r --arg existing "$EXISTING_IDS" '
+                ($existing | split(",")) as $skip |
+                [.[] | select(.platform == "IOS" and .status == "FINISHED" and ([.id] | inside($skip) | not))] |
+                first | .id // empty')
+              if [ -n "$IOS_ID" ]; then IOS_DONE="finished"; fi
+
+              if [ -z "$IOS_DONE" ]; then
+                IOS_ERR=$(echo "$BUILDS_JSON" | jq -r --arg existing "$EXISTING_IDS" '
+                  ($existing | split(",")) as $skip |
+                  [.[] | select(.platform == "IOS" and .status == "ERRORED" and ([.id] | inside($skip) | not))] | length')
+                if [ "$IOS_ERR" -gt "0" ]; then
+                  IOS_DONE="errored"
+                fi
+              fi
+            fi
+
+            # For single-platform builds we only wait for the requested platform
+            PLATFORM_INPUT="${{ inputs.platform }}"
+            if [ "$PLATFORM_INPUT" = "android" ] && [ -n "$ANDROID_DONE" ]; then break; fi
+            if [ "$PLATFORM_INPUT" = "ios" ] && [ -n "$IOS_DONE" ]; then break; fi
+            if [ "$PLATFORM_INPUT" = "all" ] && [ -n "$ANDROID_DONE" ] && [ -n "$IOS_DONE" ]; then break; fi
+
+            echo "  Android: ${ANDROID_DONE:-waiting}  iOS: ${IOS_DONE:-waiting}"
+            sleep 30
+          done
+
+          if [ -n "$ADMIN_URL" ] && [ -n "$ADMIN_BUILD_LINK_SECRET" ] && ([ -n "$ANDROID_ID" ] || [ -n "$IOS_ID" ]); then
+            echo "Reporting EAS build IDs to admin..."
+            curl -s -X POST "$ADMIN_URL/api/tenants/$TENANT/build-link" \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer $ADMIN_BUILD_LINK_SECRET" \
+              -d "{
+                \"build_id\": \"$BUILD_ID\",
+                \"eas_build_id_android\": \"$ANDROID_ID\",
+                \"eas_build_id_ios\": \"$IOS_ID\"
+              }"
+            echo ""
+          else
+            echo "Skipping admin callback (no ADMIN_URL / secret or no build IDs found)"
+          fi

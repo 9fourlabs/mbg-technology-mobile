@@ -14,6 +14,12 @@ on:
         type: string
         required: false
         default: "1.0.0"
+      push_enabled:
+        type: string
+        required: false
+        default: "0"
+        # "1" → include expo-notifications native module in this build.
+        # See docs/PUSH_NOTIFICATIONS.md.
 
 jobs:
   prepare:
@@ -28,7 +34,7 @@ jobs:
           npm run validate:tenants
       - name: Validate production readiness
         run: |
-          npx --yes tsx scripts/validateProductionReady.ts "${{ inputs.tenant }}"
+          npx --yes tsx scripts/validateProductionReady.ts "${{ inputs.tenant }}" "${{ inputs.platform }}"
       - name: Resolve Expo project ID
         id: project
         run: |
@@ -47,6 +53,7 @@ jobs:
           NATIVE_ID_MODE="tenant" \
           APP_VERSION="${{ inputs.version }}" \
           EAS_PROJECT_ID="${{ needs.prepare.outputs.project_id }}" \
+          EXPO_PUSH_ENABLED="${{ inputs.push_enabled }}" \
           eas build --profile production --platform ios --non-interactive \
           --project-id "${{ needs.prepare.outputs.project_id }}"
 
@@ -58,6 +65,11 @@ jobs:
       - uses: eas/install_node_modules
       - name: iOS submit
         run: |
+          # Load per-tenant submit identifiers into the environment so
+          # eas.json's `submit.production.ios` ($ASC_APP_ID, $APPLE_TEAM_ID)
+          # interpolate correctly. APPLE_TEAM_ID must be set as a workflow
+          # secret — see docs/STORE_SUBMISSION.md.
+          eval "$(npx --yes tsx scripts/getSubmitEnv.ts "${{ inputs.tenant }}" ios)"
           APP_TENANT="${{ inputs.tenant }}" \
           NATIVE_ID_MODE="tenant" \
           APP_VERSION="${{ inputs.version }}" \
@@ -77,6 +89,7 @@ jobs:
           NATIVE_ID_MODE="tenant" \
           APP_VERSION="${{ inputs.version }}" \
           EAS_PROJECT_ID="${{ needs.prepare.outputs.project_id }}" \
+          EXPO_PUSH_ENABLED="${{ inputs.push_enabled }}" \
           eas build --profile production --platform android --non-interactive \
           --project-id "${{ needs.prepare.outputs.project_id }}"
 
@@ -88,6 +101,9 @@ jobs:
       - uses: eas/install_node_modules
       - name: Android submit
         run: |
+          # Play service account JSON is uploaded to each tenant's Expo
+          # project via `eas credentials` (not committed to repo). EAS pulls
+          # it automatically at submit time — no env wiring needed.
           APP_TENANT="${{ inputs.tenant }}" \
           NATIVE_ID_MODE="tenant" \
           APP_VERSION="${{ inputs.version }}" \

@@ -10,12 +10,15 @@
  * Used by: .eas/workflows/release-tenant.yml
  */
 
+import { existsSync, readFileSync } from "fs";
+import { resolve } from "path";
 import { tenantProjects, MBG_PROJECT_ID } from "./tenantProjects";
 
-const [, , tenant] = process.argv;
+const [, , tenant, platformArg] = process.argv;
+const platform = (platformArg ?? "both") as "ios" | "android" | "both";
 
 if (!tenant) {
-  console.error("Usage: tsx scripts/validateProductionReady.ts <tenant-id>");
+  console.error("Usage: tsx scripts/validateProductionReady.ts <tenant-id> [ios|android|both]");
   process.exit(1);
 }
 
@@ -57,13 +60,32 @@ if (!/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(tenant) && !/^[a-z0-9]$/.test(tenant)) 
   );
 }
 
+// 5. Submission identifiers present for the target platform(s)
+const configPath = resolve(__dirname, `../configs/tenants/${tenant}.json`);
+if (existsSync(configPath)) {
+  const config = JSON.parse(readFileSync(configPath, "utf8")) as {
+    appStore?: { iosAscAppId?: string; androidPackageName?: string };
+  };
+  if ((platform === "ios" || platform === "both") && !config.appStore?.iosAscAppId) {
+    errors.push(
+      `Tenant "${tenant}" is missing appStore.iosAscAppId. ` +
+        `Register the app in App Store Connect, grab the numeric Apple ID, ` +
+        `and set it in the admin UI → App Store → Store Submission.`
+    );
+  }
+} else {
+  errors.push(
+    `Tenant config not found at ${configPath}. Run \`npm run build:tenants\` first.`
+  );
+}
+
 if (errors.length > 0) {
-  console.error(`Production readiness check FAILED for "${tenant}":\n`);
+  console.error(`Production readiness check FAILED for "${tenant}" (platform: ${platform}):\n`);
   for (const e of errors) {
     console.error(`  - ${e}`);
   }
   console.error("");
   process.exit(1);
 } else {
-  console.log(`Production readiness check PASSED for "${tenant}" (project: ${projectId})`);
+  console.log(`Production readiness check PASSED for "${tenant}" (project: ${projectId}, platform: ${platform})`);
 }

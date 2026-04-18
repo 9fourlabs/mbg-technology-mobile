@@ -19,6 +19,11 @@ on:
         required: false
         default: ""
         type: string
+      push_enabled:
+        description: "Include expo-notifications in this build (1 / 0)"
+        required: false
+        default: "0"
+        type: string
 
 permissions:
   pull-requests: write
@@ -106,7 +111,8 @@ jobs:
         id: eas-workflow
         run: |
           VERSION="${{ inputs.version || '1.0.0' }}"
-          OUTPUT=$(eas workflow:run .eas/workflows/preview-tenant.yml --input tenant=${{ matrix.tenant }} --input version=$VERSION --non-interactive 2>&1)
+          PUSH_ENABLED="${{ inputs.push_enabled || '0' }}"
+          OUTPUT=$(eas workflow:run .eas/workflows/preview-tenant.yml --input tenant=${{ matrix.tenant }} --input version=$VERSION --input push_enabled=$PUSH_ENABLED --non-interactive 2>&1)
           echo "$OUTPUT"
 
           # Extract the workflow URL from output

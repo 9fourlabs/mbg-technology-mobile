@@ -56,6 +56,11 @@ function loadTenantConfig(tenantKey: string): Record<string, any> | null {
 const tenantConfig = loadTenantConfig(tenant);
 const appStore = tenantConfig?.appStore;
 
+// Resolve the Expo project ID once so we can use it for both `extra.eas.projectId`
+// and the OTA updates URL below.
+const sharedPreviewProjectId = "8f0869f4-6354-4c29-956a-abf07a54c9b6";
+const projectId = process.env.EAS_PROJECT_ID ?? sharedPreviewProjectId;
+
 const config: ExpoConfig = {
   name: appStore?.appName ?? (tenant === "mbg" ? "MBG Technology" : tenant.split("-").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")),
   // Slug must match the EAS project. For preview builds (which use the shared
@@ -109,25 +114,47 @@ const config: ExpoConfig = {
   },
   plugins: [
     "expo-secure-store",
-    // expo-notifications plugin temporarily removed: existing iOS provisioning
-    // profile lacks push notification capability. Re-enable after regenerating
-    // the profile with push capability in Apple Developer portal.
-    // JS-level notification APIs still work for foreground notifications.
+    "expo-updates",
+    // Push notifications. Gated on EXPO_PUSH_ENABLED so a build can opt out
+    // when the iOS provisioning profile doesn't yet have push capability —
+    // attempting a build with this plugin enabled but no push entitlement
+    // fails at signing time. To enable for a tenant:
+    //   1. Apple Developer portal → App ID for the tenant → enable Push
+    //      Notifications capability.
+    //   2. `eas credentials` → iOS → regenerate the provisioning profile.
+    //   3. Set EXPO_PUSH_ENABLED=1 in the EAS workflow env (already set by
+    //      release-tenant.yml when tenant config has push enabled).
+    //   4. Upload the Apple Push Key (.p8) and FCM service account JSON to
+    //      EAS via `eas credentials`. See docs/PUSH_NOTIFICATIONS.md.
+    ...(process.env.EXPO_PUSH_ENABLED ? ["expo-notifications" as const] : []),
     // Sentry Expo plugin omitted: AGP 5.12.2 (from @sentry/react-native v7) is
     // incompatible with Gradle 9.0.0 (Expo SDK 55). JS-level error tracking still
     // works via Sentry.init() in index.ts. Re-enable when upgrading to Expo SDK 56+
     // which pairs with @sentry/react-native v8 and a compatible AGP version.
   ],
+  // OTA updates via EAS Update. runtimeVersion: "fingerprint" means native
+  // changes auto-invalidate (requiring a new build), while JS/content-only
+  // changes deliver instantly via `eas update`. See docs/OTA_UPDATES.md.
+  runtimeVersion: { policy: "fingerprint" },
+  updates: {
+    url: `https://u.expo.dev/${projectId}`,
+    enabled: true,
+    checkAutomatically: "ON_LOAD",
+    fallbackToCacheTimeout: 0,
+  },
   web: {
     favicon: resolveAsset(tenant, "favicon.png"),
   },
   extra: {
     tenant,
     nativeIdMode,
+    // URL of the MBG admin portal — used by the mobile app to register push
+    // tokens and report analytics. Defaults to the production admin URL.
+    adminUrl: process.env.EXPO_PUBLIC_ADMIN_URL ?? "https://admin.mbgtechnology.com",
     eas: {
       // Use tenant-specific Expo project ID when provided (production builds),
       // otherwise fall back to the shared MBG project (preview builds).
-      projectId: process.env.EAS_PROJECT_ID ?? "8f0869f4-6354-4c29-956a-abf07a54c9b6",
+      projectId,
     },
   },
 };

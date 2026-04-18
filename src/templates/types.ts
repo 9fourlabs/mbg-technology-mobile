@@ -240,6 +240,33 @@ export type AppStoreMetadata = {
   iconUri?: string;
   adaptiveIconBackgroundColor?: string;
   splashBackgroundColor?: string;
+
+  // --- Submission identifiers (captured when the tenant's app is registered
+  // in App Store Connect / Play Console). Used by scripts/getSubmitEnv.ts
+  // to populate eas.json's `submit.production` block at submit time.
+
+  /**
+   * App Store Connect numeric App ID (found on the app's ASC page, aka
+   * "Apple ID" — not to be confused with the bundle identifier). Required
+   * for `eas submit --platform ios`.
+   */
+  iosAscAppId?: string;
+
+  /**
+   * Google Play Console package name. Defaults to the Android `package` field
+   * derived from `NATIVE_ID_MODE`, but can be overridden here if the package
+   * was registered under a different name for a specific tenant.
+   */
+  androidPackageName?: string;
+
+  /**
+   * If true, builds for this tenant will include the `expo-notifications`
+   * native module (sets EXPO_PUSH_ENABLED=1 in the build env). Requires the
+   * iOS provisioning profile to have the Push Notifications capability —
+   * see docs/PUSH_NOTIFICATIONS.md. Defaults to false to keep builds safe
+   * for tenants that haven't yet set up push capability.
+   */
+  pushEnabled?: boolean;
 };
 
 // UNION

@@ -21,6 +21,11 @@ on:
         required: false
         default: "1.0.0"
         type: string
+      push_enabled:
+        description: "Include expo-notifications in this build (1 / 0)"
+        required: false
+        default: "0"
+        type: string
 
 jobs:
   promote:
@@ -45,5 +50,11 @@ jobs:
 
       - name: Run EAS release workflow (tenant)
         run: |
-          eas workflow:run .eas/workflows/release-tenant.yml --input tenant=${{ inputs.tenant }} --input platform=${{ inputs.platform }} --input version=${{ inputs.version || '1.0.0' }} --non-interactive
+          PUSH_ENABLED="${{ inputs.push_enabled || '0' }}"
+          eas workflow:run .eas/workflows/release-tenant.yml \
+            --input tenant=${{ inputs.tenant }} \
+            --input platform=${{ inputs.platform }} \
+            --input version=${{ inputs.version || '1.0.0' }} \
+            --input push_enabled=$PUSH_ENABLED \
+            --non-interactive
 
