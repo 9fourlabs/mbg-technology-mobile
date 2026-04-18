@@ -152,6 +152,75 @@ export default function AppStoreEditor({ tenantId, config, onChange, expoProject
           />
         </div>
       </div>
+
+      {/* ── Submission identifiers ── */}
+      <div className="mt-8 pt-6 border-t border-gray-200">
+        <h2 className="text-base font-semibold text-gray-900 mb-1">Store Submission</h2>
+        <p className="text-sm text-gray-500 mb-4">
+          IDs needed to submit this tenant&apos;s build to the App Store and Google Play.
+          See <code className="px-1 py-0.5 bg-gray-100 rounded text-xs">docs/STORE_SUBMISSION.md</code> for how to get these.
+        </p>
+
+        {/* iOS ASC App ID */}
+        <div className="mb-5">
+          <label className="block text-sm font-medium text-gray-600 mb-1">
+            App Store Connect App ID <span className="text-gray-400 font-normal">(iOS)</span>
+          </label>
+          <p className="text-xs text-gray-400 mb-2">
+            Numeric ID from App Store Connect → App Information → General → &ldquo;Apple ID&rdquo;.
+            Leave empty if this tenant won&apos;t ship to iOS.
+          </p>
+          <input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={appStore.iosAscAppId ?? ""}
+            onChange={(e) => update({ iosAscAppId: e.target.value.trim() || undefined })}
+            className="w-full py-2.5 px-4 border-gray-200 rounded-lg text-sm font-mono focus:border-blue-500 focus:ring-blue-500"
+            placeholder="1234567890"
+          />
+        </div>
+
+        {/* Android package override */}
+        <div className="mb-5">
+          <label className="block text-sm font-medium text-gray-600 mb-1">
+            Play Console Package Name <span className="text-gray-400 font-normal">(Android, optional)</span>
+          </label>
+          <p className="text-xs text-gray-400 mb-2">
+            Only set this if the Play Console listing uses a package name different from
+            the auto-generated one. Defaults to <code className="px-1 py-0.5 bg-gray-100 rounded text-xs">com.mbg.info.&lt;tenant&gt;</code>.
+          </p>
+          <input
+            type="text"
+            value={appStore.androidPackageName ?? ""}
+            onChange={(e) => update({ androidPackageName: e.target.value.trim() || undefined })}
+            className="w-full py-2.5 px-4 border-gray-200 rounded-lg text-sm font-mono focus:border-blue-500 focus:ring-blue-500"
+            placeholder="com.example.app"
+          />
+        </div>
+
+        {/* Push notifications opt-in */}
+        <div>
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={appStore.pushEnabled ?? false}
+              onChange={(e) => update({ pushEnabled: e.target.checked || undefined })}
+              className="mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <div>
+              <div className="text-sm font-medium text-gray-700">
+                Enable push notifications
+              </div>
+              <div className="text-xs text-gray-400 mt-0.5">
+                Off by default. Turn on after the iOS provisioning profile has the
+                Push Notifications capability (see <code className="px-1 py-0.5 bg-gray-100 rounded text-xs">docs/PUSH_NOTIFICATIONS.md</code>).
+                Builds will fail if this is on but the entitlement is missing.
+              </div>
+            </div>
+          </label>
+        </div>
+      </div>
     </div>
   );
 }

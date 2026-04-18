@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createTenantClient } from "@/lib/supabase/tenant";
 import { getProjectApiKeys } from "@/lib/supabase/management";
+import { getUserContext } from "@/lib/auth/user-context";
 
 // ── Allow-list per template type ────────────────────────────────────────────
 const ALLOWLIST: Record<string, string[]> = {
   booking: ["services", "time_slots", "bookings"],
   commerce: ["categories", "products", "orders", "order_items"],
-  content: ["posts", "bookmarks"],
+  content: ["posts", "bookmarks", "events"],
   directory: ["directory_items"],
   forms: ["form_submissions"],
   loyalty: [
@@ -32,14 +33,19 @@ const STATUS_UPDATE_ONLY = ["form_submissions"];
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
-async function authenticate() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-  if (error || !user) return { supabase, user: null };
-  return { supabase, user };
+/**
+ * Authorize the request against the tenant. Admins pass for any tenant;
+ * client users pass only for tenants they own. Returns null on 401/403.
+ */
+async function authorize(tenantId: string): Promise<NextResponse | null> {
+  const ctx = await getUserContext();
+  if (!ctx) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (ctx.role !== "admin" && !ctx.tenantIds.includes(tenantId)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  return null;
 }
 
 async function getTenantClient(tenantId: string) {
@@ -79,12 +85,10 @@ type RouteContext = { params: Promise<{ id: string }> };
 // ── GET ─────────────────────────────────────────────────────────────────────
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
-    const { user } = await authenticate();
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const { id: tenantId } = await context.params;
+    const denied = await authorize(tenantId);
+    if (denied) return denied;
+
     const { client, templateType } = await getTenantClient(tenantId);
 
     const searchParams = request.nextUrl.searchParams;
@@ -126,12 +130,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
 // ── POST ────────────────────────────────────────────────────────────────────
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
-    const { user } = await authenticate();
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const { id: tenantId } = await context.params;
+    const denied = await authorize(tenantId);
+    if (denied) return denied;
+
     const { client, templateType } = await getTenantClient(tenantId);
 
     const table = request.nextUrl.searchParams.get("table");
@@ -170,12 +172,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
 // ── PUT ─────────────────────────────────────────────────────────────────────
 export async function PUT(request: NextRequest, context: RouteContext) {
   try {
-    const { user } = await authenticate();
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const { id: tenantId } = await context.params;
+    const denied = await authorize(tenantId);
+    if (denied) return denied;
+
     const { client, templateType } = await getTenantClient(tenantId);
 
     const searchParams = request.nextUrl.searchParams;
@@ -224,12 +224,10 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 // ── DELETE ───────────────────────────────────────────────────────────────────
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
-    const { user } = await authenticate();
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const { id: tenantId } = await context.params;
+    const denied = await authorize(tenantId);
+    if (denied) return denied;
+
     const { client, templateType } = await getTenantClient(tenantId);
 
     const searchParams = request.nextUrl.searchParams;

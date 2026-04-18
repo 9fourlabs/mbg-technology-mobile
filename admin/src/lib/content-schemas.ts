@@ -155,6 +155,25 @@ const contentPosts: TableSchema = {
   ],
 };
 
+const contentEvents: TableSchema = {
+  table: "events",
+  label: "Events",
+  labelSingular: "Event",
+  readOnly: false,
+  defaultSort: { column: "starts_at", ascending: true },
+  columns: [
+    { key: "title", label: "Title", type: "text", tableVisible: true, formVisible: true, required: true },
+    { key: "description", label: "Description", type: "textarea", tableVisible: false, formVisible: true, required: false },
+    { key: "starts_at", label: "Starts", type: "datetime", tableVisible: true, formVisible: true, required: true },
+    { key: "ends_at", label: "Ends", type: "datetime", tableVisible: true, formVisible: true, required: false },
+    { key: "location", label: "Location", type: "text", tableVisible: true, formVisible: true, required: false, placeholder: "123 Main St" },
+    { key: "image_url", label: "Image URL", type: "text", tableVisible: false, formVisible: true, required: false },
+    { key: "rsvp_url", label: "RSVP URL", type: "text", tableVisible: false, formVisible: true, required: false },
+    { key: "category", label: "Category", type: "text", tableVisible: true, formVisible: true, required: false },
+    { key: "published", label: "Published", type: "boolean", tableVisible: true, formVisible: true, required: false },
+  ],
+};
+
 // ---------------------------------------------------------------------------
 // Directory
 // ---------------------------------------------------------------------------
@@ -264,7 +283,7 @@ const loyaltyAccounts: TableSchema = {
 const SCHEMAS_BY_TEMPLATE: Record<string, TableSchema[]> = {
   booking: [bookingServices, bookingTimeSlots, bookingBookings],
   commerce: [commerceCategories, commerceProducts, commerceOrders],
-  content: [contentPosts],
+  content: [contentPosts, contentEvents],
   directory: [directoryItems],
   forms: [formSubmissions],
   loyalty: [loyaltyRewards, loyaltyTransactions, loyaltyAccounts],

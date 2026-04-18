@@ -243,6 +243,15 @@ export type AppStoreMetadata = {
   iconUri?: string;
   adaptiveIconBackgroundColor?: string;
   splashBackgroundColor?: string;
+
+  // --- Submission identifiers. Populated after the app is registered in
+  // App Store Connect / Play Console. Consumed by scripts/getSubmitEnv.ts
+  // at `eas submit` time — see docs/STORE_SUBMISSION.md.
+  iosAscAppId?: string;
+  androidPackageName?: string;
+
+  // Per-tenant feature flags consumed by the build pipeline.
+  pushEnabled?: boolean;
 };
 
 // UNION
