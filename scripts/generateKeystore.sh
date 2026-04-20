@@ -18,7 +18,8 @@ if ! echo "$TENANT_ID" | grep -qE '^[a-z0-9][a-z0-9-]*[a-z0-9]$'; then
   exit 1
 fi
 
-KEYSTORE_DIR="$(cd "$(dirname "$0")/../keystores" && pwd)"
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+KEYSTORE_DIR="$REPO_ROOT/keystores"
 KEYSTORE_PATH="$KEYSTORE_DIR/${TENANT_ID}-upload.jks"
 KEY_ALIAS="upload"
 
