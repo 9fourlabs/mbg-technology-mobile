@@ -10,6 +10,21 @@ export const mbgTemplate: InformationalTemplate = {
     textColor: "#ffffff",
     mutedTextColor: "#999999",
   },
+  appStore: {
+    appName: "MBG Technology",
+    appDescription:
+      "Stay connected with MBG Technology. Browse services, book a consultation, and manage ongoing support for your website and business systems.",
+    appKeywords: [
+      "business",
+      "technology",
+      "IT support",
+      "web design",
+      "small business",
+    ],
+    adaptiveIconBackgroundColor: "#d4af37",
+    splashBackgroundColor: "#000000",
+    pushEnabled: false,
+  },
   tabs: [
     {
       id: "home",
