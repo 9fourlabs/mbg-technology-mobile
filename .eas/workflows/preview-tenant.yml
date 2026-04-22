@@ -28,33 +28,25 @@ jobs:
           npm run build:tenants
           npm run validate:tenants
 
-  # Preview builds share a single Expo project across tenants, so we use a
-  # tenant-scoped channel (`preview-<tenant>`) to keep OTA update streams isolated.
-  # A `preview-acme-dental` build will only receive updates from the
-  # `preview-acme-dental` branch — see docs/OTA_UPDATES.md.
+  # Preview builds share a single Expo project across tenants. Tenant-scoped
+  # OTA channel isolation is tracked in ROADMAP.md — today all preview builds
+  # listen on the "preview" channel from eas.json.
   build_android:
     needs: [prepare]
     steps:
       - uses: eas/checkout
       - uses: eas/install_node_modules
       - name: Android preview build
-        run: |
-          # eas-cli is not pre-installed in the EAS-managed build image;
-          # install it locally so `eas build` resolves.
-          npm install -g eas-cli
-          # Debug: print env so we can see what app.config.ts will receive.
-          echo "Dispatching preview build for tenant: ${{ inputs.tenant }}"
-          # Note: channel comes from eas.json's `preview` profile (currently
-          # shared across all tenants). Per-tenant channel isolation is
-          # tracked in ROADMAP.md. Env vars inlined on the command so they
-          # definitely propagate to the `expo config` resolution step inside
-          # `eas build` — the separate YAML `env:` block wasn't flowing through.
-          APP_TENANT="${{ inputs.tenant }}" \
-          NATIVE_ID_MODE_ANDROID=tenant \
-          NATIVE_ID_MODE_IOS=shared \
-          APP_VERSION="${{ inputs.version }}" \
-          EXPO_PUSH_ENABLED="${{ inputs.push_enabled }}" \
-          eas build --profile preview --platform android --non-interactive
+        env:
+          APP_TENANT: ${{ inputs.tenant }}
+          NATIVE_ID_MODE_ANDROID: tenant
+          NATIVE_ID_MODE_IOS: shared
+          APP_VERSION: ${{ inputs.version }}
+          EXPO_PUSH_ENABLED: ${{ inputs.push_enabled }}
+        uses: eas/build
+        with:
+          platform: android
+          profile: preview
 
   build_ios:
     needs: [prepare]
@@ -62,12 +54,13 @@ jobs:
       - uses: eas/checkout
       - uses: eas/install_node_modules
       - name: iOS preview build
-        run: |
-          npm install -g eas-cli
-          echo "Dispatching preview build for tenant: ${{ inputs.tenant }}"
-          APP_TENANT="${{ inputs.tenant }}" \
-          NATIVE_ID_MODE_ANDROID=tenant \
-          NATIVE_ID_MODE_IOS=shared \
-          APP_VERSION="${{ inputs.version }}" \
-          EXPO_PUSH_ENABLED="${{ inputs.push_enabled }}" \
-          eas build --profile preview --platform ios --non-interactive
+        env:
+          APP_TENANT: ${{ inputs.tenant }}
+          NATIVE_ID_MODE_ANDROID: tenant
+          NATIVE_ID_MODE_IOS: shared
+          APP_VERSION: ${{ inputs.version }}
+          EXPO_PUSH_ENABLED: ${{ inputs.push_enabled }}
+        uses: eas/build
+        with:
+          platform: ios
+          profile: preview
