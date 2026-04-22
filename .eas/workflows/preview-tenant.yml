@@ -38,19 +38,22 @@ jobs:
       - uses: eas/checkout
       - uses: eas/install_node_modules
       - name: Android preview build
-        env:
-          APP_TENANT: ${{ inputs.tenant }}
-          NATIVE_ID_MODE_ANDROID: tenant
-          NATIVE_ID_MODE_IOS: shared
-          APP_VERSION: ${{ inputs.version }}
-          EXPO_PUSH_ENABLED: ${{ inputs.push_enabled }}
         run: |
           # eas-cli is not pre-installed in the EAS-managed build image;
           # install it locally so `eas build` resolves.
           npm install -g eas-cli
+          # Debug: print env so we can see what app.config.ts will receive.
+          echo "Dispatching preview build for tenant: ${{ inputs.tenant }}"
           # Note: channel comes from eas.json's `preview` profile (currently
           # shared across all tenants). Per-tenant channel isolation is
-          # tracked in ROADMAP.md.
+          # tracked in ROADMAP.md. Env vars inlined on the command so they
+          # definitely propagate to the `expo config` resolution step inside
+          # `eas build` — the separate YAML `env:` block wasn't flowing through.
+          APP_TENANT="${{ inputs.tenant }}" \
+          NATIVE_ID_MODE_ANDROID=tenant \
+          NATIVE_ID_MODE_IOS=shared \
+          APP_VERSION="${{ inputs.version }}" \
+          EXPO_PUSH_ENABLED="${{ inputs.push_enabled }}" \
           eas build --profile preview --platform android --non-interactive
 
   build_ios:
@@ -59,12 +62,12 @@ jobs:
       - uses: eas/checkout
       - uses: eas/install_node_modules
       - name: iOS preview build
-        env:
-          APP_TENANT: ${{ inputs.tenant }}
-          NATIVE_ID_MODE_ANDROID: tenant
-          NATIVE_ID_MODE_IOS: shared
-          APP_VERSION: ${{ inputs.version }}
-          EXPO_PUSH_ENABLED: ${{ inputs.push_enabled }}
         run: |
           npm install -g eas-cli
+          echo "Dispatching preview build for tenant: ${{ inputs.tenant }}"
+          APP_TENANT="${{ inputs.tenant }}" \
+          NATIVE_ID_MODE_ANDROID=tenant \
+          NATIVE_ID_MODE_IOS=shared \
+          APP_VERSION="${{ inputs.version }}" \
+          EXPO_PUSH_ENABLED="${{ inputs.push_enabled }}" \
           eas build --profile preview --platform ios --non-interactive
