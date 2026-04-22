@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import TenantCard from "@/components/TenantCard";
 import Link from "next/link";
 import TenantFilters from "@/components/TenantFilters";
+import InfoTooltip from "@/components/InfoTooltip";
 
 export default async function TenantsPage({
   searchParams,
@@ -66,8 +67,12 @@ export default async function TenantsPage({
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">My Apps</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Create and manage mobile apps for your clients
+        <p className="text-sm text-gray-500 mt-1 inline-flex items-center gap-2">
+          Create and manage mobile apps for your clients.
+          <InfoTooltip
+            side="right"
+            text="Draft = config in progress, no build yet. In Preview = internal build ready for you and your client to test. Live = published to the App Store or Play Store. Click a status card below to filter."
+          />
         </p>
       </div>
 
