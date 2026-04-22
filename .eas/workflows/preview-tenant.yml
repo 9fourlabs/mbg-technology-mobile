@@ -45,6 +45,9 @@ jobs:
           APP_VERSION: ${{ inputs.version }}
           EXPO_PUSH_ENABLED: ${{ inputs.push_enabled }}
         run: |
+          # eas-cli is not pre-installed in the EAS-managed build image;
+          # install it locally so `eas build` resolves.
+          npm install -g eas-cli
           eas build --profile preview --platform android --non-interactive \
             --channel "preview-${{ inputs.tenant }}"
 
@@ -61,5 +64,6 @@ jobs:
           APP_VERSION: ${{ inputs.version }}
           EXPO_PUSH_ENABLED: ${{ inputs.push_enabled }}
         run: |
+          npm install -g eas-cli
           eas build --profile preview --platform ios --non-interactive \
             --channel "preview-${{ inputs.tenant }}"

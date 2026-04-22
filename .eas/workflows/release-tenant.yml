@@ -49,6 +49,8 @@ jobs:
       - uses: eas/install_node_modules
       - name: iOS production build
         run: |
+          # eas-cli is not pre-installed in the EAS-managed build image.
+          npm install -g eas-cli
           APP_TENANT="${{ inputs.tenant }}" \
           NATIVE_ID_MODE="tenant" \
           APP_VERSION="${{ inputs.version }}" \
@@ -65,6 +67,7 @@ jobs:
       - uses: eas/install_node_modules
       - name: iOS submit
         run: |
+          npm install -g eas-cli
           # Load per-tenant submit identifiers into the environment so
           # eas.json's `submit.production.ios` ($ASC_APP_ID, $APPLE_TEAM_ID)
           # interpolate correctly. APPLE_TEAM_ID must be set as a workflow
@@ -85,6 +88,7 @@ jobs:
       - uses: eas/install_node_modules
       - name: Android production build
         run: |
+          npm install -g eas-cli
           APP_TENANT="${{ inputs.tenant }}" \
           NATIVE_ID_MODE="tenant" \
           APP_VERSION="${{ inputs.version }}" \
@@ -101,6 +105,7 @@ jobs:
       - uses: eas/install_node_modules
       - name: Android submit
         run: |
+          npm install -g eas-cli
           # Play service account JSON is uploaded to each tenant's Expo
           # project via `eas credentials` (not committed to repo). EAS pulls
           # it automatically at submit time — no env wiring needed.
