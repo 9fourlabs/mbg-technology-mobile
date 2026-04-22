@@ -87,7 +87,7 @@ export const mbgTemplate: InformationalTemplate = {
         {
           id: "automate",
           imageUri:
-            "https://images.unsplash.com/photo-1522202195461-41fb4a15fd48?auto=format&fit=crop&w=1200&q=80",
+            "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80",
           title: "Automate to streamline",
           body:
             "Stop doing the same task twice. We identify the repetitive work and automate it so you can focus on growth.",
@@ -118,7 +118,7 @@ export const mbgTemplate: InformationalTemplate = {
         {
           id: "graphic-design",
           imageUri:
-            "https://images.unsplash.com/photo-1561070791-2526d30994b8?auto=format&fit=crop&w=1200&q=80",
+            "https://images.unsplash.com/photo-1558655146-364adaf1fcc9?auto=format&fit=crop&w=1200&q=80",
           title: "Graphic Design & Branding",
           body:
             "Logos, brand kits, social graphics, marketing materials. A coherent visual identity across every touchpoint.",
@@ -234,7 +234,7 @@ export const mbgTemplate: InformationalTemplate = {
         {
           id: "message",
           imageUri:
-            "https://images.unsplash.com/photo-1522202195461-41fb4a15fd48?auto=format&fit=crop&w=1200&q=80",
+            "https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&w=1200&q=80",
           title: "Send us a message",
           body:
             "Have a quick question or a project idea? Reach out through our contact form and we'll get back to you within a business day.",
