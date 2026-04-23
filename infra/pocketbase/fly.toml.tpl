@@ -11,9 +11,10 @@ primary_region = "{{REGION}}"
   dockerfile = "Dockerfile"
 
 [env]
-  # Pocketbase reads these on first boot to seed the initial admin account.
-  # The real password is set via `fly secrets set PB_ADMIN_PASSWORD=...`.
-  PB_ADMIN_EMAIL = "admin@{{APP_NAME}}.internal"
+  # Shared across every per-tenant PB instance — single admin account the
+  # admin portal can reuse. Password is injected via
+  # `fly secrets set PB_ADMIN_PASSWORD=...` (NOT baked into the image).
+  PB_ADMIN_EMAIL = "pb-admin@9fourlabs.com"
 
 [[mounts]]
   source = "{{VOLUME}}"

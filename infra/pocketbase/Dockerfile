@@ -14,11 +14,15 @@ RUN wget -q https://github.com/pocketbase/pocketbase/releases/download/v${PB_VER
     && rm pocketbase_${PB_VERSION}_linux_amd64.zip \
     && mv pocketbase /usr/local/bin/pocketbase
 
+# Entrypoint wraps `pocketbase serve` with an idempotent admin upsert so
+# the provisioning script can authenticate immediately after deploy.
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 # Fly mounts a persistent volume here; pocketbase stores its SQLite DB
 # and uploaded files under /pb_data.
 VOLUME /pb_data
 
 EXPOSE 8080
 
-# --http binds to 0.0.0.0 so Fly proxy can reach the instance.
-CMD ["pocketbase", "serve", "--http=0.0.0.0:8080", "--dir=/pb_data"]
+CMD ["/usr/local/bin/entrypoint.sh"]
