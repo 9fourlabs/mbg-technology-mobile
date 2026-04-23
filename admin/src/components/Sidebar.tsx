@@ -40,7 +40,9 @@ export default function Sidebar() {
 
   const handleSignOut = async () => {
     const supabase = createClient();
-    await supabase.auth.signOut();
+    // scope: "local" so signing out on one browser doesn't invalidate the
+    // user's sessions on other devices.
+    await supabase.auth.signOut({ scope: "local" });
     router.push("/login");
   };
 
