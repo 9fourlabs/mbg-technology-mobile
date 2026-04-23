@@ -9,7 +9,11 @@ import TabsEditor from "./tabs-editor";
 import TemplateSettingsEditor from "./template-settings-editor";
 import AppStoreEditor from "./appstore-editor";
 import PhoneMockup from "./phone-mockup";
+import DeploymentStatus from "./deployment-status";
 import TenantTabBar from "@/components/TenantTabBar";
+import { hashConfig } from "@/lib/config-hash";
+
+type LatestBuild = { config_hash: string | null; created_at: string } | null;
 
 const TABS = ["Brand", "Design", "Pages", "Features", "App Store", "Advanced"];
 
@@ -34,6 +38,9 @@ export default function ConfigEditorPage() {
   const [supabaseUrl, setSupabaseUrl] = useState("");
   const [supabaseAnonKey, setSupabaseAnonKey] = useState("");
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
+  const [draftHash, setDraftHash] = useState<string | null>(null);
+  const [latestPreview, setLatestPreview] = useState<LatestBuild>(null);
+  const [latestProduction, setLatestProduction] = useState<LatestBuild>(null);
 
   useEffect(() => {
     const loadConfig = async () => {
@@ -66,10 +73,41 @@ export default function ConfigEditorPage() {
       setSupabaseUrl(data.supabase_url ?? "");
       setSupabaseAnonKey(data.supabase_anon_key ?? "");
       setUpdatedAt(data.updated_at ?? null);
+
+      // Load the most recent successful build per profile so we can show
+      // which version of the config is live where.
+      const { data: builds } = await supabase
+        .from("builds")
+        .select("profile, config_hash, created_at")
+        .eq("tenant_id", id)
+        .eq("status", "completed")
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      const preview = builds?.find((b) => b.profile === "preview") ?? null;
+      const production = builds?.find((b) => b.profile === "production") ?? null;
+      setLatestPreview(preview);
+      setLatestProduction(production);
+
       setLoading(false);
     };
     loadConfig();
   }, [id]);
+
+  // Recompute the draft hash whenever the config changes in memory.
+  useEffect(() => {
+    if (!config) {
+      setDraftHash(null);
+      return;
+    }
+    let cancelled = false;
+    hashConfig(config).then((h) => {
+      if (!cancelled) setDraftHash(h);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [config]);
 
   // Keep JSON in sync when config changes from editors
   function handleConfigChange(updated: Record<string, unknown>) {
@@ -284,6 +322,13 @@ export default function ConfigEditorPage() {
               </a>
             </div>
           )}
+
+          {/* Deployment status */}
+          <DeploymentStatus
+            draftHash={draftHash}
+            latestPreview={latestPreview}
+            latestProduction={latestProduction}
+          />
 
           {/* Save actions */}
           <div className="rounded-lg bg-gray-50 border border-gray-300 px-4 py-3 mb-4">

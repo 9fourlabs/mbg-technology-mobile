@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { triggerWorkflowDispatch, getLatestWorkflowRun, commitTenantConfigToMain } from "@/lib/github";
 import { configToTypeScript } from "@/lib/config-generator";
+import { hashConfig } from "@/lib/config-hash";
 import type { AppTemplate } from "@/lib/types";
 
 export async function POST(
@@ -118,6 +119,10 @@ export async function POST(
       }
     }
 
+    // Hash the config that's about to be built so the UI can later tell
+    // whether the draft has drifted from what last shipped.
+    const configHash = await hashConfig(tenant.config ?? {});
+
     // Create build record FIRST so we have a UUID to pass through the pipeline
     const { data: build, error: buildError } = await supabase
       .from("builds")
@@ -127,6 +132,7 @@ export async function POST(
         status: "pending",
         platform: "all",
         app_version: appVersion,
+        config_hash: configHash,
       })
       .select("id")
       .single();

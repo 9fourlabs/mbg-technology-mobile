@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import TenantCard from "@/components/TenantCard";
 import Link from "next/link";
 import TenantFilters from "@/components/TenantFilters";
+import { hashConfig } from "@/lib/config-hash";
 
 export default async function TenantsPage({
   searchParams,
@@ -24,7 +25,7 @@ export default async function TenantsPage({
   // Fetch filtered tenants for the list
   let query = supabase
     .from("tenants")
-    .select("id, template_type, status, business_name, updated_at, app_type")
+    .select("id, template_type, status, business_name, updated_at, app_type, config")
     .order("updated_at", { ascending: false });
 
   if (params.q) {
@@ -42,6 +43,52 @@ export default async function TenantsPage({
   }
 
   const { data: tenants } = await query;
+
+  // For each tenant shown, compare the current config hash against the last
+  // successful preview+production build's hash so the card can flag
+  // unpublished changes. Template apps only — custom apps build externally.
+  const tenantIds = (tenants ?? [])
+    .filter((t) => t.app_type !== "custom")
+    .map((t) => t.id);
+
+  const pendingByTenant = new Map<
+    string,
+    { preview: boolean; production: boolean }
+  >();
+
+  if (tenantIds.length > 0) {
+    const { data: recentBuilds } = await supabase
+      .from("builds")
+      .select("tenant_id, profile, config_hash, created_at")
+      .in("tenant_id", tenantIds)
+      .eq("status", "completed")
+      .order("created_at", { ascending: false });
+
+    const latestByTenantProfile = new Map<string, string | null>();
+    for (const b of recentBuilds ?? []) {
+      const key = `${b.tenant_id}:${b.profile}`;
+      if (!latestByTenantProfile.has(key)) {
+        latestByTenantProfile.set(key, b.config_hash ?? null);
+      }
+    }
+
+    await Promise.all(
+      (tenants ?? [])
+        .filter((t) => t.app_type !== "custom")
+        .map(async (t) => {
+          const draftHash = await hashConfig(t.config ?? {});
+          const prev = latestByTenantProfile.get(`${t.id}:preview`);
+          const prod = latestByTenantProfile.get(`${t.id}:production`);
+          pendingByTenant.set(t.id, {
+            // Only flag when a build exists and its hash differs; missing
+            // hashes (pre-tracking builds) are treated as in-sync to avoid
+            // a flood of false positives on historical builds.
+            preview: prev !== undefined && prev !== null && prev !== draftHash,
+            production: prod !== undefined && prod !== null && prod !== draftHash,
+          });
+        })
+    );
+  }
 
   const activeStatus = params.status ?? null;
 
@@ -107,17 +154,22 @@ export default async function TenantsPage({
       {/* Client App Cards */}
       {tenants && tenants.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {tenants.map((tenant) => (
-            <TenantCard
-              key={tenant.id}
-              id={tenant.id}
-              template_type={tenant.template_type}
-              status={tenant.status}
-              business_name={tenant.business_name}
-              updated_at={tenant.updated_at}
-              app_type={tenant.app_type}
-            />
-          ))}
+          {tenants.map((tenant) => {
+            const pending = pendingByTenant.get(tenant.id);
+            return (
+              <TenantCard
+                key={tenant.id}
+                id={tenant.id}
+                template_type={tenant.template_type}
+                status={tenant.status}
+                business_name={tenant.business_name}
+                updated_at={tenant.updated_at}
+                app_type={tenant.app_type}
+                pendingPreview={pending?.preview ?? false}
+                pendingProduction={pending?.production ?? false}
+              />
+            );
+          })}
         </div>
       ) : (
         /* Empty state */
