@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getExpoBuildPageUrl } from "@/lib/eas";
+import { hashConfig } from "@/lib/config-hash";
 import DeployButtons from "./deploy-buttons";
 import BuildStatusPoller from "./build-status-poller";
 import BuildArtifacts from "./build-artifacts";
@@ -58,12 +59,28 @@ export default async function BuildsPage({
 
   const { data: builds } = await supabase
     .from("builds")
-    .select("*, updated_at, error_message, download_url_ios")
+    .select("*, updated_at, error_message, download_url_ios, config_hash")
     .eq("tenant_id", id)
     .order("created_at", { ascending: false });
 
   const hasExpoProject = !!tenant.expo_project_id;
   const expoBuildsUrl = getExpoBuildPageUrl();
+
+  // Compare the current draft config hash against the most recent successful
+  // build per profile so we can surface "unpublished changes" on the CTAs.
+  const draftHash = await hashConfig(tenant.config ?? {});
+  const latestPreview = builds?.find(
+    (b) => b.profile === "preview" && b.status === "completed"
+  );
+  const latestProduction = builds?.find(
+    (b) => b.profile === "production" && b.status === "completed"
+  );
+  const previewDirty =
+    !!latestPreview?.config_hash && latestPreview.config_hash !== draftHash;
+  const productionDirty =
+    !!latestProduction?.config_hash &&
+    latestProduction.config_hash !== draftHash;
+  const previewNeverBuilt = !latestPreview;
 
   return (
     <div>
@@ -77,9 +94,27 @@ export default async function BuildsPage({
             tenantId={id}
             hasExpoProject={hasExpoProject}
             missingRequirements={missingRequirements}
+            previewDirty={previewDirty || previewNeverBuilt}
+            productionDirty={productionDirty}
           />
         </div>
       </div>
+
+      {/* ── Pending-changes banner ── */}
+      {(previewDirty || productionDirty) && (
+        <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 mb-6">
+          <p className="text-sm font-medium text-amber-800 mb-1">
+            Unpublished changes
+          </p>
+          <p className="text-sm text-amber-700">
+            {previewDirty && productionDirty
+              ? "The current config differs from both the latest preview and production builds. Create a new preview to see the changes live."
+              : previewDirty
+              ? "The current config differs from the latest preview build. Create a new preview to push these changes."
+              : "The current config differs from what's live in production. Create a preview first, then go live to ship the changes."}
+          </p>
+        </div>
+      )}
 
       {/* ── Next-steps banner ── */}
       {builds && builds.length > 0 && builds[0].status === "completed" && builds[0].profile === "preview" && (

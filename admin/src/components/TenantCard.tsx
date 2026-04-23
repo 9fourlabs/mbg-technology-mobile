@@ -8,6 +8,8 @@ interface TenantCardProps {
   business_name?: string;
   updated_at: string;
   app_type?: string;
+  pendingPreview?: boolean;
+  pendingProduction?: boolean;
 }
 
 const templateColors: Record<string, string> = {
@@ -42,12 +44,15 @@ export default function TenantCard({
   business_name,
   updated_at,
   app_type,
+  pendingPreview = false,
+  pendingProduction = false,
 }: TenantCardProps) {
   const isCustom = app_type === "custom";
   const templateLabel = isCustom
     ? "Custom App"
     : TEMPLATE_LABELS[template_type] ?? template_type;
   const statusLabel = STATUS_LABELS[status] ?? status;
+  const hasPending = pendingPreview || pendingProduction;
 
   return (
     <Link
@@ -69,6 +74,27 @@ export default function TenantCard({
           <span className="text-xs text-gray-500">{statusLabel}</span>
         </div>
       </div>
+
+      {/* Pending-changes badge */}
+      {hasPending && (
+        <span
+          className="mt-3 inline-flex items-center gap-1.5 py-0.5 px-2 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200"
+          title={
+            pendingPreview && pendingProduction
+              ? "Unpublished changes for preview and production"
+              : pendingPreview
+              ? "Unpublished changes since last preview build"
+              : "Unpublished changes since last production build"
+          }
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+          {pendingPreview && pendingProduction
+            ? "Changes pending"
+            : pendingPreview
+            ? "Preview out of date"
+            : "Production out of date"}
+        </span>
+      )}
 
       {/* Updated date */}
       <p className="text-xs text-gray-400 mt-4">

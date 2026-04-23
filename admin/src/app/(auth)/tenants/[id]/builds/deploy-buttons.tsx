@@ -7,10 +7,14 @@ export default function DeployButtons({
   tenantId,
   hasExpoProject,
   missingRequirements = [],
+  previewDirty = false,
+  productionDirty = false,
 }: {
   tenantId: string;
   hasExpoProject: boolean;
   missingRequirements?: string[];
+  previewDirty?: boolean;
+  productionDirty?: boolean;
 }) {
   const productionReady = hasExpoProject && missingRequirements.length === 0;
   const router = useRouter();
@@ -94,7 +98,14 @@ export default function DeployButtons({
             disabled={loading !== null}
             className="py-2 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-yellow-600 text-white hover:bg-yellow-700 disabled:opacity-50 disabled:pointer-events-none"
           >
-            {loading === "preview" ? "Building..." : "Create Preview"}
+            {loading === "preview"
+              ? "Building..."
+              : previewDirty
+              ? "Push Changes to Preview"
+              : "Create Preview"}
+            {previewDirty && loading !== "preview" && (
+              <span className="w-1.5 h-1.5 rounded-full bg-white/90" />
+            )}
           </button>
           <div className="relative group">
             <button
@@ -106,7 +117,14 @@ export default function DeployButtons({
                   : "bg-green-600/40 cursor-not-allowed"
               }`}
             >
-              {loading === "production" ? "Going live..." : "Go Live"}
+              {loading === "production"
+                ? "Going live..."
+                : productionDirty
+                ? "Push Changes Live"
+                : "Go Live"}
+              {productionDirty && productionReady && loading !== "production" && (
+                <span className="w-1.5 h-1.5 rounded-full bg-white/90" />
+              )}
             </button>
             {!productionReady && missingRequirements.length > 0 && (
               <div className="hidden group-hover:block absolute z-50 bottom-full left-0 mb-2 w-64 p-3 rounded-lg bg-gray-100 border border-gray-300 shadow-md">
