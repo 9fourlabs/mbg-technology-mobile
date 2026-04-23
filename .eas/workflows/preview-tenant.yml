@@ -28,10 +28,9 @@ jobs:
           npm run build:tenants
           npm run validate:tenants
 
-  # Preview builds share a single Expo project across tenants, so we use a
-  # tenant-scoped channel (`preview-<tenant>`) to keep OTA update streams isolated.
-  # A `preview-acme-dental` build will only receive updates from the
-  # `preview-acme-dental` branch — see docs/OTA_UPDATES.md.
+  # Preview builds share a single Expo project across tenants. Tenant-scoped
+  # OTA channel isolation is tracked in ROADMAP.md — today all preview builds
+  # listen on the "preview" channel from eas.json.
   build_android:
     needs: [prepare]
     steps:
@@ -44,9 +43,10 @@ jobs:
           NATIVE_ID_MODE_IOS: shared
           APP_VERSION: ${{ inputs.version }}
           EXPO_PUSH_ENABLED: ${{ inputs.push_enabled }}
-        run: |
-          eas build --profile preview --platform android --non-interactive \
-            --channel "preview-${{ inputs.tenant }}"
+        uses: eas/build
+        with:
+          platform: android
+          profile: preview
 
   build_ios:
     needs: [prepare]
@@ -60,6 +60,7 @@ jobs:
           NATIVE_ID_MODE_IOS: shared
           APP_VERSION: ${{ inputs.version }}
           EXPO_PUSH_ENABLED: ${{ inputs.push_enabled }}
-        run: |
-          eas build --profile preview --platform ios --non-interactive \
-            --channel "preview-${{ inputs.tenant }}"
+        uses: eas/build
+        with:
+          platform: ios
+          profile: preview

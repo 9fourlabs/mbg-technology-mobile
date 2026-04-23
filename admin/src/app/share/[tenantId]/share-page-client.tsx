@@ -64,7 +64,13 @@ export default function SharePageClient({
           </div>
         ) : (
           <div className="space-y-6">
-            {/* ── Primary: Browser-based simulator ── */}
+            {/* ── Primary: Browser-based simulator ──
+             * NOTE: Appetize's iframe embed is a paid feature (Starter tier
+             * and up). On the free tier the iframe renders the "Embeds are
+             * not enabled for this app" message. Until we upgrade, we link
+             * out to Appetize directly — the embedded-in-portal experience
+             * is tracked in ROADMAP.md as a planned enhancement.
+             */}
             {appetizeKey ? (
               <div className="rounded-xl bg-gray-900 border border-gray-800 overflow-hidden">
                 <div className="px-5 pt-5 pb-3">
@@ -72,23 +78,38 @@ export default function SharePageClient({
                     Try it now
                   </h2>
                   <p className="text-xs text-gray-400">
-                    Interact with the app right in your browser — no install
-                    needed.
+                    Launch an interactive browser preview — no install needed.
                   </p>
                 </div>
-                <div className="flex justify-center px-4 pb-5">
-                  <div className="rounded-2xl overflow-hidden shadow-2xl shadow-black/50 border border-gray-700">
-                    <iframe
-                      src={`https://appetize.io/embed/${appetizeKey}?device=pixel7&scale=75&autoplay=false&screenOnly=false`}
-                      width="300"
-                      height="640"
-                      frameBorder="0"
-                      scrolling="no"
-                      title={`${appName} preview`}
-                      allow="cross-origin-isolated"
-                      className="bg-black"
-                    />
-                  </div>
+                <div className="px-5 pb-5">
+                  <a
+                    href={`https://appetize.io/app/${appetizeKey}?device=pixel7&autoplay=false`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full px-4 py-3.5 rounded-lg text-white text-sm font-semibold transition-colors"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="size-4"
+                      aria-hidden="true"
+                    >
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                      <polyline points="15 3 21 3 21 9" />
+                      <line x1="10" y1="14" x2="21" y2="3" />
+                    </svg>
+                    Launch browser preview
+                  </a>
+                  <p className="text-[11px] text-gray-500 text-center mt-2">
+                    Opens in a new tab. Tap around — your session lasts 5
+                    minutes.
+                  </p>
                 </div>
               </div>
             ) : null}

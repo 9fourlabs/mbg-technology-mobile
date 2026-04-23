@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminServiceClient } from "@/lib/supabase/admin";
 import { notFound } from "next/navigation";
 import SharePageClient from "./share-page-client";
 
@@ -8,7 +8,10 @@ export default async function SharePreviewPage({
   params: Promise<{ tenantId: string }>;
 }) {
   const { tenantId } = await params;
-  const supabase = await createClient();
+  // Share pages are publicly accessible (linked in /share is on proxy's PUBLIC_PATHS).
+  // Use the service-role client so the query isn't blocked by RLS on tenants.
+  // Only brand visuals + appetize key are forwarded to the client — no secrets.
+  const supabase = createAdminServiceClient();
 
   const { data: tenant } = await supabase
     .from("tenants")

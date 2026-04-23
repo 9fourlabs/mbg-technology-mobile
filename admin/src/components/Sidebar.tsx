@@ -10,6 +10,7 @@ const navItems = [
   { href: "/dashboard", label: "Recent Builds", icon: HammerIcon },
   { href: "/analytics", label: "Analytics", icon: ChartIcon },
   { href: "/settings", label: "Settings", icon: GearIcon },
+  { href: "/docs", label: "Help & Guides", icon: HelpIcon },
 ];
 
 export default function Sidebar() {
@@ -39,7 +40,9 @@ export default function Sidebar() {
 
   const handleSignOut = async () => {
     const supabase = createClient();
-    await supabase.auth.signOut();
+    // scope: "local" so signing out on one browser doesn't invalidate the
+    // user's sessions on other devices.
+    await supabase.auth.signOut({ scope: "local" });
     router.push("/login");
   };
 
@@ -92,41 +95,6 @@ export default function Sidebar() {
             })}
           </ul>
 
-          {/* ── Help accordion ── */}
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <div className="hs-accordion-group">
-              <div className="hs-accordion" id="hs-help-accordion">
-                <button
-                  className="hs-accordion-toggle flex items-center gap-x-3 w-full py-2 px-2.5 text-sm text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
-                  aria-expanded="false"
-                  aria-controls="hs-help-accordion-content"
-                >
-                  <HelpIcon className="size-5 shrink-0" />
-                  <span>Help</span>
-                  <svg className="hs-accordion-active:rotate-180 ms-auto size-4 text-gray-400 transition-transform" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="m6 9 6 6 6-6" />
-                  </svg>
-                </button>
-                <div
-                  id="hs-help-accordion-content"
-                  className="hs-accordion-content hidden w-full overflow-hidden transition-[height] duration-300"
-                  role="region"
-                  aria-labelledby="hs-help-accordion"
-                >
-                  <div className="mx-2.5 mt-2 p-3 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-500 leading-relaxed">
-                    <p className="font-medium text-gray-700 mb-1">
-                      What is this platform?
-                    </p>
-                    <p>
-                      MBG App Platform lets you create branded mobile apps for
-                      your clients without any coding. Pick a template, add your
-                      client&apos;s branding, and publish to app stores.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </nav>
 
         {/* ── User section ── */}

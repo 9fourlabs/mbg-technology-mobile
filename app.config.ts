@@ -126,7 +126,11 @@ const config: ExpoConfig = {
     //      release-tenant.yml when tenant config has push enabled).
     //   4. Upload the Apple Push Key (.p8) and FCM service account JSON to
     //      EAS via `eas credentials`. See docs/PUSH_NOTIFICATIONS.md.
-    ...(process.env.EXPO_PUSH_ENABLED ? ["expo-notifications" as const] : []),
+    // Strict "1" check — "0" is a truthy string in JS, so the previous
+    // `process.env.EXPO_PUSH_ENABLED ? ... : ...` matched the "0" case too,
+    // and broke the EAS-updates fingerprint when one side passed "0" and
+    // the other passed nothing.
+    ...(process.env.EXPO_PUSH_ENABLED === "1" ? ["expo-notifications" as const] : []),
     // Sentry Expo plugin omitted: AGP 5.12.2 (from @sentry/react-native v7) is
     // incompatible with Gradle 9.0.0 (Expo SDK 55). JS-level error tracking still
     // works via Sentry.init() in index.ts. Re-enable when upgrading to Expo SDK 56+

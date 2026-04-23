@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getUserContext } from "@/lib/auth/user-context";
+import InfoTooltip from "@/components/InfoTooltip";
 
 interface EventRow {
   event_name: string;
@@ -79,7 +80,10 @@ export default async function ClientAnalyticsPage({
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <div className="rounded-xl bg-white border border-gray-200 p-5">
-          <div className="text-xs uppercase tracking-wide text-gray-500">Events</div>
+          <div className="text-xs uppercase tracking-wide text-gray-500 inline-flex items-center gap-2">
+            Events
+            <InfoTooltip text="Every screen view and tracked button tap counts as one event. Low numbers early are normal. Look at what events are happening (below) — not just the total." />
+          </div>
           <div className="text-2xl font-semibold text-gray-900 mt-1">
             {(totalEvents ?? 0).toLocaleString()}
           </div>
@@ -88,7 +92,10 @@ export default async function ClientAnalyticsPage({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="rounded-xl bg-white border border-gray-200 p-5">
-          <h2 className="text-sm font-semibold text-gray-900 mb-3">Top screens</h2>
+          <h2 className="text-sm font-semibold text-gray-900 mb-3 inline-flex items-center gap-2">
+            Top screens
+            <InfoTooltip text="The most-viewed screens over the last 30 days. Home is almost always #1 — what matters is what's in the 2nd–5th slots. That's what users actually care about." />
+          </h2>
           {topScreens.length === 0 ? (
             <p className="text-sm text-gray-500">No screen views recorded yet.</p>
           ) : (
@@ -104,7 +111,10 @@ export default async function ClientAnalyticsPage({
         </div>
 
         <div className="rounded-xl bg-white border border-gray-200 p-5">
-          <h2 className="text-sm font-semibold text-gray-900 mb-3">Recent activity</h2>
+          <h2 className="text-sm font-semibold text-gray-900 mb-3 inline-flex items-center gap-2">
+            Recent activity
+            <InfoTooltip text="A log of the last 20 events, newest first. Useful for spot-checking — 'did that update we just published start driving traffic?' Not meant for reporting." />
+          </h2>
           {!recent || recent.length === 0 ? (
             <p className="text-sm text-gray-500">No recent events.</p>
           ) : (

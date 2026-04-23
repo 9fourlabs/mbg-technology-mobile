@@ -1,5 +1,7 @@
 "use client";
 
+import InfoTooltip from "@/components/InfoTooltip";
+
 const DESIGN_PRESETS = [
   { id: "modern", label: "Modern", desc: "Clean & fresh", accent: "#2563EB" },
   { id: "classic", label: "Classic", desc: "Timeless & structured", accent: "#854D0E" },
@@ -44,7 +46,10 @@ export default function DesignEditor({ config, onChange }: DesignEditorProps) {
 
       {/* Presets */}
       <div>
-        <h2 className="text-base font-semibold text-gray-900 mb-4">Design Preset</h2>
+        <h2 className="text-base font-semibold text-gray-900 mb-4 inline-flex items-center gap-2">
+          Design Preset
+          <InfoTooltip text="Each preset sets sensible defaults for every other field on this tab. Start with whichever fits your client's vibe, then tweak individual settings below." />
+        </h2>
         <div className="grid grid-cols-5 gap-3">
           {DESIGN_PRESETS.map((p) => (
             <button
@@ -64,7 +69,10 @@ export default function DesignEditor({ config, onChange }: DesignEditorProps) {
 
       {/* Card Style */}
       <div>
-        <label className="block text-sm font-medium text-gray-500 mb-3">Card Style</label>
+        <label className="text-sm font-medium text-gray-500 mb-3 inline-flex items-center gap-2">
+          Card Style
+          <InfoTooltip text="Rounded = friendly and modern. Sharp = structured and premium. Flat = minimal and subdued. Most consumer apps use Rounded." />
+        </label>
         <div className="grid grid-cols-3 gap-3">
           {([
             { id: "rounded", label: "Rounded", cls: "rounded-xl" },
@@ -87,7 +95,10 @@ export default function DesignEditor({ config, onChange }: DesignEditorProps) {
 
       {/* Button Shape */}
       <div>
-        <label className="block text-sm font-medium text-gray-500 mb-3">Button Shape</label>
+        <label className="text-sm font-medium text-gray-500 mb-3 inline-flex items-center gap-2">
+          Button Shape
+          <InfoTooltip text="Drag toward Pill for friendlier/playful apps; keep near Square for serious/formal apps. Most apps sit in the middle (8–16px)." />
+        </label>
         <div className="flex items-center gap-4">
           <span className="text-xs text-gray-400">Square</span>
           <input
@@ -113,7 +124,10 @@ export default function DesignEditor({ config, onChange }: DesignEditorProps) {
 
       {/* Card Layout */}
       <div>
-        <label className="block text-sm font-medium text-gray-500 mb-3">Card Layout</label>
+        <label className="text-sm font-medium text-gray-500 mb-3 inline-flex items-center gap-2">
+          Card Layout
+          <InfoTooltip text="List (1 column) = big cards with lots of text, good for primary navigation. Grid (2 columns) = short visual cards, good for browsable feeds." />
+        </label>
         <div className="grid grid-cols-2 gap-3">
           {([1, 2] as const).map((cols) => (
             <button
@@ -137,7 +151,10 @@ export default function DesignEditor({ config, onChange }: DesignEditorProps) {
       {/* Header & Tab Bar */}
       <div className="grid grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-500 mb-3">Header Style</label>
+          <label className="text-sm font-medium text-gray-500 mb-3 inline-flex items-center gap-2">
+            Header Style
+            <InfoTooltip text="Left-aligned headers read first (Western convention) and feel structured. Centered headers feel formal/luxury and work well for single-column layouts." />
+          </label>
           <div className="flex flex-col gap-2">
             {(["left", "centered"] as const).map((style) => (
               <button
@@ -153,7 +170,10 @@ export default function DesignEditor({ config, onChange }: DesignEditorProps) {
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-500 mb-3">Tab Bar</label>
+          <label className="text-sm font-medium text-gray-500 mb-3 inline-flex items-center gap-2">
+            Tab Bar
+            <InfoTooltip text="Pills = rounded badge behind the active tab, friendly/playful. Underline = a line below the active tab, restrained/professional." />
+          </label>
           <div className="flex flex-col gap-2">
             {(["pills", "underline"] as const).map((style) => (
               <button
@@ -173,7 +193,10 @@ export default function DesignEditor({ config, onChange }: DesignEditorProps) {
       {/* Typography */}
       <div className="grid grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-500 mb-3">Heading Size</label>
+          <label className="text-sm font-medium text-gray-500 mb-3 inline-flex items-center gap-2">
+            Heading Size
+            <InfoTooltip text="Small = information-dense. Medium = default, balanced. Large = billboard-style, dramatic. Match Body size — don't pair Large heading with Small body." />
+          </label>
           <div className="flex gap-2">
             {(["small", "medium", "large"] as const).map((size) => (
               <button
@@ -189,7 +212,10 @@ export default function DesignEditor({ config, onChange }: DesignEditorProps) {
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-500 mb-3">Body Size</label>
+          <label className="text-sm font-medium text-gray-500 mb-3 inline-flex items-center gap-2">
+            Body Size
+            <InfoTooltip text="Larger body text helps accessibility and older audiences. Smaller text fits more on screen. Match Heading size for a balanced look." />
+          </label>
           <div className="flex gap-2">
             {(["small", "medium", "large"] as const).map((size) => (
               <button

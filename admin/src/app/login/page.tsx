@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
@@ -10,6 +10,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +29,15 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/");
+    // Honor the redirectTo query param set by the proxy on auth-gated
+    // navigations. Restrict to same-origin relative paths to avoid
+    // open-redirect. Defaults to "/" for direct logins.
+    const redirectTo = searchParams.get("redirectTo");
+    const dest =
+      redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//")
+        ? redirectTo
+        : "/";
+    router.push(dest);
     router.refresh();
   };
 

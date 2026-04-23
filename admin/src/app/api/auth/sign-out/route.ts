@@ -8,7 +8,10 @@ import { createClient } from "@/lib/supabase/server";
  */
 export async function POST(request: Request) {
   const supabase = await createClient();
-  await supabase.auth.signOut();
+  // scope: "local" so signing out on one browser doesn't invalidate the
+  // user's sessions on other devices (and, as a side-effect, doesn't break
+  // Playwright's saved storageState for other parallel test runs).
+  await supabase.auth.signOut({ scope: "local" });
 
   const { searchParams, origin } = new URL(request.url);
   const referer = request.headers.get("referer") ?? "";

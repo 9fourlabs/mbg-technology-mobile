@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import Constants from "expo-constants";
-import { Image, Linking, SafeAreaView, ScrollView, StyleSheet, View } from "react-native";
+import { Image, Linking, ScrollView, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { PageHeader } from "./components/PageHeader";
 import { TabBar } from "./components/TabBar";
 import { TemplateCard } from "./components/TemplateCard";

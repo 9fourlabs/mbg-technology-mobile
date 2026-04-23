@@ -21,13 +21,9 @@ export const tenantProjects: Record<string, string> = {
   // MBG is the platform owner — uses the default project
   mbg: MBG_PROJECT_ID,
 
-  // Client tenants — each MUST get a dedicated project ID before production release.
-  // Replace the placeholder with a real Expo project ID when the client is approved.
-  "acme-dental": "PLACEHOLDER_CREATE_EXPO_PROJECT",
-  "acme-portal": "PLACEHOLDER_CREATE_EXPO_PROJECT",
-  "bobs-burgers": "PLACEHOLDER_CREATE_EXPO_PROJECT",
-
-  // Sample template tenants — demonstration configs for each advanced template type.
+  // Sample template tenants — demonstration configs referenced by the
+  // consultant-facing "Choosing a template" guide. Each MUST get a dedicated
+  // Expo project ID before any production release (shared preview is fine).
   "sample-booking": "PLACEHOLDER_CREATE_EXPO_PROJECT",
   "sample-commerce": "PLACEHOLDER_CREATE_EXPO_PROJECT",
   "sample-loyalty": "PLACEHOLDER_CREATE_EXPO_PROJECT",
