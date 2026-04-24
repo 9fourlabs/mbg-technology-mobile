@@ -16,6 +16,7 @@ interface SharePageClientProps {
   primaryColor: string;
   logoUrl?: string;
   appetizeKey?: string | null;
+  appetizeKeyIos?: string | null;
   builds: Build[];
 }
 
@@ -24,8 +25,10 @@ export default function SharePageClient({
   primaryColor,
   logoUrl,
   appetizeKey,
+  appetizeKeyIos,
   builds,
 }: SharePageClientProps) {
+  const hasAppetize = !!appetizeKey || !!appetizeKeyIos;
   const [showInstall, setShowInstall] = useState(false);
   const [expandedSection, setExpandedSection] = useState<
     "android" | "ios" | null
@@ -71,7 +74,7 @@ export default function SharePageClient({
              * out to Appetize directly — the embedded-in-portal experience
              * is tracked in ROADMAP.md as a planned enhancement.
              */}
-            {appetizeKey ? (
+            {hasAppetize ? (
               <div className="rounded-xl bg-gray-900 border border-gray-800 overflow-hidden">
                 <div className="px-5 pt-5 pb-3">
                   <h2 className="text-white font-semibold text-sm mb-1">
@@ -81,32 +84,59 @@ export default function SharePageClient({
                     Launch an interactive browser preview — no install needed.
                   </p>
                 </div>
-                <div className="px-5 pb-5">
-                  <a
-                    href={`https://appetize.io/app/${appetizeKey}?device=pixel7&autoplay=false`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full px-4 py-3.5 rounded-lg text-white text-sm font-semibold transition-colors"
-                    style={{ backgroundColor: primaryColor }}
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="size-4"
-                      aria-hidden="true"
+                <div className="px-5 pb-5 space-y-3">
+                  {appetizeKey && (
+                    <a
+                      href={`https://appetize.io/app/${appetizeKey}?device=pixel7&autoplay=false`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 w-full px-4 py-3.5 rounded-lg text-white text-sm font-semibold transition-colors"
+                      style={{ backgroundColor: primaryColor }}
                     >
-                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                      <polyline points="15 3 21 3 21 9" />
-                      <line x1="10" y1="14" x2="21" y2="3" />
-                    </svg>
-                    Launch browser preview
-                  </a>
-                  <p className="text-[11px] text-gray-500 text-center mt-2">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="size-4"
+                        aria-hidden="true"
+                      >
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                        <polyline points="15 3 21 3 21 9" />
+                        <line x1="10" y1="14" x2="21" y2="3" />
+                      </svg>
+                      Launch Android preview
+                    </a>
+                  )}
+                  {appetizeKeyIos && (
+                    <a
+                      href={`https://appetize.io/app/${appetizeKeyIos}?device=iphone15pro&autoplay=false`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 w-full px-4 py-3.5 rounded-lg border border-gray-700 bg-gray-800 text-white text-sm font-semibold transition-colors hover:bg-gray-700"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="size-4"
+                        aria-hidden="true"
+                      >
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                        <polyline points="15 3 21 3 21 9" />
+                        <line x1="10" y1="14" x2="21" y2="3" />
+                      </svg>
+                      Launch iPhone preview
+                    </a>
+                  )}
+                  <p className="text-[11px] text-gray-500 text-center">
                     Opens in a new tab. Tap around — your session lasts 5
                     minutes.
                   </p>
@@ -122,12 +152,12 @@ export default function SharePageClient({
               >
                 <div>
                   <p className="text-white font-semibold text-sm">
-                    {appetizeKey
+                    {hasAppetize
                       ? "Install on your device"
                       : "Download & Install"}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {appetizeKey
+                    {hasAppetize
                       ? "For hands-on testing with push notifications, camera, etc."
                       : "Install directly on your Android or iOS device"}
                   </p>

@@ -15,7 +15,9 @@ export default async function SharePreviewPage({
 
   const { data: tenant } = await supabase
     .from("tenants")
-    .select("id, business_name, config, appetize_public_key")
+    .select(
+      "id, business_name, config, appetize_public_key, appetize_public_key_ios",
+    )
     .eq("id", tenantId)
     .single();
 
@@ -26,7 +28,9 @@ export default async function SharePreviewPage({
   // Get latest completed preview build with a download URL
   const { data: builds } = await supabase
     .from("builds")
-    .select("id, download_url, download_url_ios, platform, created_at, appetize_public_key")
+    .select(
+      "id, download_url, download_url_ios, platform, created_at, appetize_public_key, appetize_public_key_ios",
+    )
     .eq("tenant_id", tenantId)
     .eq("profile", "preview")
     .eq("status", "completed")
@@ -37,10 +41,19 @@ export default async function SharePreviewPage({
   const config = tenant.config as Record<string, unknown> | null;
   const brand = (config?.brand ?? {}) as Record<string, string>;
 
-  // Use the most recent Appetize key (from the latest build, or the tenant-level fallback)
+  // Prefer the build-scoped key (stamped when the build completed). Fall back
+  // to the tenant-level key (updated every successful build). Either surfaces
+  // the most recent upload for that platform.
+  const tenantRow = tenant as Record<string, unknown>;
+  const buildRow = (builds?.[0] ?? {}) as Record<string, unknown>;
+
   const appetizeKey =
-    builds?.[0]?.appetize_public_key ??
-    (tenant as Record<string, unknown>).appetize_public_key as string | null ??
+    (buildRow.appetize_public_key as string | null | undefined) ??
+    (tenantRow.appetize_public_key as string | null | undefined) ??
+    null;
+  const appetizeKeyIos =
+    (buildRow.appetize_public_key_ios as string | null | undefined) ??
+    (tenantRow.appetize_public_key_ios as string | null | undefined) ??
     null;
 
   return (
@@ -49,6 +62,7 @@ export default async function SharePreviewPage({
       primaryColor={brand.primaryColor ?? "#2563EB"}
       logoUrl={brand.logoUrl}
       appetizeKey={appetizeKey}
+      appetizeKeyIos={appetizeKeyIos}
       builds={
         builds?.map((b) => ({
           id: b.id,
