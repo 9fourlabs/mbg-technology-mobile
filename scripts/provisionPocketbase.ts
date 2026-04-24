@@ -25,10 +25,9 @@
  * exercise it against a pilot tenant. Until then it's source code only.
  */
 
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { execSync } from "node:child_process";
 import path from "node:path";
-import { createClient } from "@supabase/supabase-js";
 
 const TEMPLATES = [
   "content",
@@ -89,9 +88,14 @@ function renderTomlTemplate(tenant: string, region: string): string {
     .replace(/\{\{VOLUME\}\}/g, `pb_data_${tenant.replace(/-/g, "_")}`);
 }
 
-function sh(cmd: string, env: Record<string, string> = {}): string {
+function sh(
+  cmd: string,
+  env: Record<string, string> = {},
+  cwd?: string,
+): string {
   return execSync(cmd, {
     env: { ...process.env, ...env },
+    cwd,
     encoding: "utf-8",
     stdio: ["inherit", "pipe", "inherit"],
   });
@@ -142,15 +146,28 @@ async function main() {
   // 1. Write a transient fly.toml with tenant substitutions.
   const rendered = renderTomlTemplate(tenant, region);
   const tomlPath = path.resolve(`infra/pocketbase/fly.${tenant}.toml`);
-  require("node:fs").writeFileSync(tomlPath, rendered, "utf-8");
+  writeFileSync(tomlPath, rendered, "utf-8");
   console.log(`  ✓ Rendered fly.toml → ${tomlPath}`);
 
-  // 2. Create the Fly app in the tenant org.
+  // 2. Create the Fly app in the tenant org (idempotent).
   console.log("▶ Creating Fly app...");
-  sh(
-    `flyctl apps create ${appName} --org ${flyOrg}`,
-    { FLY_ACCESS_TOKEN: flyToken }
-  );
+  let exists = false;
+  try {
+    execSync(`flyctl apps show ${appName}`, {
+      env: { ...process.env, FLY_ACCESS_TOKEN: flyToken },
+      stdio: "pipe",
+    });
+    exists = true;
+  } catch {
+    // `apps show` exits non-zero when the app doesn't exist — that's fine.
+  }
+  if (exists) {
+    console.log(`  ○ App ${appName} already exists — reusing`);
+  } else {
+    sh(`flyctl apps create ${appName} --org ${flyOrg}`, {
+      FLY_ACCESS_TOKEN: flyToken,
+    });
+  }
 
   // 3. Set the admin password secret BEFORE deploy so PB picks it up on boot.
   console.log("▶ Setting PB_ADMIN_PASSWORD secret...");
@@ -160,10 +177,14 @@ async function main() {
   );
 
   // 4. Deploy — builds the Dockerfile, creates the volume on first deploy.
+  //    Run from infra/pocketbase/ so Docker's build context sees Dockerfile
+  //    + entrypoint.sh as siblings.
   console.log("▶ Deploying Pocketbase instance (builds + starts)...");
+  const infraDir = path.resolve("infra/pocketbase");
   sh(
-    `flyctl deploy --remote-only --app ${appName} --config ${tomlPath} --dockerfile infra/pocketbase/Dockerfile`,
-    { FLY_ACCESS_TOKEN: flyToken }
+    `flyctl deploy --remote-only --app ${appName} --config ${tomlPath}`,
+    { FLY_ACCESS_TOKEN: flyToken },
+    infraDir,
   );
 
   // 5. Wait for /api/health, then import the schema.
@@ -176,20 +197,32 @@ async function main() {
   await seedSchema(pbUrl, template);
   console.log(`  ✓ Collections imported`);
 
-  // 6. Update admin DB tenant row.
-  const supabase = createClient(
-    requireEnv("NEXT_PUBLIC_SUPABASE_URL"),
-    requireEnv("SUPABASE_SERVICE_ROLE_KEY")
+  // 6. Update admin DB tenant row via PostgREST (dep-free).
+  const supabaseUrl = requireEnv("NEXT_PUBLIC_SUPABASE_URL");
+  const serviceKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
+  const updateRes = await fetch(
+    `${supabaseUrl}/rest/v1/tenants?id=eq.${encodeURIComponent(tenant)}`,
+    {
+      method: "PATCH",
+      headers: {
+        apikey: serviceKey,
+        Authorization: `Bearer ${serviceKey}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal",
+      },
+      body: JSON.stringify({
+        pocketbase_url: pbUrl,
+        pocketbase_app_name: appName,
+        backend: "pocketbase",
+      }),
+    }
   );
-  const { error } = await supabase
-    .from("tenants")
-    .update({
-      pocketbase_url: pbUrl,
-      pocketbase_app_name: appName,
-      backend: "pocketbase",
-    })
-    .eq("id", tenant);
-  if (error) throw error;
+  if (!updateRes.ok) {
+    const body = await updateRes.text();
+    throw new Error(
+      `Admin DB update failed: HTTP ${updateRes.status} ${body}`
+    );
+  }
   console.log(`▶ Admin DB updated — tenant "${tenant}" now on backend=pocketbase`);
 
   console.log("\n✅ Done.");
