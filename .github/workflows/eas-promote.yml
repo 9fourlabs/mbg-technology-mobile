@@ -48,13 +48,73 @@ jobs:
       - name: Install EAS CLI
         run: npm install -g eas-cli
 
-      - name: Run EAS release workflow (tenant)
+      # Bypass `eas workflow:run` for the same reasons documented in
+      # eas-preview.yml — workflow-dispatched `eas build` either fails
+      # PARSE_CUSTOM_WORKFLOW_CONFIG (uses: eas/build) or "Not authorized"
+      # at the build-request API (run: eas build inside the workflow runner).
+      # Direct `eas build` from the GA runner uses ambient EXPO_TOKEN and
+      # works.
+      - name: Build tenant configs + production-readiness check
         run: |
-          PUSH_ENABLED="${{ inputs.push_enabled || '0' }}"
-          eas workflow:run .eas/workflows/release-tenant.yml \
-            --input tenant=${{ inputs.tenant }} \
-            --input platform=${{ inputs.platform }} \
-            --input version=${{ inputs.version || '1.0.0' }} \
-            --input push_enabled=$PUSH_ENABLED \
-            --non-interactive
+          npm run build:tenants
+          npm run validate:tenants
+          npx --yes tsx scripts/validateProductionReady.ts "${{ inputs.tenant }}" "${{ inputs.platform }}"
 
+      - name: Resolve Expo project ID
+        id: project
+        run: |
+          PROJECT_ID=$(npx --yes tsx scripts/getProjectId.ts "${{ inputs.tenant }}")
+          echo "project_id=$PROJECT_ID" >> $GITHUB_OUTPUT
+
+      - name: Dispatch production builds
+        env:
+          APP_TENANT: ${{ inputs.tenant }}
+          NATIVE_ID_MODE: tenant
+          APP_VERSION: ${{ inputs.version || '1.0.0' }}
+          EAS_PROJECT_ID: ${{ steps.project.outputs.project_id }}
+          EXPO_PUSH_ENABLED: ${{ inputs.push_enabled || '0' }}
+        run: |
+          set -e
+          PLATFORM="${{ inputs.platform }}"
+
+          if [ "$PLATFORM" = "ios" ] || [ "$PLATFORM" = "both" ]; then
+            eas build --profile production --platform ios --non-interactive --no-wait \
+              --project-id "${{ steps.project.outputs.project_id }}" &
+            IOS_PID=$!
+          fi
+
+          if [ "$PLATFORM" = "android" ] || [ "$PLATFORM" = "both" ]; then
+            eas build --profile production --platform android --non-interactive --no-wait \
+              --project-id "${{ steps.project.outputs.project_id }}" &
+            ANDROID_PID=$!
+          fi
+
+          [ -n "$IOS_PID" ] && wait $IOS_PID
+          [ -n "$ANDROID_PID" ] && wait $ANDROID_PID
+
+      - name: Submit to stores
+        env:
+          APP_TENANT: ${{ inputs.tenant }}
+          NATIVE_ID_MODE: tenant
+          APP_VERSION: ${{ inputs.version || '1.0.0' }}
+          EAS_PROJECT_ID: ${{ steps.project.outputs.project_id }}
+        run: |
+          set -e
+          PLATFORM="${{ inputs.platform }}"
+
+          # `eas submit` waits for the latest production build per platform
+          # to finish before submitting (default behavior with --latest).
+          if [ "$PLATFORM" = "ios" ] || [ "$PLATFORM" = "both" ]; then
+            # Load per-tenant submit identifiers (ASC App ID, Apple Team ID)
+            # so eas.json's $ASC_APP_ID / $APPLE_TEAM_ID interpolate.
+            eval "$(npx --yes tsx scripts/getSubmitEnv.ts "${{ inputs.tenant }}" ios)"
+            eas submit --profile production --platform ios --latest --non-interactive \
+              --project-id "${{ steps.project.outputs.project_id }}"
+          fi
+
+          if [ "$PLATFORM" = "android" ] || [ "$PLATFORM" = "both" ]; then
+            # Play service account JSON is uploaded to each tenant's Expo
+            # project via `eas credentials` — EAS pulls it at submit time.
+            eas submit --profile production --platform android --latest --non-interactive \
+              --project-id "${{ steps.project.outputs.project_id }}"
+          fi

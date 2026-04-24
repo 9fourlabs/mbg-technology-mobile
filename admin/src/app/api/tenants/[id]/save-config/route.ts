@@ -6,7 +6,27 @@ import {
   createTenantPullRequest,
   updateTenantProjects,
 } from "@/lib/github";
+import { getUserContext } from "@/lib/auth/user-context";
 import type { AppTemplate } from "@/lib/types";
+
+/**
+ * Authorize the request against the tenant. Admins pass for any tenant;
+ * client users pass only for tenants they own. Returns null on success,
+ * a NextResponse on 401/403.
+ *
+ * Mirrors the pattern in /api/tenants/[id]/content/route.ts so all
+ * tenant-scoped routes enforce access uniformly.
+ */
+async function authorize(tenantId: string): Promise<NextResponse | null> {
+  const ctx = await getUserContext();
+  if (!ctx) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (ctx.role !== "admin" && !ctx.tenantIds.includes(tenantId)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  return null;
+}
 
 export async function POST(
   request: NextRequest,
@@ -31,16 +51,11 @@ export async function POST(
       );
     }
 
-    // Authenticate user
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    // Authenticate + authorize against the target tenant.
+    const denied = await authorize(tenantId);
+    if (denied) return denied;
 
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const supabase = await createClient();
 
     // Load tenant to get template_type and check concurrency
     const { data: tenant, error: tenantError } = await supabase

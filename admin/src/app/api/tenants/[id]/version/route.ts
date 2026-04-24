@@ -1,5 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getUserContext } from "@/lib/auth/user-context";
+
+async function authorize(tenantId: string): Promise<NextResponse | null> {
+  const ctx = await getUserContext();
+  if (!ctx) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (ctx.role !== "admin" && !ctx.tenantIds.includes(tenantId)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  return null;
+}
 
 export async function POST(
   request: NextRequest,
@@ -8,15 +20,8 @@ export async function POST(
   try {
     const { id: tenantId } = await params;
 
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const denied = await authorize(tenantId);
+    if (denied) return denied;
 
     const body = await request.json();
     const { version } = body;
@@ -28,6 +33,7 @@ export async function POST(
       );
     }
 
+    const supabase = await createClient();
     const { error } = await supabase
       .from("tenants")
       .update({ app_version: version })
