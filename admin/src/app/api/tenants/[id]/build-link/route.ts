@@ -85,10 +85,28 @@ export async function POST(
       }
     }
 
+    // Raw iOS artifact URL (simulator .tar.gz or .ipa) — needed for Appetize
+    // upload below. Kept separate from download_url_ios which is the Expo
+    // install page for real-device OTA installs.
+    let iosArtifactUrl: string | null = null;
+
     if (eas_build_id_ios) {
       updateFields.eas_build_id_ios = eas_build_id_ios;
-      // Use Expo install page for iOS (handles itms-services:// OTA install)
+      // Expo install page for real-device OTA install. For preview builds
+      // with `ios.simulator: true` this page surfaces the simulator .tar.gz
+      // download; for ad-hoc builds it surfaces itms-services://.
       updateFields.download_url_ios = getExpoInstallUrl(eas_build_id_ios);
+
+      // Fetch the raw artifact URL from EAS so we can upload to Appetize
+      // directly (Appetize needs the archive URL, not the Expo install page).
+      try {
+        const easBuild = await getEASBuildById(eas_build_id_ios);
+        if (easBuild?.downloadUrl) {
+          iosArtifactUrl = easBuild.downloadUrl;
+        }
+      } catch (err) {
+        console.warn("Failed to fetch iOS build from EAS:", err);
+      }
     }
 
     if (Object.keys(updateFields).length === 0) {
@@ -98,46 +116,67 @@ export async function POST(
       );
     }
 
-    // Upload Android APK to Appetize.io for browser-based preview.
-    // If the tenant already has an Appetize app, update it (keeps the same
-    // embed URL so share links stay stable). Otherwise create a new one.
-    if (updateFields.download_url && process.env.APPETIZE_API_KEY) {
+    // Upload both platforms to Appetize.io for browser-based previews.
+    // If the tenant already has an Appetize app for a given platform, update
+    // it (keeps the same embed URL so share links stay stable); otherwise
+    // create a new one.
+    const { data: tenantRow } = await supabase
+      .from("tenants")
+      .select(
+        "appetize_public_key, appetize_public_key_ios, business_name",
+      )
+      .eq("id", tenantId)
+      .single();
+
+    const label = `${tenantRow?.business_name ?? tenantId} — preview`;
+
+    async function syncAppetize(
+      artifactUrl: string,
+      platform: "android" | "ios",
+      existingKey: string | null | undefined,
+    ): Promise<string | null> {
+      if (!process.env.APPETIZE_API_KEY) return null;
       try {
-        // Check if tenant already has an Appetize app
-        const { data: tenantRow } = await supabase
-          .from("tenants")
-          .select("appetize_public_key, business_name")
-          .eq("id", tenantId)
-          .single();
-
-        let appetizeKey: string;
-
-        if (tenantRow?.appetize_public_key) {
-          // Update existing Appetize app with new build
-          await updateAppetizeApp(
-            tenantRow.appetize_public_key,
-            updateFields.download_url as string,
-          );
-          appetizeKey = tenantRow.appetize_public_key;
-        } else {
-          // Create new Appetize app
-          appetizeKey = await uploadToAppetize(
-            updateFields.download_url as string,
-            "android",
-            `${tenantRow?.business_name ?? tenantId} — preview`,
-          );
-          // Save to tenant so future builds reuse the same embed URL
-          await supabase
-            .from("tenants")
-            .update({ appetize_public_key: appetizeKey })
-            .eq("id", tenantId);
+        if (existingKey) {
+          await updateAppetizeApp(existingKey, artifactUrl);
+          return existingKey;
         }
-
-        updateFields.appetize_public_key = appetizeKey;
+        const key = await uploadToAppetize(artifactUrl, platform, label);
+        await supabase
+          .from("tenants")
+          .update(
+            platform === "android"
+              ? { appetize_public_key: key }
+              : { appetize_public_key_ios: key },
+          )
+          .eq("id", tenantId);
+        return key;
       } catch (err) {
-        // Non-fatal: share page falls back to QR code / direct download
-        console.warn("Appetize upload failed (share page will use fallback):", err);
+        // Non-fatal: share page falls back to QR code / direct install
+        console.warn(
+          `Appetize upload failed for ${platform} (share page will use fallback):`,
+          err,
+        );
+        return null;
       }
+    }
+
+    if (updateFields.download_url) {
+      const key = await syncAppetize(
+        updateFields.download_url as string,
+        "android",
+        tenantRow?.appetize_public_key,
+      );
+      if (key) updateFields.appetize_public_key = key;
+    }
+
+    if (iosArtifactUrl) {
+      const key = await syncAppetize(
+        iosArtifactUrl,
+        "ios",
+        tenantRow?.appetize_public_key_ios,
+      );
+      if (key) updateFields.appetize_public_key_ios = key;
     }
 
     // Mark the build as completed now that EAS artifacts are linked
