@@ -107,17 +107,40 @@ jobs:
           echo "existing_ids=$EXISTING" >> $GITHUB_OUTPUT
           echo "Existing build IDs (finished+errored): $EXISTING"
 
-      - name: Run EAS preview workflow (tenant)
-        id: eas-workflow
+      - name: Dispatch EAS preview builds (Android + iOS in parallel)
+        id: eas-dispatch
+        # Historical note: we used to call `eas workflow:run preview-tenant.yml`
+        # and let EAS orchestrate both platform builds inside its workflow
+        # runner. That path broke twice in April 2026:
+        #   1. `uses: eas/build` started failing PARSE_CUSTOM_WORKFLOW_CONFIG
+        #      (EAS-side regression — same YAML worked on 2026-04-22)
+        #   2. `run: eas build` inside the workflow runner authenticates far
+        #      enough to fetch keystores but fails the build-request API with
+        #      "Not authorized" (unresolved upstream).
+        # So we dispatch directly from the GA runner using GA's EXPO_TOKEN
+        # — the exact same path that works from a local shell. Builds still
+        # run on EAS; we just skip the middleman.
+        env:
+          APP_TENANT: ${{ matrix.tenant }}
+          NATIVE_ID_MODE_ANDROID: tenant
+          NATIVE_ID_MODE_IOS: shared
+          APP_VERSION: ${{ inputs.version || '1.0.0' }}
+          EXPO_PUSH_ENABLED: ${{ inputs.push_enabled || '0' }}
         run: |
-          VERSION="${{ inputs.version || '1.0.0' }}"
-          PUSH_ENABLED="${{ inputs.push_enabled || '0' }}"
-          OUTPUT=$(eas workflow:run .eas/workflows/preview-tenant.yml --input tenant=${{ matrix.tenant }} --input version=$VERSION --input push_enabled=$PUSH_ENABLED --non-interactive 2>&1)
-          echo "$OUTPUT"
+          set -e
+          # Regenerate tenant JSON + validate before dispatch (this is what
+          # the old workflow's `prepare` job did).
+          npm run build:tenants
+          npm run validate:tenants
 
-          # Extract the workflow URL from output
-          WORKFLOW_URL=$(echo "$OUTPUT" | grep -oP 'https://expo\.dev/accounts/[^\s]+' | head -1)
-          echo "workflow_url=$WORKFLOW_URL" >> $GITHUB_OUTPUT
+          # --no-wait returns immediately after queueing the build. We poll
+          # for completion in the next step via `eas build:list`.
+          eas build --profile preview --platform android --non-interactive --no-wait &
+          ANDROID_PID=$!
+          eas build --profile preview --platform ios --non-interactive --no-wait &
+          IOS_PID=$!
+          wait $ANDROID_PID
+          wait $IOS_PID
 
       - name: Wait for NEW EAS builds and report IDs back to admin
         if: inputs.build_id != ''
