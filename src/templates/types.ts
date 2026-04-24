@@ -54,6 +54,21 @@ export type InformationalTemplate = {
 export type AuthConfig = {
   supabaseUrl: string;
   supabaseAnonKey: string;
+  /**
+   * Optional: if the tenant has been migrated to its own Pocketbase
+   * instance, this URL routes per-tenant data reads (posts, bookmarks,
+   * directory, etc.) to that PB instance instead of Supabase.
+   *
+   * End-user auth still goes through Supabase until Phase 3 of the
+   * migration moves auth too. See docs/POCKETBASE_MIGRATION.md.
+   */
+  pocketbaseUrl?: string;
+  /**
+   * Backend selector for per-tenant data. Defaults to "supabase" for
+   * backwards compatibility — only set to "pocketbase" once the tenant's
+   * PB instance is provisioned and pocketbaseUrl is populated.
+   */
+  backend?: "supabase" | "pocketbase";
 };
 
 export type AuthenticatedTemplate = {

@@ -2,12 +2,19 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from "
 import { createClient, type Session, type User, type SupabaseClient } from "@supabase/supabase-js";
 import type { AuthConfig } from "../templates/types";
 import { secureStoreAdapter } from "./supabaseStorage";
+import { resolveTenantBackend, type TenantBackend } from "../data/tenantBackend";
 
 type AuthState = {
   user: User | null;
   session: Session | null;
   loading: boolean;
   supabase: SupabaseClient;
+  /**
+   * Where this tenant's per-tenant data lives. Hooks like usePosts /
+   * usePost dispatch their queries based on this. End-user auth still
+   * goes through `supabase` until Phase 3 of the PB migration moves it.
+   */
+  backend: TenantBackend;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
   signUp: (email: string, password: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
@@ -19,6 +26,7 @@ const AuthContext = createContext<AuthState>({
   session: null,
   loading: true,
   supabase: null as unknown as SupabaseClient,
+  backend: null as unknown as TenantBackend,
   signIn: async () => ({}),
   signUp: async () => ({}),
   signOut: async () => {},
@@ -68,12 +76,15 @@ export function AuthProvider({ config, children }: Props) {
     return () => subscription.unsubscribe();
   }, [supabase]);
 
+  const backend = useMemo(() => resolveTenantBackend(config), [config]);
+
   const value: AuthState = useMemo(
     () => ({
       user: session?.user ?? null,
       session,
       loading,
       supabase,
+      backend,
 
       signIn: async (email: string, password: string) => {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -97,7 +108,7 @@ export function AuthProvider({ config, children }: Props) {
         return {};
       },
     }),
-    [session, loading, supabase]
+    [session, loading, supabase, backend]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
