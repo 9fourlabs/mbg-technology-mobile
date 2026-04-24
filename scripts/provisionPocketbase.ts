@@ -154,7 +154,7 @@ async function main() {
   let exists = false;
   try {
     execSync(`flyctl apps show ${appName}`, {
-      env: { ...process.env, FLY_ACCESS_TOKEN: flyToken },
+      env: { ...process.env, FLY_API_TOKEN: flyToken },
       stdio: "pipe",
     });
     exists = true;
@@ -165,7 +165,7 @@ async function main() {
     console.log(`  ○ App ${appName} already exists — reusing`);
   } else {
     sh(`flyctl apps create ${appName} --org ${flyOrg}`, {
-      FLY_ACCESS_TOKEN: flyToken,
+      FLY_API_TOKEN: flyToken,
     });
   }
 
@@ -173,7 +173,7 @@ async function main() {
   console.log("▶ Setting PB_ADMIN_PASSWORD secret...");
   sh(
     `flyctl secrets set PB_ADMIN_PASSWORD="${pbAdminPassword}" --app ${appName} --stage`,
-    { FLY_ACCESS_TOKEN: flyToken }
+    { FLY_API_TOKEN: flyToken }
   );
 
   // 4. Deploy — builds the Dockerfile, creates the volume on first deploy.
@@ -183,7 +183,7 @@ async function main() {
   const infraDir = path.resolve("infra/pocketbase");
   sh(
     `flyctl deploy --remote-only --app ${appName} --config ${tomlPath}`,
-    { FLY_ACCESS_TOKEN: flyToken },
+    { FLY_API_TOKEN: flyToken },
     infraDir,
   );
 
