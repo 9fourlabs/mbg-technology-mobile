@@ -160,10 +160,15 @@ async function main() {
   console.log("▶ Creating Fly app...");
   let exists = false;
   try {
-    execSync(`flyctl apps show ${appName}`, { stdio: "pipe" });
-    exists = true;
+    const appsList = execSync(`flyctl apps list -o ${flyOrg} --json`, {
+      stdio: ["inherit", "pipe", "inherit"],
+      encoding: "utf-8",
+    });
+    const apps = JSON.parse(appsList) as Array<{ Name: string }>;
+    exists = apps.some((a) => a.Name === appName);
   } catch {
-    // `apps show` exits non-zero when the app doesn't exist — that's fine.
+    // If listing fails entirely, fall through and let `apps create` surface
+    // the real error.
   }
   if (exists) {
     console.log(`  ○ App ${appName} already exists — reusing`);
