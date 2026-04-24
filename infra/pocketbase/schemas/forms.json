@@ -1,0 +1,23 @@
+[
+  {
+    "id": "formsubmissions",
+    "name": "form_submissions",
+    "type": "base",
+    "schema": [
+      { "name": "user",        "type": "relation", "required": true, "options": { "collectionId": "_pb_users_auth_", "cascadeDelete": true, "maxSelect": 1 } },
+      { "name": "form_id",     "type": "text",     "required": true },
+      { "name": "data",        "type": "json",     "options": { "maxSize": 500000 } },
+      { "name": "status",      "type": "select",   "required": true, "options": { "maxSelect": 1, "values": ["submitted", "in_review", "approved", "rejected"] } },
+      { "name": "attachments", "type": "json",     "options": { "maxSize": 50000 } }
+    ],
+    "indexes": [
+      "CREATE INDEX idx_form_submissions_user ON form_submissions (user)",
+      "CREATE INDEX idx_form_submissions_form_id ON form_submissions (form_id)"
+    ],
+    "listRule":   "@request.auth.id != '' && user = @request.auth.id",
+    "viewRule":   "@request.auth.id != '' && user = @request.auth.id",
+    "createRule": "@request.auth.id != '' && user = @request.auth.id",
+    "updateRule": "@request.auth.id != '' && user = @request.auth.id",
+    "deleteRule": "@request.auth.id != '' && user = @request.auth.id"
+  }
+]

@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { generateDefaultConfig, configToTypeScript } from "@/lib/config-generator";
-import { commitTenantConfig, createTenantPullRequest } from "@/lib/github";
+import { commitTenantConfig, createTenantPullRequest, triggerWorkflowDispatch } from "@/lib/github";
 import type { TemplateId } from "@/lib/types";
+
+// Templates that get a dedicated Pocketbase instance on creation.
+// informational has no end-user data or auth, so no per-tenant backend needed.
+// authenticated doesn't ship with a schema JSON yet, so it stays on Supabase
+// until Phase 3 creates an auth-only template schema.
+const PB_TEMPLATES: TemplateId[] = [
+  "content",
+  "booking",
+  "commerce",
+  "loyalty",
+  "forms",
+  "directory",
+];
 
 export async function POST(request: NextRequest) {
   try {
@@ -118,6 +131,14 @@ export async function POST(request: NextRequest) {
       if (brand.logoUrl) config.brand.logoUri = brand.logoUrl;
     }
 
+    // Data-template tenants get a dedicated Pocketbase instance. The actual
+    // provisioning runs in a GitHub Action (takes 2-3 min); we flag the row
+    // so the admin UI can show "Provisioning..." until pocketbase_url populates.
+    const willProvisionPb = PB_TEMPLATES.includes(template_type);
+    const backend: "supabase" | "pocketbase" = willProvisionPb
+      ? "pocketbase"
+      : "supabase";
+
     // Insert tenant into Supabase
     const { error: insertError } = await supabase.from("tenants").insert({
       id: tenant_id,
@@ -127,6 +148,7 @@ export async function POST(request: NextRequest) {
       config,
       app_type: "template",
       brief: briefRecord,
+      backend,
     });
 
     if (insertError) {
@@ -146,9 +168,31 @@ export async function POST(request: NextRequest) {
     // Open a pull request
     const pr = await createTenantPullRequest(branch, tenant_id, template_type);
 
+    // Dispatch Pocketbase provisioning (non-fatal if GA secrets aren't set yet —
+    // admin can retry by re-running the workflow manually from the UI).
+    let pbProvisionDispatched = false;
+    if (willProvisionPb) {
+      try {
+        await triggerWorkflowDispatch("pb-provision.yml", "main", {
+          tenant: tenant_id,
+          template: template_type,
+        });
+        pbProvisionDispatched = true;
+      } catch (err) {
+        console.warn(
+          `Failed to dispatch pb-provision for ${tenant_id}:`,
+          err instanceof Error ? err.message : err,
+        );
+        // Don't fail the whole tenant-create; the tenant row still exists and
+        // Tim can retry provisioning via `gh workflow run pb-provision.yml`.
+      }
+    }
+
     return NextResponse.json({
       success: true,
       tenant_id,
+      backend,
+      pb_provision_dispatched: pbProvisionDispatched,
       pr_url: pr.url,
       pr_number: pr.number,
     });

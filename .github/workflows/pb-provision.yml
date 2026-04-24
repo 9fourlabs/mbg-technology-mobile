@@ -1,0 +1,46 @@
+name: Provision Pocketbase Instance
+
+on:
+  workflow_dispatch:
+    inputs:
+      tenant:
+        description: "Tenant ID (matches tenants.id in admin DB)"
+        required: true
+        type: string
+      template:
+        description: "Template type — drives which schema JSON gets imported"
+        required: true
+        type: choice
+        options:
+          - content
+          - directory
+          - forms
+          - loyalty
+          - booking
+          - commerce
+          - events
+
+jobs:
+  provision:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Provision Pocketbase instance
+        env:
+          FLY_TENANTS_ORG: ${{ secrets.FLY_TENANTS_ORG }}
+          FLY_TENANTS_API_TOKEN: ${{ secrets.FLY_TENANTS_API_TOKEN }}
+          PB_ADMIN_EMAIL: ${{ secrets.PB_ADMIN_EMAIL }}
+          PB_ADMIN_PASSWORD: ${{ secrets.PB_ADMIN_PASSWORD }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: npx --yes tsx scripts/provisionPocketbase.ts --tenant "${{ inputs.tenant }}" --template "${{ inputs.template }}"

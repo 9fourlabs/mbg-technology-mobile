@@ -1,0 +1,59 @@
+[
+  {
+    "id": "loyaltyrewards0",
+    "name": "loyalty_rewards",
+    "type": "base",
+    "schema": [
+      { "name": "name",        "type": "text",   "required": true },
+      { "name": "description", "type": "text" },
+      { "name": "points_cost", "type": "number", "required": true, "options": { "min": 0 } },
+      { "name": "image_url",   "type": "url" },
+      { "name": "active",      "type": "bool" },
+      { "name": "stock",       "type": "number" }
+    ],
+    "listRule":   "@request.auth.id != '' && active = true",
+    "viewRule":   "@request.auth.id != '' && active = true",
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null
+  },
+  {
+    "id": "loyaltyaccounts",
+    "name": "loyalty_accounts",
+    "type": "base",
+    "schema": [
+      { "name": "user",            "type": "relation", "required": true, "options": { "collectionId": "_pb_users_auth_", "cascadeDelete": true, "maxSelect": 1 } },
+      { "name": "points_balance",  "type": "number",   "required": true, "options": { "min": 0 } },
+      { "name": "lifetime_points", "type": "number",   "required": true, "options": { "min": 0 } },
+      { "name": "tier",            "type": "text",     "required": true }
+    ],
+    "indexes": [
+      "CREATE UNIQUE INDEX idx_loyalty_accounts_user ON loyalty_accounts (user)"
+    ],
+    "listRule":   "@request.auth.id != '' && user = @request.auth.id",
+    "viewRule":   "@request.auth.id != '' && user = @request.auth.id",
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null
+  },
+  {
+    "id": "loyaltytransact",
+    "name": "loyalty_transactions",
+    "type": "base",
+    "schema": [
+      { "name": "user",         "type": "relation", "required": true, "options": { "collectionId": "_pb_users_auth_", "cascadeDelete": true, "maxSelect": 1 } },
+      { "name": "type",         "type": "select",   "required": true, "options": { "maxSelect": 1, "values": ["earn", "redeem", "adjustment", "expire"] } },
+      { "name": "points",       "type": "number",   "required": true },
+      { "name": "description",  "type": "text" },
+      { "name": "reference_id", "type": "text" }
+    ],
+    "indexes": [
+      "CREATE INDEX idx_loyalty_transactions_user_created ON loyalty_transactions (user, created DESC)"
+    ],
+    "listRule":   "@request.auth.id != '' && user = @request.auth.id",
+    "viewRule":   "@request.auth.id != '' && user = @request.auth.id",
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null
+  }
+]

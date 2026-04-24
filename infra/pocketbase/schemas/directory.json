@@ -1,0 +1,25 @@
+[
+  {
+    "id": "directoryitems0",
+    "name": "directory_items",
+    "type": "base",
+    "schema": [
+      { "name": "name",        "type": "text",   "required": true },
+      { "name": "category_id", "type": "text" },
+      { "name": "data",        "type": "json",   "options": { "maxSize": 100000 } },
+      { "name": "image_url",   "type": "url" },
+      { "name": "latitude",    "type": "number" },
+      { "name": "longitude",   "type": "number" },
+      { "name": "active",      "type": "bool" }
+    ],
+    "indexes": [
+      "CREATE INDEX idx_directory_items_category ON directory_items (category_id)",
+      "CREATE INDEX idx_directory_items_name ON directory_items (name)"
+    ],
+    "listRule":   "active = true",
+    "viewRule":   "active = true",
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null
+  }
+]
