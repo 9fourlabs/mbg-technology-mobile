@@ -13,7 +13,16 @@
     "generate:keystore": "bash scripts/generateKeystore.sh",
     "validate:production": "tsx scripts/validateProductionReady.ts",
     "ota:preview": "tsx scripts/publishOta.ts preview",
-    "ota:production": "tsx scripts/publishOta.ts production"
+    "ota:production": "tsx scripts/publishOta.ts production",
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": { "^.+\\.tsx?$": ["ts-jest", { "isolatedModules": true }] },
+    "testMatch": ["<rootDir>/__tests__/**/*.test.ts"],
+    "testPathIgnorePatterns": ["/node_modules/", "/admin/"],
+    "modulePathIgnorePatterns": ["<rootDir>/admin/"]
   },
   "dependencies": {
     "@react-navigation/native": "^7.2.2",
@@ -33,7 +42,14 @@
     "react-native-screens": "~4.23.0"
   },
   "devDependencies": {
+    "@testing-library/jest-native": "^5.4.3",
+    "@testing-library/react-native": "^13.3.3",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.6.0",
     "@types/react": "~19.2.2",
+    "jest": "^30.3.0",
+    "jest-expo": "^55.0.16",
+    "ts-jest": "^29.4.9",
     "tsx": "^4.19.2",
     "typescript": "~5.9.2"
   },

@@ -1,0 +1,35 @@
+name: Mobile App Tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  jest:
+    name: Jest (config + theme + template + URL liveness)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install deps
+        run: npm ci --legacy-peer-deps
+
+      - name: Regenerate tenant JSON from TS sources
+        run: npm run build:tenants
+
+      - name: Run Jest
+        # URL liveness can flake on transient Unsplash / CDN hiccups.
+        # Local runs and nightly can flip SKIP_URL_LIVENESS=0 for a full
+        # external-link audit; default here keeps CI deterministic.
+        env:
+          SKIP_URL_LIVENESS: "0"
+        run: npm test -- --ci

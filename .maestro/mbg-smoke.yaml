@@ -1,0 +1,42 @@
+# MBG smoke flow — walk every tab, verify header + a card is rendered, tap a CTA.
+#
+# Run locally against a simulator with the MBG preview installed:
+#   maestro test .maestro/mbg-smoke.yaml
+#
+# Or against Appetize (paid automation API):
+#   APPETIZE_PUBLIC_KEY=<key> maestro cloud .maestro/mbg-smoke.yaml
+#
+# Expected device state: MBG preview build installed, cold-started.
+
+appId: com.mbg.mbgtechnologymobile
+
+---
+# Home tab — the tagline is "Innovate. Integrate. Elevate."
+- launchApp
+- assertVisible: "Innovate. Integrate. Elevate."
+- assertVisible: "Start the conversation"
+- assertVisible: "Elevate with modernization"
+
+# Services tab
+- tapOn: "Services"
+- assertVisible: "Our Services"
+- assertVisible: "Web Design & Management"
+
+# Plans tab
+- tapOn: "Plans"
+- assertVisible: "Ongoing Support"
+
+# Contact tab
+- tapOn: "Contact"
+- assertVisible: "Let's talk"
+
+# Account tab (member area stub — deep links to client portal login)
+- tapOn: "Account"
+- assertVisible: "Member area"
+
+# Back to Home and exercise a CTA that opens an external URL.
+# "Book a consultation" leaves the app — verify we can open it then come back.
+- tapOn: "Home"
+- tapOn: "Book a consultation"
+- back
+- assertVisible: "Innovate. Integrate. Elevate."
