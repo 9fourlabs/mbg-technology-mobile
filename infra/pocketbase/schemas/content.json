@@ -1,0 +1,43 @@
+[
+  {
+    "id": "posts_coll00001",
+    "name": "posts",
+    "type": "base",
+    "schema": [
+      { "name": "title",        "type": "text",   "required": true },
+      { "name": "slug",         "type": "text",   "required": true, "options": { "pattern": "^[a-z0-9-]+$" }, "unique": true },
+      { "name": "excerpt",      "type": "text" },
+      { "name": "body",         "type": "editor" },
+      { "name": "image_url",    "type": "url" },
+      { "name": "category_id",  "type": "text" },
+      { "name": "published",    "type": "bool" },
+      { "name": "published_at", "type": "date" }
+    ],
+    "indexes": [
+      "CREATE INDEX idx_posts_category ON posts (category_id)",
+      "CREATE INDEX idx_posts_published ON posts (published, published_at DESC)"
+    ],
+    "listRule":   "published = true",
+    "viewRule":   "published = true",
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null
+  },
+  {
+    "id": "bookmarks_col01",
+    "name": "bookmarks",
+    "type": "base",
+    "schema": [
+      { "name": "user", "type": "relation", "required": true, "options": { "collectionId": "_pb_users_auth_", "cascadeDelete": true, "maxSelect": 1 } },
+      { "name": "post", "type": "relation", "required": true, "options": { "collectionId": "posts_coll00001", "cascadeDelete": true, "maxSelect": 1 } }
+    ],
+    "indexes": [
+      "CREATE UNIQUE INDEX idx_bookmarks_user_post ON bookmarks (user, post)"
+    ],
+    "listRule":   "@request.auth.id != '' && user = @request.auth.id",
+    "viewRule":   "@request.auth.id != '' && user = @request.auth.id",
+    "createRule": "@request.auth.id != '' && user = @request.auth.id",
+    "updateRule": "@request.auth.id != '' && user = @request.auth.id",
+    "deleteRule": "@request.auth.id != '' && user = @request.auth.id"
+  }
+]

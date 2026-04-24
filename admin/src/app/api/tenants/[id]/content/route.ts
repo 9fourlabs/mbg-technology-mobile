@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createTenantClient } from "@/lib/supabase/tenant";
 import { getProjectApiKeys } from "@/lib/supabase/management";
+import { PocketbaseClient } from "@/lib/pocketbase/client";
 import { getUserContext } from "@/lib/auth/user-context";
 
 // ── Allow-list per template type ────────────────────────────────────────────
@@ -48,23 +49,70 @@ async function authorize(tenantId: string): Promise<NextResponse | null> {
   return null;
 }
 
-async function getTenantClient(tenantId: string) {
+type SupabaseBackend = {
+  kind: "supabase";
+  client: Awaited<ReturnType<typeof createTenantClient>>;
+  templateType: string;
+};
+
+type PocketbaseBackend = {
+  kind: "pocketbase";
+  client: PocketbaseClient;
+  templateType: string;
+};
+
+type TenantBackend = SupabaseBackend | PocketbaseBackend;
+
+/**
+ * Returns a client for reading/writing the tenant's per-tenant data,
+ * either from their Supabase project OR their dedicated Pocketbase instance,
+ * based on the `backend` column on the tenants row.
+ */
+async function getTenantBackend(tenantId: string): Promise<TenantBackend> {
   const supabase = await createClient();
   const { data: tenant } = await supabase
     .from("tenants")
-    .select("template_type, supabase_project_id, supabase_url")
+    .select(
+      "template_type, backend, supabase_project_id, supabase_url, pocketbase_url",
+    )
     .eq("id", tenantId)
     .single();
 
-  if (!tenant?.supabase_project_id) {
-    throw new Error("Tenant has no Supabase project");
+  if (!tenant) throw new Error("Tenant not found");
+
+  if (tenant.backend === "pocketbase") {
+    if (!tenant.pocketbase_url) {
+      throw new Error(
+        "Tenant backend is 'pocketbase' but pocketbase_url is not set",
+      );
+    }
+    const adminEmail = process.env.PB_ADMIN_EMAIL;
+    const adminPassword = process.env.PB_ADMIN_PASSWORD;
+    if (!adminEmail || !adminPassword) {
+      throw new Error(
+        "PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set to talk to tenant PB instances",
+      );
+    }
+    return {
+      kind: "pocketbase",
+      client: new PocketbaseClient({
+        url: tenant.pocketbase_url,
+        adminEmail,
+        adminPassword,
+      }),
+      templateType: tenant.template_type,
+    };
   }
 
+  // Default: Supabase backend
+  if (!tenant.supabase_project_id) {
+    throw new Error("Tenant has no Supabase project");
+  }
   const { serviceRoleKey } = await getProjectApiKeys(
     tenant.supabase_project_id,
   );
   const client = createTenantClient(tenant.supabase_url!, serviceRoleKey);
-  return { client, templateType: tenant.template_type };
+  return { kind: "supabase", client, templateType: tenant.template_type };
 }
 
 function validateTable(
@@ -79,6 +127,19 @@ function validateTable(
   return null; // valid
 }
 
+/**
+ * PB records carry system fields `created` / `updated`. Alias them as
+ * `created_at` / `updated_at` so the admin UI (which assumes Supabase-shaped
+ * rows) doesn't need to know which backend it's talking to.
+ */
+function pbToRow(record: Record<string, unknown>): Record<string, unknown> {
+  return {
+    ...record,
+    created_at: record.created,
+    updated_at: record.updated,
+  };
+}
+
 // ── Route params type ───────────────────────────────────────────────────────
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -89,12 +150,12 @@ export async function GET(request: NextRequest, context: RouteContext) {
     const denied = await authorize(tenantId);
     if (denied) return denied;
 
-    const { client, templateType } = await getTenantClient(tenantId);
+    const backend = await getTenantBackend(tenantId);
 
     const searchParams = request.nextUrl.searchParams;
     const table = searchParams.get("table");
 
-    const validationError = validateTable(templateType, table);
+    const validationError = validateTable(backend.templateType, table);
     if (validationError) {
       return NextResponse.json({ error: validationError }, { status: 403 });
     }
@@ -107,19 +168,37 @@ export async function GET(request: NextRequest, context: RouteContext) {
     const orderBy = searchParams.get("orderBy") ?? "created_at";
     const ascending = searchParams.get("ascending") === "true";
 
+    if (backend.kind === "pocketbase") {
+      // PB uses its own system fields `created` / `updated` — translate the
+      // admin UI's default of `created_at` so ordering still works.
+      const pbSort = `${ascending ? "+" : "-"}${
+        orderBy === "created_at"
+          ? "created"
+          : orderBy === "updated_at"
+          ? "updated"
+          : orderBy
+      }`;
+      const result = await backend.client.list(table!, {
+        page,
+        perPage: pageSize,
+        sort: pbSort,
+      });
+      return NextResponse.json({
+        data: result.items.map((r) => pbToRow(r as Record<string, unknown>)),
+        count: result.totalItems,
+      });
+    }
+
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
-
-    const { data, error, count } = await client
+    const { data, error, count } = await backend.client
       .from(table!)
       .select("*", { count: "exact" })
       .order(orderBy, { ascending })
       .range(from, to);
-
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-
     return NextResponse.json({ data, count });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Internal error";
@@ -134,11 +213,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const denied = await authorize(tenantId);
     if (denied) return denied;
 
-    const { client, templateType } = await getTenantClient(tenantId);
+    const backend = await getTenantBackend(tenantId);
 
     const table = request.nextUrl.searchParams.get("table");
 
-    const validationError = validateTable(templateType, table);
+    const validationError = validateTable(backend.templateType, table);
     if (validationError) {
       return NextResponse.json({ error: validationError }, { status: 403 });
     }
@@ -152,16 +231,22 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const body = await request.json();
 
-    const { data, error } = await client
+    if (backend.kind === "pocketbase") {
+      const record = await backend.client.create(table!, body);
+      return NextResponse.json(
+        { data: pbToRow(record as Record<string, unknown>) },
+        { status: 201 },
+      );
+    }
+
+    const { data, error } = await backend.client
       .from(table!)
       .insert(body)
       .select()
       .single();
-
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-
     return NextResponse.json({ data }, { status: 201 });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Internal error";
@@ -176,13 +261,13 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     const denied = await authorize(tenantId);
     if (denied) return denied;
 
-    const { client, templateType } = await getTenantClient(tenantId);
+    const backend = await getTenantBackend(tenantId);
 
     const searchParams = request.nextUrl.searchParams;
     const table = searchParams.get("table");
     const rowId = searchParams.get("rowId");
 
-    const validationError = validateTable(templateType, table);
+    const validationError = validateTable(backend.templateType, table);
     if (validationError) {
       return NextResponse.json({ error: validationError }, { status: 403 });
     }
@@ -203,17 +288,22 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 
     const body = await request.json();
 
-    const { data, error } = await client
+    if (backend.kind === "pocketbase") {
+      const record = await backend.client.update(table!, rowId, body);
+      return NextResponse.json({
+        data: pbToRow(record as Record<string, unknown>),
+      });
+    }
+
+    const { data, error } = await backend.client
       .from(table!)
       .update(body)
       .eq("id", rowId)
       .select()
       .single();
-
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-
     return NextResponse.json({ data });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Internal error";
@@ -228,13 +318,13 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     const denied = await authorize(tenantId);
     if (denied) return denied;
 
-    const { client, templateType } = await getTenantClient(tenantId);
+    const backend = await getTenantBackend(tenantId);
 
     const searchParams = request.nextUrl.searchParams;
     const table = searchParams.get("table");
     const rowId = searchParams.get("rowId");
 
-    const validationError = validateTable(templateType, table);
+    const validationError = validateTable(backend.templateType, table);
     if (validationError) {
       return NextResponse.json({ error: validationError }, { status: 403 });
     }
@@ -253,12 +343,18 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       );
     }
 
-    const { error } = await client.from(table!).delete().eq("id", rowId);
+    if (backend.kind === "pocketbase") {
+      await backend.client.remove(table!, rowId);
+      return NextResponse.json({ success: true });
+    }
 
+    const { error } = await backend.client
+      .from(table!)
+      .delete()
+      .eq("id", rowId);
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-
     return NextResponse.json({ success: true });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Internal error";
