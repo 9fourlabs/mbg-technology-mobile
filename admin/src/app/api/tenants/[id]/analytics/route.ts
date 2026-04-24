@@ -1,5 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getUserContext } from "@/lib/auth/user-context";
+
+async function authorize(tenantId: string): Promise<NextResponse | null> {
+  const ctx = await getUserContext();
+  if (!ctx) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (ctx.role !== "admin" && !ctx.tenantIds.includes(tenantId)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  return null;
+}
 
 export async function GET(
   request: NextRequest,
@@ -8,11 +20,10 @@ export async function GET(
   try {
     const { id: tenantId } = await params;
 
+    const denied = await authorize(tenantId);
+    if (denied) return denied;
+
     const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     const range = request.nextUrl.searchParams.get("range") ?? "7d";
     const daysBack = range === "30d" ? 30 : range === "90d" ? 90 : 7;

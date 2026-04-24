@@ -3,7 +3,19 @@ import { createClient } from "@/lib/supabase/server";
 import { triggerWorkflowDispatch, getLatestWorkflowRun, commitTenantConfigToMain } from "@/lib/github";
 import { configToTypeScript } from "@/lib/config-generator";
 import { hashConfig } from "@/lib/config-hash";
+import { getUserContext } from "@/lib/auth/user-context";
 import type { AppTemplate } from "@/lib/types";
+
+async function authorize(tenantId: string): Promise<NextResponse | null> {
+  const ctx = await getUserContext();
+  if (!ctx) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (ctx.role !== "admin" && !ctx.tenantIds.includes(tenantId)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  return null;
+}
 
 export async function POST(
   request: NextRequest,
@@ -12,16 +24,11 @@ export async function POST(
   try {
     const { id: tenantId } = await params;
 
-    // Authenticate the user
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    // Authenticate + authorize against the target tenant.
+    const denied = await authorize(tenantId);
+    if (denied) return denied;
 
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const supabase = await createClient();
 
     // Validate request body
     const body = await request.json();
