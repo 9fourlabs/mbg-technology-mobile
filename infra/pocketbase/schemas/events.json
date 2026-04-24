@@ -1,0 +1,27 @@
+[
+  {
+    "id": "events000000000",
+    "name": "events",
+    "type": "base",
+    "schema": [
+      { "name": "title",       "type": "text",   "required": true },
+      { "name": "description", "type": "text" },
+      { "name": "starts_at",   "type": "date",   "required": true },
+      { "name": "ends_at",     "type": "date" },
+      { "name": "location",    "type": "text" },
+      { "name": "image_url",   "type": "url" },
+      { "name": "rsvp_url",    "type": "url" },
+      { "name": "category",    "type": "text" },
+      { "name": "published",   "type": "bool" }
+    ],
+    "indexes": [
+      "CREATE INDEX idx_events_starts_at ON events (starts_at)",
+      "CREATE INDEX idx_events_published_starts ON events (published, starts_at)"
+    ],
+    "listRule":   "published = true",
+    "viewRule":   "published = true",
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null
+  }
+]

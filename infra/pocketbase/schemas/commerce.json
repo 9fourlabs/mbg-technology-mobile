@@ -1,0 +1,81 @@
+[
+  {
+    "id": "categories00000",
+    "name": "categories",
+    "type": "base",
+    "schema": [
+      { "name": "name",       "type": "text",   "required": true },
+      { "name": "slug",       "type": "text",   "required": true, "options": { "pattern": "^[a-z0-9-]+$" }, "unique": true },
+      { "name": "image_url",  "type": "url" },
+      { "name": "sort_order", "type": "number" }
+    ],
+    "listRule":   "@request.auth.id != ''",
+    "viewRule":   "@request.auth.id != ''",
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null
+  },
+  {
+    "id": "products0000000",
+    "name": "products",
+    "type": "base",
+    "schema": [
+      { "name": "name",        "type": "text",   "required": true },
+      { "name": "description", "type": "text" },
+      { "name": "price",       "type": "number", "required": true, "options": { "min": 0 } },
+      { "name": "image_url",   "type": "url" },
+      { "name": "category",    "type": "relation", "options": { "collectionId": "categories00000", "cascadeDelete": false, "maxSelect": 1 } },
+      { "name": "active",      "type": "bool" },
+      { "name": "stock",       "type": "number", "options": { "min": 0 } }
+    ],
+    "indexes": [
+      "CREATE INDEX idx_products_category ON products (category)"
+    ],
+    "listRule":   "@request.auth.id != '' && active = true",
+    "viewRule":   "@request.auth.id != '' && active = true",
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null
+  },
+  {
+    "id": "orders000000000",
+    "name": "orders",
+    "type": "base",
+    "schema": [
+      { "name": "user",                     "type": "relation", "required": true, "options": { "collectionId": "_pb_users_auth_", "cascadeDelete": true, "maxSelect": 1 } },
+      { "name": "status",                   "type": "select",   "required": true, "options": { "maxSelect": 1, "values": ["pending", "paid", "processing", "shipped", "delivered", "cancelled", "refunded"] } },
+      { "name": "subtotal",                 "type": "number",   "required": true, "options": { "min": 0 } },
+      { "name": "tax",                      "type": "number",   "required": true, "options": { "min": 0 } },
+      { "name": "total",                    "type": "number",   "required": true, "options": { "min": 0 } },
+      { "name": "stripe_payment_intent_id", "type": "text" },
+      { "name": "shipping_address",         "type": "json",     "options": { "maxSize": 10000 } }
+    ],
+    "indexes": [
+      "CREATE INDEX idx_orders_user_created ON orders (user, created DESC)"
+    ],
+    "listRule":   "@request.auth.id != '' && user = @request.auth.id",
+    "viewRule":   "@request.auth.id != '' && user = @request.auth.id",
+    "createRule": "@request.auth.id != '' && user = @request.auth.id",
+    "updateRule": "@request.auth.id != '' && user = @request.auth.id",
+    "deleteRule": "@request.auth.id != '' && user = @request.auth.id"
+  },
+  {
+    "id": "orderitems00000",
+    "name": "order_items",
+    "type": "base",
+    "schema": [
+      { "name": "order",      "type": "relation", "required": true, "options": { "collectionId": "orders000000000", "cascadeDelete": true,  "maxSelect": 1 } },
+      { "name": "product",    "type": "relation", "required": true, "options": { "collectionId": "products0000000", "cascadeDelete": false, "maxSelect": 1 } },
+      { "name": "quantity",   "type": "number",   "required": true, "options": { "min": 1 } },
+      { "name": "unit_price", "type": "number",   "required": true, "options": { "min": 0 } }
+    ],
+    "indexes": [
+      "CREATE INDEX idx_order_items_order ON order_items (order)"
+    ],
+    "listRule":   "@request.auth.id != '' && order.user = @request.auth.id",
+    "viewRule":   "@request.auth.id != '' && order.user = @request.auth.id",
+    "createRule": "@request.auth.id != '' && order.user = @request.auth.id",
+    "updateRule": null,
+    "deleteRule": null
+  }
+]
