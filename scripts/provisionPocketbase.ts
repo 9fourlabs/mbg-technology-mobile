@@ -149,14 +149,16 @@ async function main() {
   writeFileSync(tomlPath, rendered, "utf-8");
   console.log(`  ✓ Rendered fly.toml → ${tomlPath}`);
 
+  // Use --access-token on every flyctl call. Env-var resolution in GA
+  // runners is unreliable (flyctl secrets set rejects FLY_API_TOKEN from env
+  // on some setups); the CLI flag always works.
+  const tokenArg = `--access-token "${flyToken}"`;
+
   // 2. Create the Fly app in the tenant org (idempotent).
   console.log("▶ Creating Fly app...");
   let exists = false;
   try {
-    execSync(`flyctl apps show ${appName}`, {
-      env: { ...process.env, FLY_API_TOKEN: flyToken },
-      stdio: "pipe",
-    });
+    execSync(`flyctl apps show ${appName} ${tokenArg}`, { stdio: "pipe" });
     exists = true;
   } catch {
     // `apps show` exits non-zero when the app doesn't exist — that's fine.
@@ -164,16 +166,13 @@ async function main() {
   if (exists) {
     console.log(`  ○ App ${appName} already exists — reusing`);
   } else {
-    sh(`flyctl apps create ${appName} --org ${flyOrg}`, {
-      FLY_API_TOKEN: flyToken,
-    });
+    sh(`flyctl apps create ${appName} --org ${flyOrg} ${tokenArg}`);
   }
 
   // 3. Set the admin password secret BEFORE deploy so PB picks it up on boot.
   console.log("▶ Setting PB_ADMIN_PASSWORD secret...");
   sh(
-    `flyctl secrets set PB_ADMIN_PASSWORD="${pbAdminPassword}" --app ${appName} --stage`,
-    { FLY_API_TOKEN: flyToken }
+    `flyctl secrets set PB_ADMIN_PASSWORD="${pbAdminPassword}" --app ${appName} --stage ${tokenArg}`,
   );
 
   // 4. Deploy — builds the Dockerfile, creates the volume on first deploy.
@@ -182,8 +181,8 @@ async function main() {
   console.log("▶ Deploying Pocketbase instance (builds + starts)...");
   const infraDir = path.resolve("infra/pocketbase");
   sh(
-    `flyctl deploy --remote-only --app ${appName} --config ${tomlPath}`,
-    { FLY_API_TOKEN: flyToken },
+    `flyctl deploy --remote-only --app ${appName} --config ${tomlPath} ${tokenArg}`,
+    {},
     infraDir,
   );
 
