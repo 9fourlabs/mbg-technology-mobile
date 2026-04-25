@@ -92,6 +92,19 @@ jobs:
           [ -n "$IOS_PID" ] && wait $IOS_PID
           [ -n "$ANDROID_PID" ] && wait $ANDROID_PID
 
+      - name: Materialize Google Play service account JSON
+        if: ${{ inputs.platform == 'android' || inputs.platform == 'both' }}
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          mkdir -p credentials
+          # eas.json's submit.production.android.serviceAccountKeyPath
+          # points at this file. Gitignored locally; injected from a GH
+          # secret at CI runtime; never committed.
+          printf '%s' "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > credentials/google-play-service-account.json
+          # Sanity check — must be valid JSON with a client_email field.
+          node -e "const j=require('./credentials/google-play-service-account.json'); if(!j.client_email) process.exit(1)"
+
       - name: Submit to stores
         env:
           APP_TENANT: ${{ inputs.tenant }}
@@ -113,8 +126,8 @@ jobs:
           fi
 
           if [ "$PLATFORM" = "android" ] || [ "$PLATFORM" = "both" ]; then
-            # Play service account JSON is uploaded to each tenant's Expo
-            # project via `eas credentials` — EAS pulls it at submit time.
+            # eas.json points at credentials/google-play-service-account.json
+            # — materialized in the previous step from GH secret.
             eas submit --profile production --platform android --latest --non-interactive \
               --project-id "${{ steps.project.outputs.project_id }}"
           fi

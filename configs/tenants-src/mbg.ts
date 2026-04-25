@@ -45,6 +45,12 @@ export const mbgTemplate: InformationalTemplate = {
     adaptiveIconBackgroundColor: "#d4af37",
     splashBackgroundColor: "#000000",
     pushEnabled: false,
+    // app.config.ts derives this from NATIVE_ID_MODE=tenant; setting
+    // explicitly matches what Play Console will need at registration.
+    androidPackageName: "com.mbg.mbgtechnologymobile",
+    // iosAscAppId is intentionally left unset — it gets populated when
+    // Apple Dev D-U-N-S enrollment finalizes and the app is registered
+    // in App Store Connect (admin UI → App Store → Store Submission).
   },
   tabs: [
     {
