@@ -129,6 +129,40 @@ backends coexist — the mobile app and admin portal route based on the flag.
 The only irreversible step is Phase 4's "remove Supabase tenant code paths,"
 which happens after every tenant is successfully on PB and stable.
 
+## Debug notes (2026-04-24): why provisioning took many attempts
+
+Getting the GA workflow to provision a PB instance end-to-end surfaced
+four separate bugs, each mimicking the others. Documenting so future
+attempts don't repeat:
+
+1. **`flyctl apps show <name>` isn't a valid subcommand.** The script
+   was using it as an existence check, and flyctl exited 0 with help
+   text, so the script thought every app already existed and skipped
+   create. Fixed: use `flyctl apps list -o <org> --json` + name grep.
+
+2. **`FLY_TENANTS_API_TOKEN` GH secret was 1 char.** Set earlier via
+   `flyctl auth token | head -1 | gh secret set ... --body -` — pipe
+   corruption dropped all but a newline. GA log masked the whole value
+   as `***` so the bug was invisible until I added a `TOKEN_LENGTH`
+   debug step. Fix: re-set from a temp file, not a pipe.
+
+3. **`FLY_TENANTS_ORG` GH secret was just `-`.** Same pattern. Visible
+   in GA logs as `flyctl orgs list` showing `9four***labs` where `-`
+   was being masked as `***` — because "-" was literally the full
+   secret value. Fix: same — re-set from file.
+
+4. **`PB_ADMIN_PASSWORD` GH secret was empty.** Same pattern. Visible
+   only by SSH'ing into the PB instance and reading `/proc/<pid>/environ`
+   where `PB_ADMIN_PASSWORD=` (empty). Fix: re-set from file.
+
+5. **Entrypoint `admin create` ran before `pocketbase serve`, so the
+   DB didn't exist yet.** `2>/dev/null` was swallowing the resulting
+   error. Fix: start serve in background, wait for `/api/health`, then
+   run admin create.
+
+Lesson: always set GH secrets from files, not pipes — see
+`feedback_secret_hygiene.md` in memory.
+
 ## Open questions
 
 1. **PB admin token storage** — we need one per instance. Store in admin DB
