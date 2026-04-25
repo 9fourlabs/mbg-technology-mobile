@@ -49,10 +49,14 @@ jobs:
           flyctl orgs list 2>&1 || echo "(orgs list failed)"
 
       - name: Provision Pocketbase instance
+        # Email comes from admin/src/lib/pocketbase/constants.ts (project
+        # constant, single source of truth) — NOT a GH secret. The
+        # PB_ADMIN_EMAIL secret was previously read here but turned out
+        # corrupted (1 char from a pipe-set), causing a script-vs-container
+        # email mismatch. Removed to eliminate that failure mode.
         env:
           FLY_TENANTS_ORG: ${{ secrets.FLY_TENANTS_ORG }}
           FLY_TENANTS_API_TOKEN: ${{ secrets.FLY_TENANTS_API_TOKEN }}
-          PB_ADMIN_EMAIL: ${{ secrets.PB_ADMIN_EMAIL }}
           PB_ADMIN_PASSWORD: ${{ secrets.PB_ADMIN_PASSWORD }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
