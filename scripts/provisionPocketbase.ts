@@ -76,7 +76,16 @@ function requireEnv(name: string): string {
     console.error(`Missing required env var: ${name}`);
     process.exit(1);
   }
-  return v;
+  // Trim trailing whitespace/CR — defensive against GH-secret-from-pipe bugs
+  // (see feedback_secret_hygiene.md). Log a warning if trimming changes the
+  // value so future debug sessions know the secret is malformed in storage.
+  const trimmed = v.replace(/\s+$/u, "");
+  if (trimmed.length !== v.length) {
+    console.warn(
+      `⚠ env var ${name} had ${v.length - trimmed.length} trailing whitespace char(s) — trimmed for use; consider re-setting the secret from a file`,
+    );
+  }
+  return trimmed;
 }
 
 function renderTomlTemplate(tenant: string, region: string): string {
@@ -115,7 +124,57 @@ async function waitForHealth(url: string, timeoutMs = 60_000): Promise<void> {
   throw new Error(`PB instance at ${url} did not become healthy in ${timeoutMs}ms`);
 }
 
-async function seedSchema(url: string, template: Template): Promise<void> {
+/**
+ * Wait for the entrypoint's `pocketbase admin create` to finish.
+ *
+ * /api/health goes 200 the moment `pocketbase serve` binds the port — which
+ * happens BEFORE the entrypoint's `admin create` runs (the entrypoint waits
+ * on its own local health first). So there's a window where the instance
+ * is "healthy" but no admin record exists yet, and adminLogin returns 400.
+ *
+ * Retry with backoff until adminLogin succeeds or we time out.
+ */
+async function waitForAdminAuth(
+  url: string,
+  email: string,
+  password: string,
+  timeoutMs = 60_000,
+): Promise<void> {
+  const { PocketbaseClient, PocketbaseError } = await import(
+    "../admin/src/lib/pocketbase/client"
+  );
+  const start = Date.now();
+  let lastErr: unknown;
+  let attempts = 0;
+  while (Date.now() - start < timeoutMs) {
+    attempts++;
+    const client = new PocketbaseClient({ url, adminEmail: email, adminPassword: password });
+    try {
+      await client.adminLogin();
+      console.log(`  ✓ adminLogin succeeded on attempt ${attempts}`);
+      return;
+    } catch (err) {
+      lastErr = err;
+      // Only retry on "no admin yet" — any other error is permanent.
+      const isTransient =
+        err instanceof PocketbaseError &&
+        (err.status === 400 || err.status === 404);
+      if (!isTransient) throw err;
+    }
+    await new Promise((r) => setTimeout(r, 2000));
+  }
+  throw new Error(
+    `adminLogin did not succeed in ${timeoutMs}ms (${attempts} attempts). ` +
+      `Last error: ${lastErr instanceof Error ? lastErr.message : String(lastErr)}`,
+  );
+}
+
+async function seedSchema(
+  url: string,
+  template: Template,
+  email: string,
+  password: string,
+): Promise<void> {
   const schemaPath = path.resolve(
     `infra/pocketbase/schemas/${template}.json`
   );
@@ -126,8 +185,8 @@ async function seedSchema(url: string, template: Template): Promise<void> {
   );
   const client = new PocketbaseClient({
     url,
-    adminEmail: requireEnv("PB_ADMIN_EMAIL"),
-    adminPassword: requireEnv("PB_ADMIN_PASSWORD"),
+    adminEmail: email,
+    adminPassword: password,
   });
   await client.adminLogin();
   await client.importCollections(collections);
@@ -138,10 +197,12 @@ async function main() {
   const appName = `mbg-pb-${tenant}`;
   const flyOrg = requireEnv("FLY_TENANTS_ORG");
   const flyToken = requireEnv("FLY_TENANTS_API_TOKEN");
+  const pbAdminEmail = requireEnv("PB_ADMIN_EMAIL");
   const pbAdminPassword = requireEnv("PB_ADMIN_PASSWORD");
 
   console.log(`▶ Provisioning Pocketbase for tenant "${tenant}" (${template})`);
   console.log(`  Fly org: ${flyOrg}  app: ${appName}  region: ${region}`);
+  console.log(`  PB admin email length: ${pbAdminEmail.length}, password length: ${pbAdminPassword.length}`);
 
   // 1. Write a transient fly.toml with tenant substitutions.
   const rendered = renderTomlTemplate(tenant, region);
@@ -193,14 +254,21 @@ async function main() {
     infraDir,
   );
 
-  // 5. Wait for /api/health, then import the schema.
+  // 5. Wait for /api/health, then for admin bootstrap, then import schema.
+  //    /api/health responds the moment `pocketbase serve` binds the port,
+  //    but the entrypoint runs `admin create` AFTER its own local health
+  //    wait — so there's a window where the instance is "live" but no admin
+  //    exists. waitForAdminAuth bridges that race.
   const pbUrl = `https://${appName}.fly.dev`;
   console.log(`▶ Waiting for ${pbUrl}/api/health ...`);
   await waitForHealth(pbUrl);
   console.log(`  ✓ Instance is live`);
 
+  console.log(`▶ Waiting for admin bootstrap (entrypoint admin create)...`);
+  await waitForAdminAuth(pbUrl, pbAdminEmail, pbAdminPassword);
+
   console.log(`▶ Seeding "${template}" schema...`);
-  await seedSchema(pbUrl, template);
+  await seedSchema(pbUrl, template, pbAdminEmail, pbAdminPassword);
   console.log(`  ✓ Collections imported`);
 
   // 6. Update admin DB tenant row via PostgREST (dep-free).

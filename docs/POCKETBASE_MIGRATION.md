@@ -160,6 +160,19 @@ attempts don't repeat:
    error. Fix: start serve in background, wait for `/api/health`, then
    run admin create.
 
+6. **Race between `/api/health` and `admin create` (2026-04-25).** The
+   "serve first, then admin create" fix from #5 introduced a new race:
+   the script's external `/api/health` poll responded 200 the moment
+   `pocketbase serve` bound the port (sub-second), but the entrypoint's
+   `pocketbase admin create` only ran AFTER its own *local* /api/health
+   wait. So `seedSchema` would call `auth-with-password` ~90 ms after
+   external health came up, before any admin record existed → HTTP 400.
+   Fix: `provisionPocketbase.ts` now has a `waitForAdminAuth()` helper
+   that retries the auth call for 60 s with 2 s backoff, bridging the
+   race regardless of when the entrypoint finishes its bootstrap. Also
+   added defensive env-var trimming + clearer "ADMIN BOOTSTRAP COMPLETE"
+   log line in the entrypoint for future Fly-log diagnosis.
+
 Lesson: always set GH secrets from files, not pipes — see
 `feedback_secret_hygiene.md` in memory.
 

@@ -30,14 +30,14 @@ Picking up from 2026-04-23 ("demo-ready"), this session moved the platform to **
 4. **Security hardening** — 4 admin API routes that previously skipped tenant access checks now call `requireTenantAccess(tenantId)`: `save-config`, `trigger-build`, `version`, `analytics`. Migration `022_security_rls.sql` adds defense-in-depth: enables RLS on `push_tokens` (was off entirely from migration 010!) and replaces the `USING (true)` allow-all on `analytics_events` with a tenant-scoped policy. Service role still bypasses RLS for mobile ingest.
 5. **Mobile app test suite** — 33 Jest tests (config shape, theme math, template resolution, CTA + image URL liveness against the live network) at [`__tests__/`](__tests__/). Plus a [Maestro smoke flow](.maestro/mbg-smoke.yaml) walking all 5 MBG tabs + a CTA. CI: [.github/workflows/test-mobile.yml](.github/workflows/test-mobile.yml) — green on first run.
 6. **Pending-changes indicator** — admin config editor + tenant list + builds page now show "unpublished changes" badges when the current draft hash differs from what last shipped. Migration `019_build_config_hash.sql` + new `admin/src/lib/config-hash.ts` (isomorphic SHA-256 over canonicalized JSON).
-7. **Pocketbase migration started** (Phases 0-2 + 1c-mobile shipped — see [docs/POCKETBASE_MIGRATION.md](docs/POCKETBASE_MIGRATION.md) for the full 4-phase plan). Pilot PB instance live at `mbg-pb-mbg.fly.dev` in the new **MBG Fly org** (slug `mbg-989`). Tenant-create flow now defaults to `backend='pocketbase'` for data-template tenants and dispatches a provision workflow. **`scripts/provisionPocketbase.ts` works end-to-end locally**; the GA `pb-provision.yml` workflow has a final admin-password mismatch bug (entrypoint creates admin OK but the password baked in doesn't match what the script then auths with — root cause unclear, parked).
+7. **Pocketbase migration started** (Phases 0-2 + 1c-mobile shipped — see [docs/POCKETBASE_MIGRATION.md](docs/POCKETBASE_MIGRATION.md) for the full 4-phase plan). Pilot PB instance live at `mbg-pb-mbg.fly.dev` in the new **MBG Fly org** (slug `mbg-989`). Tenant-create flow now defaults to `backend='pocketbase'` for data-template tenants and dispatches a provision workflow. `scripts/provisionPocketbase.ts` works end-to-end both locally and from GA — the previously "parked" admin-password mismatch was a **race**, not a password issue: `/api/health` responded the moment `pocketbase serve` bound the port, but the entrypoint runs `pocketbase admin create` AFTER its own local health-wait, so the script auth'd before the admin record was written. Fix: `waitForAdminAuth()` retries `/api/admins/auth-with-password` for 60 s with 2 s backoff (plus defensive env-var trimming and clearer entrypoint error logging).
 8. **Google Play submit path** — Play SA JSON is now wired into `eas.json` (`submit.production.android.serviceAccountKeyPath`), gitignored locally, materialized at submit time from `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` GH secret. `androidPackageName: "com.mbg.mbgtechnologymobile"` set in mbg config. iOS half remains gated on Apple Dev approval.
+9. **Per-tenant OTA channel isolation shipped** — `eas-preview.yml` now `jq`-transforms `eas.json` at workflow time so each preview build has `channel="preview-<tenant>"`. `publishOta.ts preview` already targets branch `preview-<tenant>`, so OTAs land on the right tenant. Unblocks onboarding a 2nd preview tenant without cross-tenant update bleed.
 
 ### Still blocked
 
 - **Apple Developer** 1P item is empty — D-U-N-S enrollment is still pending Apple. When approved: ASC API key, APNs push key, provisioning profile, register MBG in App Store Connect, populate `appStore.iosAscAppId` via the admin UI.
 - **Play Console listing** — to actually `eas submit --platform android`, Tim needs to register `com.mbg.mbgtechnologymobile` in Play Console, complete the listing (icon, screenshots, privacy URL, content rating).
-- **PB GA provisioning admin-password bug** — last 5% of the PB migration automation. Local script works fine; only the GA path stamps the wrong password. Worth one fresh debug session next time someone needs hands-off provisioning.
 
 ---
 
@@ -371,7 +371,7 @@ One nullability error at `src/hooks/useAnalytics.ts:24` predates the 2026-04-18 
    └──────────────────┘
 ```
 
-- **Channels for OTA**: `preview` (single shared channel today — per-tenant isolation is a ROADMAP item), `production` (per-tenant Expo project → per-project channel).
+- **Channels for OTA**: `preview-<tenant>` per-tenant — `eas-preview.yml` `jq`-transforms `eas.json` at workflow time so each preview build listens on its own EAS Update channel; `publishOta.ts preview` targets the matching branch. `production` is per-tenant Expo project → per-project channel.
 - **Native ID modes**: preview Android uses tenant-isolated package via `NATIVE_ID_MODE_ANDROID=tenant`; preview iOS stays shared (provisioning profile constraint); production uses per-tenant on both platforms.
 - **Auth**: admin DB is the single auth surface. Three roles:
   - `app_metadata.role = "admin"` in JWT → MBG admin (fast path).

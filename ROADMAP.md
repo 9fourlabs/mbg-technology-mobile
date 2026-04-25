@@ -20,21 +20,6 @@ Living list of planned enhancements we've consciously deferred, with the reason 
 
 ## Build pipeline hardening
 
-### Per-tenant OTA channel isolation for preview builds
-
-**What:** Preview builds currently share the channel `"preview"` (from `eas.json`'s preview profile). This was previously overridden per-tenant via `--channel "preview-<tenant>"` on the `eas build` CLI, but that flag was removed in current eas-cli — and the field in `eas.json` doesn't support env-var interpolation. So right now, a `publishOta.ts preview --tenant mbg` push to branch `preview-mbg` would NOT reach MBG preview builds (they listen on channel `preview`, not `preview-mbg`).
-
-**Impact today:** Low — only one tenant (MBG) currently has a preview build. Everything lands on the same `preview` channel, which is fine in single-tenant mode.
-
-**Impact once we have 2+ clients:** Client A's preview OTA would propagate to Client B's preview app, since they share the channel. Not acceptable.
-
-**Fix options:**
-- Generate a per-tenant `eas.json` on the fly in the EAS workflow before `eas build` runs (a short `jq` transform).
-- Define per-tenant profiles in `eas.json` (`preview-mbg`, `preview-acme-dental`...) — scales poorly.
-- Align the update-side: have `publishOta.ts preview` target branch `preview` (single branch) and accept no cross-tenant isolation for preview.
-
-**Trigger to revisit:** Before we onboard a second paying client with active preview cycles.
-
 ### GitHub Actions should fail when its dispatched EAS workflow fails
 
 **What:** Today, `.github/workflows/eas-preview.yml` calls `eas workflow:run ...` to fire an EAS workflow, then polls `eas build:list` every 30s for up to 20 minutes looking for a new FINISHED build. If the EAS workflow fails fast (e.g., the `eas-cli missing` bug we just fixed — 25s from dispatch to failure), the poll loop doesn't detect the failure. It times out, the GitHub Actions job still exits green, and subsequent logic can pick up a stale prior build and link it as the "new" one — exactly how the April 11 Bob's Burgers APK got linked to MBG in Appetize during this session. See commit `c48d566` context for the diagnosis.
