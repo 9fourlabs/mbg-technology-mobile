@@ -48,7 +48,12 @@ export async function uploadToAppetize(
       url: apkUrl,
       platform,
       note,
-      timeout: 300, // 5-minute session timeout
+      // 30-minute session timeout. Appetize only accepts specific
+      // values (30/60/90/120/180/300/600/1800/3600/7200). 1800s is the
+      // sweet spot for a thorough client click-through without burning
+      // idle minutes if the tab is left open. Free tier max is 300s;
+      // Starter unlocks the longer durations.
+      timeout: 1800,
     }),
   });
 
