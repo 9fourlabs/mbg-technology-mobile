@@ -12,6 +12,10 @@
 # concurrent read+write safely.
 set -e
 
+# Diagnostic: log env state at boot (length only, never value) so we can
+# tell if admin bootstrap failed because the secret wasn't propagated yet.
+echo "ENTRYPOINT: boot t=$(date -u +%Y-%m-%dT%H:%M:%SZ) PB_ADMIN_EMAIL_LEN=${#PB_ADMIN_EMAIL} PB_ADMIN_PASSWORD_LEN=${#PB_ADMIN_PASSWORD}"
+
 # Start PB serve in the background.
 pocketbase serve --http=0.0.0.0:8080 --dir=/pb_data &
 PB_PID=$!
@@ -28,9 +32,16 @@ done
 # admin already exists; we fall back to `update` so the password matches
 # whatever's currently in the env (cheap rotation pattern).
 if [ -n "$PB_ADMIN_EMAIL" ] && [ -n "$PB_ADMIN_PASSWORD" ]; then
-  pocketbase admin create "$PB_ADMIN_EMAIL" "$PB_ADMIN_PASSWORD" --dir=/pb_data \
-    || pocketbase admin update "$PB_ADMIN_EMAIL" "$PB_ADMIN_PASSWORD" --dir=/pb_data \
-    || echo "ENTRYPOINT: admin bootstrap failed (instance may still be usable if admin already exists with a different password)"
+  echo "ENTRYPOINT: bootstrapping admin $PB_ADMIN_EMAIL"
+  if pocketbase admin create "$PB_ADMIN_EMAIL" "$PB_ADMIN_PASSWORD" --dir=/pb_data; then
+    echo "ENTRYPOINT: admin created fresh"
+  elif pocketbase admin update "$PB_ADMIN_EMAIL" "$PB_ADMIN_PASSWORD" --dir=/pb_data; then
+    echo "ENTRYPOINT: admin already existed, password updated"
+  else
+    echo "ENTRYPOINT: admin bootstrap FAILED — instance may be unusable until manual intervention"
+  fi
+else
+  echo "ENTRYPOINT: skipping admin bootstrap (PB_ADMIN_EMAIL or PB_ADMIN_PASSWORD empty)"
 fi
 
 # Keep the serve process in the foreground so Fly health checks see PB.
