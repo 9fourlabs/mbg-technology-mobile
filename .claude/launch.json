@@ -2,11 +2,11 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "admin",
+      "name": "admin-dev",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 3000,
-      "cwd": "/Users/tbrown/projects/mbg-technology-mobile/admin"
+      "cwd": "admin"
     }
   ]
 }

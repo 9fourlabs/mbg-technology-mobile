@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminServiceClient } from "@/lib/supabase/admin";
+import { getServerSession } from "@/lib/auth-pb/server";
 
 const ALLOWED_TYPES = [
   "image/png",
@@ -17,16 +18,15 @@ const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
 const SUPABASE_URL = "https://wmckytfxlcxzhzduttvv.supabase.co";
 
 export async function POST(request: NextRequest) {
-  // Authenticate
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
-
-  if (authError || !user) {
+  // Authenticate via PB session.
+  const session = await getServerSession();
+  if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  // Storage still lives in Supabase for now (separate migration phase).
+  // Service-role client bypasses RLS; safe because we just authn'd above.
+  const supabase = createAdminServiceClient();
 
   try {
     const formData = await request.formData();

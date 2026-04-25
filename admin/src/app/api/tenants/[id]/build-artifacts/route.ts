@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { getServerSession } from "@/lib/auth-pb/server";
 import { getEASBuilds } from "@/lib/eas";
 
 export async function GET(
@@ -9,14 +9,8 @@ export async function GET(
   try {
     await params; // validate route param exists
 
-    // Authenticate
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
+    const session = await getServerSession();
+    if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
