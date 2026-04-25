@@ -1,5 +1,6 @@
 import { createAdminServiceClient } from "@/lib/supabase/admin";
 import { PocketbaseClient } from "./client";
+import { PB_ADMIN_EMAIL } from "./constants";
 
 /**
  * Get a Pocketbase client bound to a tenant's dedicated PB instance.
@@ -31,20 +32,20 @@ export async function getTenantPocketbase(
     );
   }
 
-  // Admin credentials come from env — same token is valid for every PB
-  // instance we provision because the provisioning script seeds the same
-  // admin account on each (see scripts/provisionPocketbase.ts).
-  const adminEmail = process.env.PB_ADMIN_EMAIL;
+  // Admin credentials: email is a project constant (PB_ADMIN_EMAIL) — same
+  // shared admin account across every PB instance because the provisioning
+  // script seeds it identically on each. Password comes from env (Fly secret
+  // / op-injected .env.local).
   const adminPassword = process.env.PB_ADMIN_PASSWORD;
-  if (!adminEmail || !adminPassword) {
+  if (!adminPassword) {
     throw new Error(
-      "PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set in admin env to talk to tenant PB instances"
+      "PB_ADMIN_PASSWORD must be set in admin env (op://MBG/Pocketbase Admin/password) to talk to tenant PB instances",
     );
   }
 
   return new PocketbaseClient({
     url: tenant.pocketbase_url,
-    adminEmail,
+    adminEmail: PB_ADMIN_EMAIL,
     adminPassword,
   });
 }

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createTenantClient } from "@/lib/supabase/tenant";
 import { getProjectApiKeys } from "@/lib/supabase/management";
 import { PocketbaseClient } from "@/lib/pocketbase/client";
+import { PB_ADMIN_EMAIL } from "@/lib/pocketbase/constants";
 import { getUserContext } from "@/lib/auth/user-context";
 
 // ── Allow-list per template type ────────────────────────────────────────────
@@ -86,18 +87,17 @@ async function getTenantBackend(tenantId: string): Promise<TenantBackend> {
         "Tenant backend is 'pocketbase' but pocketbase_url is not set",
       );
     }
-    const adminEmail = process.env.PB_ADMIN_EMAIL;
     const adminPassword = process.env.PB_ADMIN_PASSWORD;
-    if (!adminEmail || !adminPassword) {
+    if (!adminPassword) {
       throw new Error(
-        "PB_ADMIN_EMAIL and PB_ADMIN_PASSWORD must be set to talk to tenant PB instances",
+        "PB_ADMIN_PASSWORD must be set to talk to tenant PB instances",
       );
     }
     return {
       kind: "pocketbase",
       client: new PocketbaseClient({
         url: tenant.pocketbase_url,
-        adminEmail,
+        adminEmail: PB_ADMIN_EMAIL,
         adminPassword,
       }),
       templateType: tenant.template_type,

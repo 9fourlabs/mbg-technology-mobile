@@ -43,9 +43,15 @@ export default async function ClientTenantHome({
     enabled: boolean;
   }> = [
     {
-      label: "Content",
+      label: "Manage content",
+      href: `/client/${tenantId}/cms`,
+      description: "Add, edit, and remove the events, posts, listings, and other dynamic content that appears in your app. Updates are live immediately.",
+      enabled: true,
+    },
+    {
+      label: "Content (legacy)",
       href: `/client/${tenantId}/content`,
-      description: "Posts, events, directory entries, and other dynamic content shown in the app.",
+      description: "The original direct-table editor — same data, raw view. Most clients should use Manage Content above.",
       enabled: true,
     },
     {
