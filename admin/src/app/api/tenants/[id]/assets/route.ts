@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminServiceClient } from "@/lib/supabase/admin";
+import { getServerSession } from "@/lib/auth-pb/server";
 
 const SUPABASE_URL = "https://wmckytfxlcxzhzduttvv.supabase.co";
 
@@ -7,15 +8,11 @@ type RouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(_request: NextRequest, context: RouteContext) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
+    const session = await getServerSession();
+    if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const supabase = createAdminServiceClient();
 
     const { id: tenantId } = await context.params;
 
@@ -89,15 +86,11 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 
 export async function DELETE(request: NextRequest, context: RouteContext) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
+    const session = await getServerSession();
+    if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const supabase = createAdminServiceClient();
 
     // Ensure the path belongs to this tenant
     const { id: tenantId } = await context.params;

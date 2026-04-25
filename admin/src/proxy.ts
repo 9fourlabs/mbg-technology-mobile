@@ -1,5 +1,5 @@
-import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { getMiddlewareSession, SESSION_COOKIE_NAME } from "@/lib/auth-pb/middleware";
 
 /** Paths that never require authentication. */
 const PUBLIC_PATHS = [
@@ -14,14 +14,12 @@ function isClientPath(pathname: string): boolean {
   return pathname === "/client" || pathname.startsWith("/client/");
 }
 
-/** API paths that use their own auth (shared secrets, not Supabase session). */
+/** API paths that use their own auth (shared secrets, not user session). */
 function isSelfAuth(pathname: string): boolean {
   if (!pathname.startsWith("/api/tenants/")) return false;
   // Build-link callback uses ADMIN_BUILD_LINK_SECRET header.
   if (pathname.includes("/build-link")) return true;
-  // Mobile-app push token registration is public (no user session) — the
-  // route handler itself validates the payload. See:
-  //   admin/src/app/api/tenants/[id]/notifications/register/route.ts
+  // Mobile-app push token registration is public (no user session).
   if (pathname.endsWith("/notifications/register")) return true;
   return false;
 }
@@ -41,9 +39,7 @@ function isStaticAsset(pathname: string): boolean {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Forward the path as a request header so server components can read it
-  // (Next.js doesn't expose request URL via next/headers). Used by the
-  // client portal layout to skip its auth gate on the login page.
+  // Forward the path as a request header so server components can read it.
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-pathname", pathname);
 
@@ -51,38 +47,21 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
-  let response = NextResponse.next({
+  const response = NextResponse.next({
     request: { headers: requestHeaders },
   });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value),
-          );
-          response = NextResponse.next({
-            request: { headers: requestHeaders },
-          });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options),
-          );
-        },
-      },
+  // Validate session cookie against PB. If the session is valid, PB returns
+  // a refreshed token — we re-set the cookie on the response.
+  const cookieValue = request.cookies.get(SESSION_COOKIE_NAME)?.value;
+  const session = await getMiddlewareSession({
+    cookieValue,
+    setCookie: (name, value, options) => {
+      response.cookies.set(name, value, options as Parameters<typeof response.cookies.set>[2]);
     },
-  );
+  });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
+  if (!session) {
     // Send unauthenticated traffic to the appropriate login page.
     const loginPath = isClientPath(pathname) ? "/client/login" : "/login";
     const loginUrl = new URL(loginPath, request.url);
@@ -90,21 +69,14 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // Resolve role to gate cross-portal access. Cheapest signal first.
-  const isAdminFromMeta = (user.app_metadata as Record<string, unknown> | undefined)?.role === "admin";
-  let isAdmin = isAdminFromMeta;
-  if (!isAdmin) {
-    const { data: rows } = await supabase
-      .from("tenant_users")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .limit(1);
-    isAdmin = (rows?.length ?? 0) > 0;
-  }
-
-  // Clients should only see /client/*. Bounce them away from admin-only paths.
-  if (!isAdmin && !isClientPath(pathname)) {
+  // Resolve role to gate cross-portal access. Admins pass everywhere; clients
+  // are bounced from MBG admin pages to their portal. API routes are open
+  // to any authenticated user (each route does its own authz).
+  if (
+    !session.user.is_mbg_admin &&
+    !isClientPath(pathname) &&
+    !pathname.startsWith("/api/")
+  ) {
     return NextResponse.redirect(new URL("/client", request.url));
   }
 

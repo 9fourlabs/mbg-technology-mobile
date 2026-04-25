@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 
 const navItems = [
@@ -19,10 +18,12 @@ export default function Sidebar() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUserEmail(user?.email ?? null);
-    });
+    fetch("/api/auth/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { email?: string } | null) => {
+        setUserEmail(data?.email ?? null);
+      })
+      .catch(() => setUserEmail(null));
   }, []);
 
   // Auto-close sidebar on mobile when navigating
@@ -39,11 +40,9 @@ export default function Sidebar() {
   }, [pathname]);
 
   const handleSignOut = async () => {
-    const supabase = createClient();
-    // scope: "local" so signing out on one browser doesn't invalidate the
-    // user's sessions on other devices.
-    await supabase.auth.signOut({ scope: "local" });
+    await fetch("/api/auth/sign-out", { method: "POST" });
     router.push("/login");
+    router.refresh();
   };
 
   const isActive = (href: string) => {

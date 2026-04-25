@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getServerSession } from "@/lib/auth-pb/server";
 import { generateDefaultConfig, configToTypeScript } from "@/lib/config-generator";
 import { commitTenantConfig, createTenantPullRequest, triggerWorkflowDispatch } from "@/lib/github";
 import type { TemplateId } from "@/lib/types";
@@ -19,20 +20,11 @@ const PB_TEMPLATES: TemplateId[] = [
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-
-    // Authenticate
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 },
-      );
+    const session = await getServerSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const supabase = await createClient();
 
     // Parse body
     const body = await request.json();
