@@ -20,7 +20,27 @@ Top-level docs for humans, by audience:
 
 ---
 
-## Where Claude left off (2026-04-25)
+## Where Claude left off — second session (2026-04-25 evening)
+
+Picking up from 2026-04-25 morning's work, this session executed the Supabase removal plan most of the way through. Auth is now fully on Pocketbase. Data layer is partially migrated (CMS + per-tenant content already there).
+
+1. **Customer-facing CMS via Refine** ([6193a3e](https://github.com/9fourlabs/mbg-technology-mobile/commit/6193a3e)) — `/client/[tenantId]/cms` lets customers (or MBG staff) manage events, posts, listings, services, products, rewards. List/create/edit/delete via [Refine.dev](https://refine.dev) v5 against the existing `/api/tenants/[id]/content` route (already authorizes + dispatches to per-tenant Supabase or PB). Per-template resource registry at [admin/src/lib/refine/resource-registry.ts](admin/src/lib/refine/resource-registry.ts).
+
+2. **Phase A: Admin DB scaffolding** ([6193a3e](https://github.com/9fourlabs/mbg-technology-mobile/commit/6193a3e)) — `mbg-pb-admin.fly.dev` provisioned + 6 collections seeded (tenants, builds, tenant_users, push_tokens, analytics_events, activity_log). Provisioner script gained an `--admin` mode. Admin-side PB client lib at [admin/src/lib/pocketbase/admin-client.ts](admin/src/lib/pocketbase/admin-client.ts) with typed wrappers + cached service-role token.
+
+3. **Phase C: Auth migration to Pocketbase** ([cf74e77](https://github.com/9fourlabs/mbg-technology-mobile/commit/cf74e77)) — every auth flow now backed by `mbg-pb-admin`'s `users` collection. Sessions are PB JWTs in HTTP-only cookies. Live-verified end-to-end: PB issues 207-char tokens; setting them as `mbg_pb_session` passes the proxy; `/api/auth/me` returns correct user+admin status; `/tenants` returns 200 for admins, redirects clients to `/client`. Login pages use Next 16 server actions calling `serverSignIn()`. New lib at [admin/src/lib/auth-pb/](admin/src/lib/auth-pb/) (server.ts for server components; middleware.ts for the Edge proxy). [user-context.ts](admin/src/lib/auth/user-context.ts) rewritten on PB.
+
+4. **Data mirror script** ([cf74e77](https://github.com/9fourlabs/mbg-technology-mobile/commit/cf74e77)) — [scripts/migrateAdminToPb.ts](scripts/migrateAdminToPb.ts) idempotently copies `tenants` + `tenant_users` from Supabase to PB. Ran successfully: 4 tenants + 1 membership mirrored. Maps users by email (Supabase auth.users → PB users record).
+
+### Still on the migration roadmap (deferred)
+
+- **Phase D (data layer)**: ~38 files still call `supabase.from('tenants')` / `from('builds')` etc. for reads + writes. Two paths: build a Supabase-API shim on top of PB (one-time investment, callsites unchanged) OR rewrite each callsite directly. Until this lands, admin pages still read tenant data from Supabase, even though PB has the same data.
+- **Phase E**: storage migration (PB has built-in file fields; current upload route still hits Supabase Storage), then remove `@supabase/*` deps + env vars + decommission the Supabase project.
+- **Client portal tenant resolution sanity-check**: the dev server's Turbopack cache got stuck during this session, masking whether `ctx.tenantIds` resolves correctly for non-admin users. Curl-direct PB queries confirm the data is there; just needs a clean restart to confirm the code path. Production deploy hasn't been click-tested for client login yet.
+
+---
+
+## Where Claude left off (2026-04-25 morning)
 
 Picking up from 2026-04-23 ("demo-ready"), this session moved the platform to **client-facing**: Markea (the MBG/first-client) has a working preview link, the platform layered in real testing, security tightening, and the start of a backend migration.
 
