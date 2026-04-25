@@ -33,6 +33,20 @@ export default function SharePageClient({
   const [expandedSection, setExpandedSection] = useState<
     "android" | "ios" | null
   >(null);
+  // Default to iPhone when both platforms are available — matches most
+  // client/consumer testing preferences. Falls back gracefully when only
+  // one platform has an Appetize app.
+  const defaultPlatform: "ios" | "android" = appetizeKeyIos
+    ? "ios"
+    : "android";
+  const [activePlatform, setActivePlatform] = useState<"ios" | "android">(
+    defaultPlatform,
+  );
+  const [iframeStarted, setIframeStarted] = useState(false);
+
+  const activeKey = activePlatform === "ios" ? appetizeKeyIos : appetizeKey;
+  const activeDevice =
+    activePlatform === "ios" ? "iphone15pro" : "pixel7";
 
   const androidBuild = builds.find(
     (b) => b.platform === "android" || b.platform === "all",
@@ -45,7 +59,7 @@ export default function SharePageClient({
 
   return (
     <div className="min-h-screen bg-gray-950 flex items-start justify-center px-4 py-12">
-      <div className="w-full max-w-lg">
+      <div className={hasAppetize ? "w-full max-w-2xl" : "w-full max-w-lg"}>
         {/* App header */}
         <div className="text-center mb-8">
           {logoUrl && (
@@ -67,79 +81,123 @@ export default function SharePageClient({
           </div>
         ) : (
           <div className="space-y-6">
-            {/* ── Primary: Browser-based simulator ──
-             * NOTE: Appetize's iframe embed is a paid feature (Starter tier
-             * and up). On the free tier the iframe renders the "Embeds are
-             * not enabled for this app" message. Until we upgrade, we link
-             * out to Appetize directly — the embedded-in-portal experience
-             * is tracked in ROADMAP.md as a planned enhancement.
+            {/* ── Primary: Embedded browser simulator ──
+             * Appetize Starter tier unlocks iframe embeds. We render the
+             * phone simulator directly inline. autoplay=false keeps a
+             * session from auto-starting (Appetize bills per usage minute);
+             * the user taps "Tap to play" inside the iframe to begin.
              */}
             {hasAppetize ? (
               <div className="rounded-xl bg-gray-900 border border-gray-800 overflow-hidden">
-                <div className="px-5 pt-5 pb-3">
-                  <h2 className="text-white font-semibold text-sm mb-1">
-                    Try it now
-                  </h2>
-                  <p className="text-xs text-gray-400">
-                    Launch an interactive browser preview — no install needed.
-                  </p>
+                <div className="px-5 pt-5 pb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-white font-semibold text-sm mb-1">
+                      Try it now
+                    </h2>
+                    <p className="text-xs text-gray-400">
+                      Tap the phone to launch — no install needed.
+                    </p>
+                  </div>
+                  {appetizeKey && appetizeKeyIos && (
+                    <div
+                      role="tablist"
+                      aria-label="Choose preview platform"
+                      className="inline-flex rounded-lg bg-gray-800 border border-gray-700 p-0.5"
+                    >
+                      <button
+                        role="tab"
+                        aria-selected={activePlatform === "ios"}
+                        onClick={() => {
+                          setActivePlatform("ios");
+                          setIframeStarted(false);
+                        }}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                          activePlatform === "ios"
+                            ? "bg-gray-950 text-white"
+                            : "text-gray-400 hover:text-gray-200"
+                        }`}
+                        style={
+                          activePlatform === "ios"
+                            ? { boxShadow: `inset 0 0 0 1px ${primaryColor}` }
+                            : undefined
+                        }
+                      >
+                        iPhone
+                      </button>
+                      <button
+                        role="tab"
+                        aria-selected={activePlatform === "android"}
+                        onClick={() => {
+                          setActivePlatform("android");
+                          setIframeStarted(false);
+                        }}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                          activePlatform === "android"
+                            ? "bg-gray-950 text-white"
+                            : "text-gray-400 hover:text-gray-200"
+                        }`}
+                        style={
+                          activePlatform === "android"
+                            ? { boxShadow: `inset 0 0 0 1px ${primaryColor}` }
+                            : undefined
+                        }
+                      >
+                        Android
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <div className="px-5 pb-5 space-y-3">
-                  {appetizeKey && (
-                    <a
-                      href={`https://appetize.io/app/${appetizeKey}?device=pixel7&autoplay=false`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 w-full px-4 py-3.5 rounded-lg text-white text-sm font-semibold transition-colors"
-                      style={{ backgroundColor: primaryColor }}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="size-4"
-                        aria-hidden="true"
-                      >
-                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                        <polyline points="15 3 21 3 21 9" />
-                        <line x1="10" y1="14" x2="21" y2="3" />
-                      </svg>
-                      Launch Android preview
-                    </a>
+
+                <div className="px-5 pb-5">
+                  {activeKey ? (
+                    <div className="bg-black rounded-lg overflow-hidden">
+                      {iframeStarted ? (
+                        <iframe
+                          key={`${activePlatform}-${activeKey}`}
+                          src={`https://appetize.io/embed/${activeKey}?device=${activeDevice}&autoplay=false&deviceColor=black&scale=auto&orientation=portrait`}
+                          title={`${appName} — ${activePlatform === "ios" ? "iPhone" : "Android"} preview`}
+                          allow="autoplay; clipboard-read; clipboard-write; microphone; camera; gyroscope; accelerometer"
+                          className="w-full block border-0"
+                          style={{ height: "640px" }}
+                        />
+                      ) : (
+                        <button
+                          onClick={() => setIframeStarted(true)}
+                          className="w-full flex flex-col items-center justify-center gap-3 py-16 px-4 text-center transition-colors hover:bg-gray-950/50"
+                          aria-label={`Start ${activePlatform === "ios" ? "iPhone" : "Android"} preview`}
+                        >
+                          <span
+                            className="flex items-center justify-center w-14 h-14 rounded-full"
+                            style={{ backgroundColor: primaryColor }}
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              fill="white"
+                              className="size-6 ml-1"
+                              aria-hidden="true"
+                            >
+                              <path d="M8 5v14l11-7z" />
+                            </svg>
+                          </span>
+                          <p className="text-white text-sm font-medium">
+                            Tap to launch{" "}
+                            {activePlatform === "ios" ? "iPhone" : "Android"}{" "}
+                            preview
+                          </p>
+                          <p className="text-[11px] text-gray-500 max-w-xs">
+                            Streams the real app to your browser. Sessions last
+                            up to 30 minutes — restart anytime.
+                          </p>
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-gray-500 text-center py-4">
+                      {activePlatform === "ios" ? "iPhone" : "Android"} preview
+                      isn&apos;t ready yet — try the other platform above.
+                    </p>
                   )}
-                  {appetizeKeyIos && (
-                    <a
-                      href={`https://appetize.io/app/${appetizeKeyIos}?device=iphone15pro&autoplay=false`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 w-full px-4 py-3.5 rounded-lg border border-gray-700 bg-gray-800 text-white text-sm font-semibold transition-colors hover:bg-gray-700"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="size-4"
-                        aria-hidden="true"
-                      >
-                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                        <polyline points="15 3 21 3 21 9" />
-                        <line x1="10" y1="14" x2="21" y2="3" />
-                      </svg>
-                      Launch iPhone preview
-                    </a>
-                  )}
-                  <p className="text-[11px] text-gray-500 text-center">
-                    Opens in a new tab. Tap around — your session lasts 5
-                    minutes.
-                  </p>
                 </div>
               </div>
             ) : null}
