@@ -1,0 +1,151 @@
+[
+  {
+    "id": "tenants_admin01",
+    "name": "tenants",
+    "type": "base",
+    "schema": [
+      { "name": "slug",                    "type": "text", "required": true, "unique": true, "options": { "pattern": "^[a-z0-9-]+$" } },
+      { "name": "business_name",           "type": "text", "required": true },
+      { "name": "template_type",           "type": "text", "required": true, "options": { "values": ["informational", "authenticated", "booking", "commerce", "loyalty", "content", "forms", "directory", "custom"] } },
+      { "name": "status",                  "type": "select", "required": true, "options": { "values": ["draft", "preview", "production"], "maxSelect": 1 } },
+      { "name": "config",                  "type": "json",   "options": { "maxSize": 2000000 } },
+      { "name": "supabase_project_id",     "type": "text" },
+      { "name": "supabase_url",            "type": "url" },
+      { "name": "supabase_anon_key",       "type": "text" },
+      { "name": "expo_project_id",         "type": "text" },
+      { "name": "app_version",             "type": "text" },
+      { "name": "created_by",              "type": "text" },
+      { "name": "app_type",                "type": "select", "options": { "values": ["template", "custom"], "maxSelect": 1 } },
+      { "name": "repo_url",                "type": "url" },
+      { "name": "repo_branch",             "type": "text" },
+      { "name": "appetize_public_key",     "type": "text" },
+      { "name": "appetize_public_key_ios", "type": "text" },
+      { "name": "brief",                   "type": "json",   "options": { "maxSize": 2000000 } },
+      { "name": "pocketbase_url",          "type": "url" },
+      { "name": "pocketbase_app_name",     "type": "text" },
+      { "name": "backend",                 "type": "select", "options": { "values": ["supabase", "pocketbase"], "maxSelect": 1 } }
+    ],
+    "indexes": [
+      "CREATE UNIQUE INDEX idx_tenants_slug ON tenants (slug)",
+      "CREATE INDEX idx_tenants_status ON tenants (status)"
+    ],
+    "listRule":   null,
+    "viewRule":   null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null
+  },
+  {
+    "id": "builds_admin001",
+    "name": "builds",
+    "type": "base",
+    "schema": [
+      { "name": "tenant",                  "type": "relation", "required": true, "options": { "collectionId": "tenants_admin01", "cascadeDelete": true, "maxSelect": 1 } },
+      { "name": "workflow_run_id",         "type": "text" },
+      { "name": "platform",                "type": "select", "options": { "values": ["ios", "android", "all"], "maxSelect": 1 } },
+      { "name": "profile",                 "type": "select", "options": { "values": ["preview", "production", "development"], "maxSelect": 1 } },
+      { "name": "status",                  "type": "select", "required": true, "options": { "values": ["pending", "in_progress", "succeeded", "failed", "cancelled"], "maxSelect": 1 } },
+      { "name": "build_url",               "type": "url" },
+      { "name": "download_url",            "type": "url" },
+      { "name": "download_url_ios",        "type": "url" },
+      { "name": "error_message",           "type": "text" },
+      { "name": "app_version",             "type": "text" },
+      { "name": "eas_build_id_android",    "type": "text" },
+      { "name": "eas_build_id_ios",        "type": "text" },
+      { "name": "appetize_public_key",     "type": "text" },
+      { "name": "appetize_public_key_ios", "type": "text" },
+      { "name": "config_hash",             "type": "text" }
+    ],
+    "indexes": [
+      "CREATE INDEX idx_builds_tenant ON builds (tenant)",
+      "CREATE INDEX idx_builds_status ON builds (status)",
+      "CREATE INDEX idx_builds_created ON builds (created DESC)"
+    ],
+    "listRule":   null,
+    "viewRule":   null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null
+  },
+  {
+    "id": "tenantusers01",
+    "name": "tenant_users",
+    "type": "base",
+    "schema": [
+      { "name": "user",       "type": "relation", "required": true, "options": { "collectionId": "_pb_users_auth_", "cascadeDelete": true, "maxSelect": 1 } },
+      { "name": "tenant",     "type": "relation", "required": true, "options": { "collectionId": "tenants_admin01", "cascadeDelete": true, "maxSelect": 1 } },
+      { "name": "role",       "type": "select",   "required": true, "options": { "values": ["admin", "client"], "maxSelect": 1 } }
+    ],
+    "indexes": [
+      "CREATE UNIQUE INDEX idx_tenant_users_pair ON tenant_users (user, tenant)",
+      "CREATE INDEX idx_tenant_users_user ON tenant_users (user)",
+      "CREATE INDEX idx_tenant_users_tenant ON tenant_users (tenant)"
+    ],
+    "listRule":   null,
+    "viewRule":   null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null
+  },
+  {
+    "id": "pushtokens_001",
+    "name": "push_tokens",
+    "type": "base",
+    "schema": [
+      { "name": "tenant_id",   "type": "text", "required": true, "options": { "pattern": "^[a-z0-9-]+$" } },
+      { "name": "device_token","type": "text", "required": true },
+      { "name": "platform",    "type": "select", "required": true, "options": { "values": ["ios", "android"], "maxSelect": 1 } }
+    ],
+    "indexes": [
+      "CREATE UNIQUE INDEX idx_push_tokens_dedup ON push_tokens (tenant_id, device_token)",
+      "CREATE INDEX idx_push_tokens_tenant ON push_tokens (tenant_id)"
+    ],
+    "listRule":   null,
+    "viewRule":   null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null
+  },
+  {
+    "id": "analytics_ev01",
+    "name": "analytics_events",
+    "type": "base",
+    "schema": [
+      { "name": "tenant_id",    "type": "text", "required": true, "options": { "pattern": "^[a-z0-9-]+$" } },
+      { "name": "anonymous_id", "type": "text", "required": true },
+      { "name": "event_name",   "type": "text", "required": true },
+      { "name": "event_data",   "type": "json", "options": { "maxSize": 100000 } },
+      { "name": "screen_name",  "type": "text" },
+      { "name": "platform",     "type": "select", "options": { "values": ["ios", "android", "web"], "maxSelect": 1 } },
+      { "name": "app_version",  "type": "text" }
+    ],
+    "indexes": [
+      "CREATE INDEX idx_analytics_tenant_date ON analytics_events (tenant_id, created DESC)",
+      "CREATE INDEX idx_analytics_event ON analytics_events (tenant_id, event_name)"
+    ],
+    "listRule":   null,
+    "viewRule":   null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null
+  },
+  {
+    "id": "activity_log01",
+    "name": "activity_log",
+    "type": "base",
+    "schema": [
+      { "name": "tenant",     "type": "relation", "required": true, "options": { "collectionId": "tenants_admin01", "cascadeDelete": true, "maxSelect": 1 } },
+      { "name": "action",     "type": "text", "required": true },
+      { "name": "details",    "type": "text" },
+      { "name": "user_email", "type": "email" }
+    ],
+    "indexes": [
+      "CREATE INDEX idx_activity_tenant_date ON activity_log (tenant, created DESC)"
+    ],
+    "listRule":   null,
+    "viewRule":   null,
+    "createRule": null,
+    "updateRule": null,
+    "deleteRule": null
+  }
+]

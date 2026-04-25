@@ -1,28 +1,40 @@
 #!/usr/bin/env node
 /**
- * Provision a new per-tenant Pocketbase instance on Fly.
+ * Provision a Pocketbase instance on Fly. Two modes:
  *
- * What this does:
- *   1. Renders `infra/pocketbase/fly.toml.tpl` for this tenant
- *   2. Runs `fly launch --copy-config --no-deploy` in the tenant org
- *   3. Creates the persistent volume (`pb_data_<tenant>`)
- *   4. Sets the PB admin password as a Fly secret
- *   5. Deploys — PB boots and auto-creates the SQLite DB on first start
- *   6. Waits for health, then seeds the collection schema via `importCollections()`
- *   7. Updates the admin DB `tenants` row: sets `pocketbase_url`, `pocketbase_app_name`, `backend = 'pocketbase'`
+ *   1. Tenant mode (default): `--tenant <id> --template <type>`
+ *      Provisions `mbg-pb-<id>` for one tenant's content. Updates the admin
+ *      DB `tenants` row to set `pocketbase_url` + `backend='pocketbase'`.
+ *
+ *   2. Admin mode: `--admin`
+ *      Provisions `mbg-pb-admin` — the central admin DB replacement (Supabase
+ *      → Pocketbase migration, Phase A). Seeds `admin.json` schema. Skips
+ *      tenant-row update (it IS the tenant registry).
+ *
+ * What it does, both modes:
+ *   1. Renders `infra/pocketbase/fly.toml.tpl` with substituted app name + volume
+ *   2. Creates the Fly app in the target org (idempotent)
+ *   3. Sets PB_ADMIN_PASSWORD as a Fly secret
+ *   4. Deploys — PB boots and auto-creates the SQLite DB on first start
+ *   5. Waits for /api/health + admin auth, then seeds the collection schema
  *
  * Usage (from repo root):
+ *   # Tenant mode
  *   npx tsx scripts/provisionPocketbase.ts --tenant mbg --template content
  *
- * Env vars required:
- *   FLY_TENANTS_API_TOKEN  — org-scoped Fly API token for the tenant org
- *   FLY_TENANTS_ORG        — e.g. "mbg-tenants"
- *   PB_ADMIN_EMAIL         — admin account email, same across all PB instances
- *   PB_ADMIN_PASSWORD      — admin account password
- *   NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY — to update the tenant row
+ *   # Admin mode (Supabase replacement)
+ *   npx tsx scripts/provisionPocketbase.ts --admin
  *
- * Phase 0 note: this script is currently untested end-to-end. Phase 1 will
- * exercise it against a pilot tenant. Until then it's source code only.
+ * Env vars required:
+ *   FLY_TENANTS_API_TOKEN  — Fly API token (token must reach the target org)
+ *   FLY_TENANTS_ORG        — Fly org slug (admin mode reuses the same token/org
+ *                            today; later phases may move admin to 9four-labs)
+ *   PB_ADMIN_PASSWORD      — admin account password (1Password: Pocketbase Admin)
+ *   NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY — only required in
+ *                            tenant mode for the post-deploy tenant-row update
+ *
+ * Email is sourced from `admin/src/lib/pocketbase/constants.ts` (project
+ * constant, not a GH secret).
  */
 
 import { readFileSync, writeFileSync } from "node:fs";
@@ -40,11 +52,9 @@ const TEMPLATES = [
 ] as const;
 type Template = (typeof TEMPLATES)[number];
 
-interface Args {
-  tenant: string;
-  template: Template;
-  region?: string;
-}
+type Args =
+  | { mode: "tenant"; tenant: string; template: Template; region: string }
+  | { mode: "admin"; region: string };
 
 function parseArgs(): Args {
   const argv = process.argv.slice(2);
@@ -53,13 +63,20 @@ function parseArgs(): Args {
     return i >= 0 ? argv[i + 1] : undefined;
   };
 
+  const region = get("--region") ?? "iad";
+
+  if (argv.includes("--admin")) {
+    return { mode: "admin", region };
+  }
+
   const tenant = get("--tenant");
   const template = get("--template") as Template | undefined;
-  const region = get("--region") ?? "iad";
 
   if (!tenant || !template) {
     console.error(
-      "Usage: provisionPocketbase.ts --tenant <id> --template <type> [--region iad]"
+      "Usage:\n" +
+        "  provisionPocketbase.ts --tenant <id> --template <type> [--region iad]\n" +
+        "  provisionPocketbase.ts --admin [--region iad]"
     );
     process.exit(1);
   }
@@ -67,7 +84,7 @@ function parseArgs(): Args {
     console.error(`--template must be one of: ${TEMPLATES.join(", ")}`);
     process.exit(1);
   }
-  return { tenant, template, region };
+  return { mode: "tenant", tenant, template, region };
 }
 
 function requireEnv(name: string): string {
@@ -88,13 +105,17 @@ function requireEnv(name: string): string {
   return trimmed;
 }
 
-function renderTomlTemplate(tenant: string, region: string): string {
+function renderTomlTemplate(
+  appName: string,
+  volumeName: string,
+  region: string,
+): string {
   const tplPath = path.resolve("infra/pocketbase/fly.toml.tpl");
   const tpl = readFileSync(tplPath, "utf-8");
   return tpl
-    .replace(/\{\{APP_NAME\}\}/g, `mbg-pb-${tenant}`)
+    .replace(/\{\{APP_NAME\}\}/g, appName)
     .replace(/\{\{REGION\}\}/g, region)
-    .replace(/\{\{VOLUME\}\}/g, `pb_data_${tenant.replace(/-/g, "_")}`);
+    .replace(/\{\{VOLUME\}\}/g, volumeName);
 }
 
 function sh(
@@ -171,12 +192,12 @@ async function waitForAdminAuth(
 
 async function seedSchema(
   url: string,
-  template: Template,
+  schemaName: Template | "admin",
   email: string,
   password: string,
 ): Promise<void> {
   const schemaPath = path.resolve(
-    `infra/pocketbase/schemas/${template}.json`
+    `infra/pocketbase/schemas/${schemaName}.json`
   );
   const collections = JSON.parse(readFileSync(schemaPath, "utf-8"));
 
@@ -192,21 +213,33 @@ async function seedSchema(
   await client.importCollections(collections);
 }
 
-async function main() {
-  const { tenant, template, region } = parseArgs();
-  const appName = `mbg-pb-${tenant}`;
-  const flyOrg = requireEnv("FLY_TENANTS_ORG");
-  const flyToken = requireEnv("FLY_TENANTS_API_TOKEN");
-  const pbAdminEmail = requireEnv("PB_ADMIN_EMAIL");
-  const pbAdminPassword = requireEnv("PB_ADMIN_PASSWORD");
+interface ProvisionParams {
+  appName: string;
+  volumeName: string;
+  region: string;
+  flyOrg: string;
+  flyToken: string;
+  pbAdminEmail: string;
+  pbAdminPassword: string;
+  schemaName: Template | "admin";
+  /** A label like "tenant \"mbg\" (content)" for log lines. */
+  label: string;
+}
 
-  console.log(`▶ Provisioning Pocketbase for tenant "${tenant}" (${template})`);
-  console.log(`  Fly org: ${flyOrg}  app: ${appName}  region: ${region}`);
-  console.log(`  PB admin email length: ${pbAdminEmail.length}, password length: ${pbAdminPassword.length}`);
+/**
+ * Core provisioning routine — shared by tenant and admin modes.
+ * Returns the live PB URL on success.
+ */
+async function provisionInstance(p: ProvisionParams): Promise<string> {
+  console.log(`▶ Provisioning Pocketbase for ${p.label}`);
+  console.log(`  Fly org: ${p.flyOrg}  app: ${p.appName}  region: ${p.region}`);
+  console.log(
+    `  PB admin email: ${p.pbAdminEmail} (password length: ${p.pbAdminPassword.length})`,
+  );
 
-  // 1. Write a transient fly.toml with tenant substitutions.
-  const rendered = renderTomlTemplate(tenant, region);
-  const tomlPath = path.resolve(`infra/pocketbase/fly.${tenant}.toml`);
+  // 1. Write a transient fly.toml with the right substitutions.
+  const rendered = renderTomlTemplate(p.appName, p.volumeName, p.region);
+  const tomlPath = path.resolve(`infra/pocketbase/fly.${p.appName}.toml`);
   writeFileSync(tomlPath, rendered, "utf-8");
   console.log(`  ✓ Rendered fly.toml → ${tomlPath}`);
 
@@ -214,33 +247,33 @@ async function main() {
   // child inherits it naturally. (GA dispatch surfaced quirks with
   // per-call env overrides and the --access-token flag for some
   // subcommands — setting at parent level is the most reliable.)
-  process.env.FLY_API_TOKEN = flyToken;
-  process.env.FLY_ACCESS_TOKEN = flyToken;
+  process.env.FLY_API_TOKEN = p.flyToken;
+  process.env.FLY_ACCESS_TOKEN = p.flyToken;
 
-  // 2. Create the Fly app in the tenant org (idempotent).
+  // 2. Create the Fly app in the target org (idempotent).
   console.log("▶ Creating Fly app...");
   let exists = false;
   try {
-    const appsList = execSync(`flyctl apps list -o ${flyOrg} --json`, {
+    const appsList = execSync(`flyctl apps list -o ${p.flyOrg} --json`, {
       stdio: ["inherit", "pipe", "inherit"],
       encoding: "utf-8",
     });
     const apps = JSON.parse(appsList) as Array<{ Name: string }>;
-    exists = apps.some((a) => a.Name === appName);
+    exists = apps.some((a) => a.Name === p.appName);
   } catch {
     // If listing fails entirely, fall through and let `apps create` surface
     // the real error.
   }
   if (exists) {
-    console.log(`  ○ App ${appName} already exists — reusing`);
+    console.log(`  ○ App ${p.appName} already exists — reusing`);
   } else {
-    sh(`flyctl apps create ${appName} --org ${flyOrg}`);
+    sh(`flyctl apps create ${p.appName} --org ${p.flyOrg}`);
   }
 
   // 3. Set the admin password secret BEFORE deploy so PB picks it up on boot.
   console.log("▶ Setting PB_ADMIN_PASSWORD secret...");
   sh(
-    `flyctl secrets set PB_ADMIN_PASSWORD="${pbAdminPassword}" --app ${appName} --stage`,
+    `flyctl secrets set PB_ADMIN_PASSWORD="${p.pbAdminPassword}" --app ${p.appName} --stage`,
   );
 
   // 4. Deploy — builds the Dockerfile, creates the volume on first deploy.
@@ -249,7 +282,7 @@ async function main() {
   console.log("▶ Deploying Pocketbase instance (builds + starts)...");
   const infraDir = path.resolve("infra/pocketbase");
   sh(
-    `flyctl deploy --remote-only --app ${appName} --config ${tomlPath}`,
+    `flyctl deploy --remote-only --app ${p.appName} --config ${tomlPath}`,
     {},
     infraDir,
   );
@@ -259,19 +292,72 @@ async function main() {
   //    but the entrypoint runs `admin create` AFTER its own local health
   //    wait — so there's a window where the instance is "live" but no admin
   //    exists. waitForAdminAuth bridges that race.
-  const pbUrl = `https://${appName}.fly.dev`;
+  const pbUrl = `https://${p.appName}.fly.dev`;
   console.log(`▶ Waiting for ${pbUrl}/api/health ...`);
   await waitForHealth(pbUrl);
   console.log(`  ✓ Instance is live`);
 
   console.log(`▶ Waiting for admin bootstrap (entrypoint admin create)...`);
-  await waitForAdminAuth(pbUrl, pbAdminEmail, pbAdminPassword);
+  await waitForAdminAuth(pbUrl, p.pbAdminEmail, p.pbAdminPassword);
 
-  console.log(`▶ Seeding "${template}" schema...`);
-  await seedSchema(pbUrl, template, pbAdminEmail, pbAdminPassword);
+  console.log(`▶ Seeding "${p.schemaName}" schema...`);
+  await seedSchema(pbUrl, p.schemaName, p.pbAdminEmail, p.pbAdminPassword);
   console.log(`  ✓ Collections imported`);
 
-  // 6. Update admin DB tenant row via PostgREST (dep-free).
+  return pbUrl;
+}
+
+async function main() {
+  const args = parseArgs();
+  const flyOrg = requireEnv("FLY_TENANTS_ORG");
+  const flyToken = requireEnv("FLY_TENANTS_API_TOKEN");
+  const pbAdminPassword = requireEnv("PB_ADMIN_PASSWORD");
+
+  // Email is a non-sensitive project constant — sourced from the same TS
+  // module the future admin-side PB code will use. Reading it from a GH
+  // secret is what bit us in run 24931587641: secret was corrupted to 1
+  // char by a pipe-set, the entrypoint kept using fly.toml.tpl's hardcoded
+  // value, and the script auth'd with the corrupt env var → 400.
+  const { PB_ADMIN_EMAIL: pbAdminEmail } = await import(
+    "../admin/src/lib/pocketbase/constants"
+  );
+
+  if (args.mode === "admin") {
+    const pbUrl = await provisionInstance({
+      appName: "mbg-pb-admin",
+      volumeName: "pb_data_admin",
+      region: args.region,
+      flyOrg,
+      flyToken,
+      pbAdminEmail,
+      pbAdminPassword,
+      schemaName: "admin",
+      label: "central admin DB (Supabase replacement)",
+    });
+    console.log("\n✅ Admin Pocketbase instance ready.");
+    console.log(`   PB admin UI: ${pbUrl}/_/`);
+    console.log(`   PB API:      ${pbUrl}/api/`);
+    console.log(
+      "   Next: build admin/src/lib/pocketbase/admin-client.ts + flip ADMIN_BACKEND flag.",
+    );
+    return;
+  }
+
+  // Tenant mode
+  const { tenant, template } = args;
+  const pbUrl = await provisionInstance({
+    appName: `mbg-pb-${tenant}`,
+    volumeName: `pb_data_${tenant.replace(/-/g, "_")}`,
+    region: args.region,
+    flyOrg,
+    flyToken,
+    pbAdminEmail,
+    pbAdminPassword,
+    schemaName: template,
+    label: `tenant "${tenant}" (${template})`,
+  });
+
+  // Update admin DB tenant row via PostgREST (dep-free). Tenant mode only.
   const supabaseUrl = requireEnv("NEXT_PUBLIC_SUPABASE_URL");
   const serviceKey = requireEnv("SUPABASE_SERVICE_ROLE_KEY");
   const updateRes = await fetch(
@@ -286,7 +372,7 @@ async function main() {
       },
       body: JSON.stringify({
         pocketbase_url: pbUrl,
-        pocketbase_app_name: appName,
+        pocketbase_app_name: `mbg-pb-${tenant}`,
         backend: "pocketbase",
       }),
     }

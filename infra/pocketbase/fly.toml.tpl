@@ -12,7 +12,9 @@ primary_region = "{{REGION}}"
 
 [env]
   # Shared across every per-tenant PB instance — single admin account the
-  # admin portal can reuse. Password is injected via
+  # admin portal can reuse. Must match `PB_ADMIN_EMAIL` exported from
+  # `admin/src/lib/pocketbase/constants.ts` (single source of truth for
+  # the script + admin-side code). Password is injected via
   # `fly secrets set PB_ADMIN_PASSWORD=...` (NOT baked into the image).
   PB_ADMIN_EMAIL = "pb-admin@9fourlabs.com"
 
