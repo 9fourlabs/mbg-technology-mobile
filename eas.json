@@ -30,7 +30,8 @@
       "android": {
         "track": "internal",
         "releaseStatus": "draft",
-        "changesNotSentForReview": false
+        "changesNotSentForReview": false,
+        "serviceAccountKeyPath": "./credentials/google-play-service-account.json"
       }
     }
   }
