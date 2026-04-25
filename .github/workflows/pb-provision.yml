@@ -35,6 +35,19 @@ jobs:
       - name: Install flyctl
         uses: superfly/flyctl-actions/setup-flyctl@master
 
+      - name: Sanity-check Fly token scope
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_TENANTS_API_TOKEN }}
+        run: |
+          # Confirm the token reaches Fly and identify what user it
+          # resolves as. If this prints an email but `apps create` later
+          # fails "Not authorized", the token lacks org-create scope and
+          # we need a different token (admin-scoped).
+          echo "TOKEN_LENGTH=$(echo -n "$FLY_API_TOKEN" | wc -c)"
+          echo "TOKEN_PREFIX=$(echo "$FLY_API_TOKEN" | head -c 12)"
+          flyctl auth whoami || echo "(whoami failed)"
+          flyctl orgs list 2>&1 || echo "(orgs list failed)"
+
       - name: Provision Pocketbase instance
         env:
           FLY_TENANTS_ORG: ${{ secrets.FLY_TENANTS_ORG }}
