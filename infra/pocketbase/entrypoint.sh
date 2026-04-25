@@ -31,14 +31,22 @@ done
 # Idempotently bootstrap the admin. `create` fails on second boot if the
 # admin already exists; we fall back to `update` so the password matches
 # whatever's currently in the env (cheap rotation pattern).
+#
+# IMPORTANT: the provisioning script polls /api/health and then attempts
+# `auth-with-password` immediately. /api/health responds the moment serve
+# binds, BEFORE this block runs — so the script must retry adminLogin with
+# backoff to bridge the race. The "ADMIN BOOTSTRAP COMPLETE" line below is
+# the canonical "OK to auth now" signal in Fly logs.
 if [ -n "$PB_ADMIN_EMAIL" ] && [ -n "$PB_ADMIN_PASSWORD" ]; then
   echo "ENTRYPOINT: bootstrapping admin $PB_ADMIN_EMAIL"
-  if pocketbase admin create "$PB_ADMIN_EMAIL" "$PB_ADMIN_PASSWORD" --dir=/pb_data; then
-    echo "ENTRYPOINT: admin created fresh"
-  elif pocketbase admin update "$PB_ADMIN_EMAIL" "$PB_ADMIN_PASSWORD" --dir=/pb_data; then
-    echo "ENTRYPOINT: admin already existed, password updated"
+  if pocketbase admin create "$PB_ADMIN_EMAIL" "$PB_ADMIN_PASSWORD" --dir=/pb_data 2>/tmp/pb-admin-err; then
+    echo "ENTRYPOINT: ADMIN BOOTSTRAP COMPLETE (created fresh)"
+  elif pocketbase admin update "$PB_ADMIN_EMAIL" "$PB_ADMIN_PASSWORD" --dir=/pb_data 2>/tmp/pb-admin-err; then
+    echo "ENTRYPOINT: ADMIN BOOTSTRAP COMPLETE (existing admin, password rotated)"
   else
-    echo "ENTRYPOINT: admin bootstrap FAILED — instance may be unusable until manual intervention"
+    echo "ENTRYPOINT: admin bootstrap FAILED — last stderr:"
+    cat /tmp/pb-admin-err 2>/dev/null || echo "(no error captured)"
+    echo "ENTRYPOINT: instance may be unusable until manual intervention"
   fi
 else
   echo "ENTRYPOINT: skipping admin bootstrap (PB_ADMIN_EMAIL or PB_ADMIN_PASSWORD empty)"

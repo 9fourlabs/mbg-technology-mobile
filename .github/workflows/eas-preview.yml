@@ -133,6 +133,20 @@ jobs:
           npm run build:tenants
           npm run validate:tenants
 
+          # Per-tenant OTA channel isolation. The preview profile in eas.json
+          # ships with channel="preview" (a static default for local CLI use);
+          # at workflow time we override it to "preview-<tenant>" so each
+          # tenant's preview build listens on its own EAS Update channel.
+          # Without this, OTAs published to branch "preview-mbg" wouldn't
+          # reach MBG preview builds (they'd listen on "preview"), and
+          # cross-tenant updates could leak once we have 2+ tenants.
+          # publishOta.ts already targets branch "preview-<tenant>", so the
+          # channel + branch line up.
+          CHANNEL="preview-${APP_TENANT}"
+          jq --arg ch "$CHANNEL" '.build.preview.channel = $ch' eas.json > eas.json.tmp
+          mv eas.json.tmp eas.json
+          echo "Set eas.json build.preview.channel = $CHANNEL"
+
           # --no-wait returns immediately after queueing the build. We poll
           # for completion in the next step via `eas build:list`.
           eas build --profile preview --platform android --non-interactive --no-wait &
