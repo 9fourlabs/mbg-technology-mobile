@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminServiceClient } from "@/lib/supabase/admin";
+import { createSupabaseStorageClient } from "@/lib/supabase/admin";
 import { getServerSession } from "@/lib/auth-pb/server";
 
 const SUPABASE_URL = "https://wmckytfxlcxzhzduttvv.supabase.co";
@@ -12,7 +12,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const supabase = createAdminServiceClient();
+    const supabase = createSupabaseStorageClient();
 
     const { id: tenantId } = await context.params;
 
@@ -90,7 +90,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const supabase = createAdminServiceClient();
+    const supabase = createSupabaseStorageClient();
 
     // Ensure the path belongs to this tenant
     const { id: tenantId } = await context.params;
