@@ -40,9 +40,18 @@ export async function POST(
       supabase_url?: string | null;
       supabase_anon_key?: string | null;
       expected_updated_at?: string | null;
+      /** When true, skip the GitHub commit + PR side-effect — DB-only save. */
+      draft_only?: boolean;
     };
 
-    const { config, expo_project_id, supabase_url, supabase_anon_key, expected_updated_at } = body;
+    const {
+      config,
+      expo_project_id,
+      supabase_url,
+      supabase_anon_key,
+      expected_updated_at,
+      draft_only,
+    } = body;
 
     if (!config) {
       return NextResponse.json(
@@ -97,6 +106,13 @@ export async function POST(
         { error: `Failed to update config: ${updateError.message}` },
         { status: 500 }
       );
+    }
+
+    // Draft-only mode (called from the config editor's "Save Draft" button):
+    // skip the GitHub commit + PR. The DB row is the source of truth for
+    // unpublished work; PR creation only happens on Save & Deploy.
+    if (draft_only) {
+      return NextResponse.json({ success: true, draft: true });
     }
 
     // Generate TypeScript and JSON content
