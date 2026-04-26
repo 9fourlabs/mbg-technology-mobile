@@ -24,7 +24,9 @@ export type FieldKind =
   | "boolean"
   | "date"
   | "datetime"
-  | "select";
+  | "select"
+  /** URL field with an integrated upload button — uploads to PB via /api/upload. */
+  | "image";
 
 export interface ResourceField {
   /** DB column name. */
@@ -76,7 +78,7 @@ export const RESOURCES_BY_TEMPLATE: Record<string, ResourceDefinition[]> = {
         { name: "category_id", label: "Category", kind: "text", span: "half" },
         { name: "excerpt", label: "Excerpt (preview text)", kind: "textarea", span: "full" },
         { name: "body", label: "Body", kind: "richtext", span: "full" },
-        { name: "image_url", label: "Cover Image URL", kind: "url", span: "full" },
+        { name: "image_url", label: "Cover Image", kind: "image", span: "full" },
         { name: "published", label: "Published", kind: "boolean", showInList: true, span: "half" },
         { name: "published_at", label: "Publish Date", kind: "datetime", showInList: true, span: "half" },
       ],
@@ -94,7 +96,7 @@ export const RESOURCES_BY_TEMPLATE: Record<string, ResourceDefinition[]> = {
         { name: "ends_at", label: "Ends at", kind: "datetime", showInList: true, span: "half" },
         { name: "location", label: "Location", kind: "text", showInList: true, span: "full" },
         { name: "description", label: "Description", kind: "textarea", span: "full" },
-        { name: "image_url", label: "Image URL", kind: "url", span: "half" },
+        { name: "image_url", label: "Image", kind: "image", span: "half" },
         { name: "rsvp_url", label: "RSVP / Tickets URL", kind: "url", span: "half" },
         { name: "category", label: "Category", kind: "text", span: "half" },
         { name: "published", label: "Published", kind: "boolean", showInList: true, span: "half" },
@@ -118,7 +120,7 @@ export const RESOURCES_BY_TEMPLATE: Record<string, ResourceDefinition[]> = {
         { name: "phone", label: "Phone", kind: "text", span: "half" },
         { name: "email", label: "Email", kind: "email", span: "half" },
         { name: "website", label: "Website", kind: "url", span: "full" },
-        { name: "image_url", label: "Image URL", kind: "url", span: "full" },
+        { name: "image_url", label: "Image", kind: "image", span: "full" },
         { name: "published", label: "Published", kind: "boolean", showInList: true, span: "half" },
       ],
     },
@@ -136,7 +138,7 @@ export const RESOURCES_BY_TEMPLATE: Record<string, ResourceDefinition[]> = {
         { name: "description", label: "Description", kind: "textarea", span: "full" },
         { name: "duration_minutes", label: "Duration (minutes)", kind: "number", showInList: true, span: "half" },
         { name: "price_cents", label: "Price (cents USD)", kind: "number", showInList: true, span: "half" },
-        { name: "image_url", label: "Image URL", kind: "url", span: "full" },
+        { name: "image_url", label: "Image", kind: "image", span: "full" },
         { name: "active", label: "Active", kind: "boolean", showInList: true, span: "half" },
       ],
     },
@@ -152,7 +154,7 @@ export const RESOURCES_BY_TEMPLATE: Record<string, ResourceDefinition[]> = {
       fields: [
         { name: "name", label: "Name", kind: "text", required: true, showInList: true, span: "full" },
         { name: "slug", label: "URL Slug", kind: "text", required: true, showInList: true, span: "half" },
-        { name: "image_url", label: "Image URL", kind: "url", span: "half" },
+        { name: "image_url", label: "Image", kind: "image", span: "half" },
       ],
     },
     {
@@ -167,7 +169,7 @@ export const RESOURCES_BY_TEMPLATE: Record<string, ResourceDefinition[]> = {
         { name: "description", label: "Description", kind: "textarea", span: "full" },
         { name: "price_cents", label: "Price (cents USD)", kind: "number", required: true, showInList: true, span: "half" },
         { name: "category_id", label: "Category", kind: "text", span: "half" },
-        { name: "image_url", label: "Image URL", kind: "url", span: "full" },
+        { name: "image_url", label: "Image", kind: "image", span: "full" },
         { name: "in_stock", label: "In Stock", kind: "boolean", showInList: true, span: "half" },
       ],
     },

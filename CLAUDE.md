@@ -20,6 +20,34 @@ Top-level docs for humans, by audience:
 
 ---
 
+## Where Claude left off — third session (2026-04-25 late evening)
+
+Closed out the migration: **Supabase is fully removed from the admin app**. End-to-end tests pass on production at https://mbg-admin.fly.dev. Plus CMS polish (image uploads + TipTap rich-text editor).
+
+1. **Phase D — Supabase-API compat shim** ([9a22c0e](https://github.com/9fourlabs/mbg-technology-mobile/commit/9a22c0e)) — One file ([admin/src/lib/admin-db/shim.ts](admin/src/lib/admin-db/shim.ts), ~600 lines) implements the Supabase query-builder API (`.from(t).select().eq().single()` etc.) on top of Pocketbase. Per-table mapping handles all the slug↔PB-id and FK↔relation translations internally. `lib/supabase/server.ts` and `admin.ts` redirect to it, so all 35 existing call-sites kept working without changes.
+
+2. **Phase E — Storage migration + remove @supabase/\*** ([6f110f0](https://github.com/9fourlabs/mbg-technology-mobile/commit/6f110f0), [4d3705a](https://github.com/9fourlabs/mbg-technology-mobile/commit/4d3705a)) —
+   - New `uploads` collection on mbg-pb-admin (file field, 5MB cap, image-only).
+   - `/api/upload` writes to PB; returns `mbg-pb-admin.fly.dev/api/files/uploads/<id>/<file>`.
+   - `/api/tenants/[id]/assets` reads + deletes via PB.
+   - Two new server endpoints to back former Supabase-Browser-Client pages: `/api/tenants/[id]/config` (GET) and `/api/tenants/[id]/supabase-link` (POST).
+   - `save-config` route gained `draft_only: true` flag for the config-editor's "Save Draft" button (skips the GitHub PR side-effect).
+   - Deleted: `lib/supabase/{client,middleware,tenant,management}.ts`, `lib/pocketbase/tenant.ts` (all dead).
+   - `npm uninstall @supabase/ssr @supabase/supabase-js` — gone from package.json.
+   - Playwright helper rewrote to hit PB REST directly.
+
+3. **CMS polish** —
+   - **Image upload field** ([admin/src/components/cms/CmsFieldRenderers.tsx](admin/src/components/cms/CmsFieldRenderers.tsx)) — new `image` field kind combines a URL input with an upload button; uploads go through `/api/upload` to the PB `uploads` collection. Existing `image_url` fields in the resource registry switched to this kind across posts, events, listings, services, products, etc.
+   - **TipTap rich-text editor** ([admin/src/components/cms/RichTextEditor.tsx](admin/src/components/cms/RichTextEditor.tsx)) — replaces the textarea fallback for `richtext` fields. Toolbar: bold/italic/strike, H2/H3, bullet+ordered lists, blockquote, links, undo/redo. `@tailwindcss/typography` plugin added for `prose` styling.
+
+**Live-verified** post-deploy: 12/12 admin routes return 200 (admin + client portal). Auth flow end-to-end (PB token → cookie → proxy → /api/auth/me → role gate). CMS reads + writes posts, events, etc. for any tenant on `backend='pocketbase'`.
+
+### What's still on Supabase
+
+**Nothing in the admin app.** The only Supabase project still in existence is `mbg-admin` (the original central DB), and it's now read-only — the production admin no longer connects to it. Safe to deprovision the project at any time after a confirmation window. (Doing so is irreversible — I left it running this session.)
+
+---
+
 ## Where Claude left off — second session (2026-04-25 evening)
 
 Picking up from 2026-04-25 morning's work, this session executed the Supabase removal plan most of the way through. Auth is now fully on Pocketbase. Data layer is partially migrated (CMS + per-tenant content already there).
