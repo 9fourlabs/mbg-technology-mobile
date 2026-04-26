@@ -30,10 +30,7 @@ ADMIN_BUILD_LINK_SECRET={{ op://MBG/ADMIN_BUILD_LINK_SECRET/password }}
 # --- Optional: Appetize (for in-admin preview embedding) ---
 # APPETIZE_API_KEY=
 
-# --- Pocketbase admin instance (Supabase replacement, Phase A) ---
-# Source of truth for cross-tenant infra (tenants, builds, tenant_users,
-# push_tokens, analytics_events, activity_log). Currently shadow — no admin
-# portal code reads from here yet. Phase B flips ADMIN_BACKEND on.
-POCKETBASE_ADMIN_URL=https://mbg-pb-admin.fly.dev
+# --- Pocketbase admin password (for per-tenant PB instances) ---
+# Used by /api/tenants/[id]/content to talk to per-tenant mbg-pb-<tenant>
+# Fly apps. Same password seeded across every per-tenant PB instance.
 PB_ADMIN_PASSWORD={{ op://MBG/Pocketbase Admin/password }}
-# ADMIN_BACKEND=supabase  # set to "pocketbase" once Phase B helpers land
