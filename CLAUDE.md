@@ -20,6 +20,39 @@ Top-level docs for humans, by audience:
 
 ---
 
+## Where Claude left off — fourth session (2026-04-25 late evening)
+
+**Rolled back the admin Supabase→PB migration.** After landing the migration earlier in the same session, Tim and I talked through the trade-offs and decided the right architecture is:
+
+- Auth + admin DB + storage → **Supabase** (free tier, big community, zero ops)
+- Per-tenant content data → **Pocketbase** per tenant (cost-efficient at scale)
+
+The cost concern was always per-tenant — and that's still on PB. The admin DB doesn't compound with tenant count, so the Supabase free tier is the right home; "PB everywhere" was over-rotated.
+
+**Rollback details** ([b0b9561](https://github.com/9fourlabs/mbg-technology-mobile/commit/b0b9561)):
+- Restored `lib/supabase/{client,server,admin,middleware,tenant,management}.ts` from the pre-migration tip (commit 6193a3e).
+- Reverted proxy.ts, user-context.ts, login pages, sign-out, every API route that switched to PB-auth.
+- Reverted `/api/upload` + `/api/tenants/[id]/assets` to Supabase Storage (`tenant-assets` bucket).
+- **Deleted the shim** ([admin/src/lib/admin-db/shim.ts](admin/src/lib/admin-db/shim.ts)) — Tim's call. Per his note: "Direct Supabase calls are simpler to read, debug, onboard." 600 lines of compatibility code gone.
+- Deleted `lib/auth-pb/`, `lib/pocketbase/admin-client.ts`, `/api/auth/me`, `/api/tenants/[id]/{config,supabase-link}`, server-action login files.
+- Re-installed `@supabase/ssr` + `@supabase/supabase-js`.
+- Decommissioned `mbg-pb-admin.fly.dev` (Fly app destroyed).
+- Removed `POCKETBASE_ADMIN_URL` from Fly secrets + `.env.local.tpl`.
+
+**What's kept from the migration sessions:**
+- Customer CMS via Refine ([admin/src/lib/refine/](admin/src/lib/refine/), [admin/src/components/cms/](admin/src/components/cms/), [admin/src/app/client/[tenantId]/cms/](admin/src/app/client/[tenantId]/cms/)). Backend-agnostic, talks to per-tenant PB through the existing tenant-content route.
+- Image-upload field renderer (Supabase Storage backend, same as before).
+- TipTap rich-text editor.
+- Per-tenant Pocketbase infra: provisioning script + schemas + mbg-pb-* Fly apps + lib/pocketbase/{client,constants}.ts.
+- [scripts/migrateAdminToPb.ts](scripts/migrateAdminToPb.ts) kept for future flexibility (idempotent; could re-run if we ever change our minds).
+
+**Architecture today (production):**
+- `mbg-admin.fly.dev` (Next.js admin portal) — talks to Supabase for auth/data/storage, per-tenant PB for tenant content.
+- Central Supabase `mbg-admin` project — auth + tenants/builds/tenant_users/push_tokens/analytics_events/activity_log + tenant-assets bucket.
+- Per-tenant Pocketbase Fly apps (`mbg-pb-<tenant>`) for content/events/listings/etc.
+
+---
+
 ## Where Claude left off — third session (2026-04-25 late evening)
 
 Closed out the migration: **Supabase is fully removed from the admin app**. End-to-end tests pass on production at https://mbg-admin.fly.dev. Plus CMS polish (image uploads + TipTap rich-text editor).
