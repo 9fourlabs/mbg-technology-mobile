@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminServiceClient } from "@/lib/supabase/admin";
+import { createSupabaseStorageClient } from "@/lib/supabase/admin";
 import { getServerSession } from "@/lib/auth-pb/server";
 
 const ALLOWED_TYPES = [
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
   // Storage still lives in Supabase for now (separate migration phase).
   // Service-role client bypasses RLS; safe because we just authn'd above.
-  const supabase = createAdminServiceClient();
+  const supabase = createSupabaseStorageClient();
 
   try {
     const formData = await request.formData();
