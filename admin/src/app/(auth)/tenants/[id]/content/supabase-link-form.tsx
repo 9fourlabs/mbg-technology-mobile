@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 
 export default function SupabaseLinkForm({ tenantId }: { tenantId: string }) {
   const router = useRouter();
@@ -20,21 +19,19 @@ export default function SupabaseLinkForm({ tenantId }: { tenantId: string }) {
     setError(null);
 
     try {
-      const supabase = createClient();
-      const { error: updateError } = await supabase
-        .from("tenants")
-        .update({
+      const res = await fetch(`/api/tenants/${tenantId}/supabase-link`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           supabase_url: url.trim(),
           supabase_anon_key: anonKey.trim() || null,
-          supabase_project_id: url.trim(), // Use URL as project identifier
-        })
-        .eq("id", tenantId);
-
-      if (updateError) {
-        setError(updateError.message);
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setError(body.error ?? `HTTP ${res.status}`);
         return;
       }
-
       router.refresh();
     } catch {
       setError("Failed to save. Please try again.");

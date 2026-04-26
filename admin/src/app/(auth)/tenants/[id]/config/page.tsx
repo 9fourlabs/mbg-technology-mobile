@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import BrandEditor from "./brand-editor";
 import DesignEditor from "./design-editor";
 import TabsEditor from "./tabs-editor";
@@ -44,48 +43,46 @@ export default function ConfigEditorPage() {
 
   useEffect(() => {
     const loadConfig = async () => {
-      const supabase = createClient();
-      const { data, error: fetchError } = await supabase
-        .from("tenants")
-        .select("config, app_type, repo_url, business_name, expo_project_id, supabase_url, supabase_anon_key, updated_at")
-        .eq("id", id)
-        .single();
-
-      if (fetchError) {
-        setError(fetchError.message);
+      const res = await fetch(`/api/tenants/${id}/config`);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setError(body.error ?? `HTTP ${res.status}`);
         setLoading(false);
         return;
       }
+      const { tenant, builds } = (await res.json()) as {
+        tenant: {
+          config: Record<string, unknown> | null;
+          app_type: string;
+          repo_url: string | null;
+          business_name: string | null;
+          expo_project_id: string | null;
+          supabase_url: string | null;
+          supabase_anon_key: string | null;
+          updated_at: string | null;
+        };
+        builds: Array<{ profile: string; config_hash: string | null; created_at: string }>;
+      };
 
-      setTenantName(data.business_name || id);
-      setAppType(data.app_type);
+      setTenantName(tenant.business_name || id);
+      setAppType(tenant.app_type);
 
-      if (data.app_type === "custom") {
+      if (tenant.app_type === "custom") {
         setIsCustomApp(true);
-        setRepoUrl(data.repo_url);
+        setRepoUrl(tenant.repo_url);
         setLoading(false);
         return;
       }
 
-      setConfig(data.config ?? {});
-      setConfigJson(JSON.stringify(data.config ?? {}, null, 2));
-      setExpoProjectId(data.expo_project_id ?? "");
-      setSupabaseUrl(data.supabase_url ?? "");
-      setSupabaseAnonKey(data.supabase_anon_key ?? "");
-      setUpdatedAt(data.updated_at ?? null);
+      setConfig(tenant.config ?? {});
+      setConfigJson(JSON.stringify(tenant.config ?? {}, null, 2));
+      setExpoProjectId(tenant.expo_project_id ?? "");
+      setSupabaseUrl(tenant.supabase_url ?? "");
+      setSupabaseAnonKey(tenant.supabase_anon_key ?? "");
+      setUpdatedAt(tenant.updated_at ?? null);
 
-      // Load the most recent successful build per profile so we can show
-      // which version of the config is live where.
-      const { data: builds } = await supabase
-        .from("builds")
-        .select("profile, config_hash, created_at")
-        .eq("tenant_id", id)
-        .eq("status", "completed")
-        .order("created_at", { ascending: false })
-        .limit(20);
-
-      const preview = builds?.find((b) => b.profile === "preview") ?? null;
-      const production = builds?.find((b) => b.profile === "production") ?? null;
+      const preview = builds.find((b) => b.profile === "preview") ?? null;
+      const production = builds.find((b) => b.profile === "production") ?? null;
       setLatestPreview(preview);
       setLatestProduction(production);
 
@@ -123,19 +120,20 @@ export default function ConfigEditorPage() {
 
     try {
       const parsed = activeTab === 5 ? JSON.parse(configJson) : config;
-      const supabase = createClient();
-      const { error: updateError } = await supabase
-        .from("tenants")
-        .update({
+      const res = await fetch(`/api/tenants/${id}/save-config`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           config: parsed,
           expo_project_id: expoProjectId || null,
           supabase_url: supabaseUrl || null,
           supabase_anon_key: supabaseAnonKey || null,
-        })
-        .eq("id", id);
-
-      if (updateError) {
-        setError(updateError.message);
+          draft_only: true, // skip the GitHub PR side-effect
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setError(body.error ?? `HTTP ${res.status}`);
       } else {
         setConfig(parsed);
         setConfigJson(JSON.stringify(parsed, null, 2));

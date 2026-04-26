@@ -1,10 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseStorageClient } from "@/lib/supabase/admin";
+import { adminPb } from "@/lib/pocketbase/admin-client";
 import { getServerSession } from "@/lib/auth-pb/server";
 
-const SUPABASE_URL = "https://wmckytfxlcxzhzduttvv.supabase.co";
+interface UploadRecord {
+  id: string;
+  tenant_id: string;
+  category: string;
+  file: string;
+  created: string;
+  uploaded_by?: string;
+}
+
+interface AssetView {
+  name: string;
+  path: string;
+  url: string;
+  category: string;
+  size: number;
+  createdAt: string;
+}
 
 type RouteContext = { params: Promise<{ id: string }> };
+
+const PB_URL =
+  process.env.POCKETBASE_ADMIN_URL ?? "https://mbg-pb-admin.fly.dev";
 
 export async function GET(_request: NextRequest, context: RouteContext) {
   try {
@@ -12,70 +31,23 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const supabase = createSupabaseStorageClient();
-
     const { id: tenantId } = await context.params;
 
-    const { data: files, error } = await supabase.storage
-      .from("tenant-assets")
-      .list(tenantId, { sortBy: { column: "created_at", order: "desc" } });
+    const pb = await adminPb();
+    const result = await pb.list<UploadRecord>("uploads", {
+      filter: `tenant_id = "${tenantId.replace(/"/g, '\\"')}"`,
+      sort: "-created",
+      perPage: 200,
+    });
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    // files at root level are category folders — list each subfolder
-    const assets: {
-      name: string;
-      path: string;
-      url: string;
-      category: string;
-      size: number;
-      createdAt: string;
-    }[] = [];
-
-    // Each entry could be a folder (category) or a file at root
-    const folders = (files ?? []).filter((f) => f.id === null || !f.metadata);
-    const rootFiles = (files ?? []).filter((f) => f.id !== null && f.metadata);
-
-    // Add root-level files (no category)
-    for (const file of rootFiles) {
-      const path = `${tenantId}/${file.name}`;
-      assets.push({
-        name: file.name,
-        path,
-        url: `${SUPABASE_URL}/storage/v1/object/public/tenant-assets/${path}`,
-        category: "uncategorized",
-        size: file.metadata?.size ?? 0,
-        createdAt: file.created_at ?? "",
-      });
-    }
-
-    // List files in each category subfolder
-    for (const folder of folders) {
-      const category = folder.name;
-      const { data: categoryFiles } = await supabase.storage
-        .from("tenant-assets")
-        .list(`${tenantId}/${category}`, {
-          sortBy: { column: "created_at", order: "desc" },
-        });
-
-      if (categoryFiles) {
-        for (const file of categoryFiles) {
-          // Skip folders within category
-          if (file.id === null && !file.metadata) continue;
-          const path = `${tenantId}/${category}/${file.name}`;
-          assets.push({
-            name: file.name,
-            path,
-            url: `${SUPABASE_URL}/storage/v1/object/public/tenant-assets/${path}`,
-            category,
-            size: file.metadata?.size ?? 0,
-            createdAt: file.created_at ?? "",
-          });
-        }
-      }
-    }
+    const assets: AssetView[] = result.items.map((rec) => ({
+      name: rec.file,
+      path: `${rec.tenant_id}/${rec.category}/${rec.file}`,
+      url: `${PB_URL}/api/files/uploads/${rec.id}/${rec.file}`,
+      category: rec.category,
+      size: 0, // PB doesn't expose file size in record metadata; populated only on upload
+      createdAt: rec.created,
+    }));
 
     return NextResponse.json(assets);
   } catch (err: unknown) {
@@ -90,34 +62,43 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const supabase = createSupabaseStorageClient();
-
-    // Ensure the path belongs to this tenant
     const { id: tenantId } = await context.params;
-    const { path } = await request.json();
+    const { path } = (await request.json()) as { path?: string };
 
     if (!path || typeof path !== "string") {
       return NextResponse.json(
         { error: "Missing 'path' in request body" },
-        { status: 400 }
+        { status: 400 },
       );
     }
-
     if (!path.startsWith(`${tenantId}/`)) {
       return NextResponse.json(
         { error: "Path does not belong to this tenant" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
-    const { error } = await supabase.storage
-      .from("tenant-assets")
-      .remove([path]);
+    // Path format: <tenant_id>/<category>/<file_name>
+    const parts = path.split("/");
+    if (parts.length < 3) {
+      return NextResponse.json(
+        { error: "Malformed path" },
+        { status: 400 },
+      );
+    }
+    const fileName = parts[parts.length - 1];
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    const pb = await adminPb();
+    const result = await pb.list<UploadRecord>("uploads", {
+      filter: `tenant_id = "${tenantId.replace(/"/g, '\\"')}" && file = "${fileName.replace(/"/g, '\\"')}"`,
+      perPage: 1,
+    });
+    const record = result.items[0];
+    if (!record) {
+      return NextResponse.json({ error: "Asset not found" }, { status: 404 });
     }
 
+    await pb.remove("uploads", record.id);
     return NextResponse.json({ success: true });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Internal error";
