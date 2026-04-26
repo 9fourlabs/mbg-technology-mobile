@@ -1,23 +1,29 @@
-/**
- * SHIM: returns a PB-backed compatibility client.
- *
- * Was a `@supabase/ssr` server client. Now redirects to
- * `lib/admin-db/shim.ts`, which exposes the same `.from(table).select()`
- * chain syntax but executes against `mbg-pb-admin` Pocketbase. This
- * keeps every existing callsite (~35 files) working without code changes
- * while we migrate off Supabase.
- *
- * Auth methods (.auth.getUser, .auth.signInWithPassword) are no longer
- * exposed here — callers were migrated to `lib/auth-pb/server.ts` in
- * the Phase C commit.
- *
- * Storage (.storage.from()) is also not on this client — `upload/route.ts`
- * and `assets/route.ts` were migrated to use `createAdminServiceClient()`
- * from `./admin.ts` directly during the auth migration.
- */
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
-import { createCompatClient, type CompatClient } from "@/lib/admin-db/shim";
+export async function createClient() {
+  const cookieStore = await cookies();
 
-export async function createClient(): Promise<CompatClient> {
-  return createCompatClient();
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options),
+            );
+          } catch {
+            // setAll is called from a Server Component where cookies
+            // cannot be set. This is safe to ignore when the middleware
+            // is refreshing the session.
+          }
+        },
+      },
+    },
+  );
 }

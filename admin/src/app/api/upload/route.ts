@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "@/lib/auth-pb/server";
-import { PB_ADMIN_EMAIL } from "@/lib/pocketbase/constants";
+import { createClient } from "@/lib/supabase/server";
 
 const ALLOWED_TYPES = [
   "image/png",
@@ -11,36 +10,22 @@ const ALLOWED_TYPES = [
   "image/svg+xml",
 ];
 
-const ALLOWED_CATEGORIES = [
-  "logo",
-  "card",
-  "product",
-  "post",
-  "directory",
-  "app-icon",
-  "splash",
-  "hero",
-];
+const ALLOWED_CATEGORIES = ["logo", "card", "product", "post", "directory", "app-icon", "splash", "hero"];
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
 
-/**
- * Upload an image asset to Pocketbase's `uploads` collection.
- * Returns a public URL that the mobile app + admin UI can fetch.
- */
-export async function POST(request: NextRequest) {
-  const session = await getServerSession();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+const SUPABASE_URL = "https://wmckytfxlcxzhzduttvv.supabase.co";
 
-  const pbUrl = process.env.POCKETBASE_ADMIN_URL;
-  const pbPassword = process.env.PB_ADMIN_PASSWORD;
-  if (!pbUrl || !pbPassword) {
-    return NextResponse.json(
-      { error: "PB admin credentials not configured" },
-      { status: 500 },
-    );
+export async function POST(request: NextRequest) {
+  // Authenticate
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
@@ -52,98 +37,63 @@ export async function POST(request: NextRequest) {
     if (!file || !tenantId || !category) {
       return NextResponse.json(
         { error: "Missing required fields: file, tenantId, category" },
-        { status: 400 },
+        { status: 400 }
       );
     }
+
+    // Validate category
     if (!ALLOWED_CATEGORIES.includes(category)) {
       return NextResponse.json(
-        {
-          error: `Invalid category. Allowed: ${ALLOWED_CATEGORIES.join(", ")}`,
-        },
-        { status: 400 },
+        { error: `Invalid category. Allowed: ${ALLOWED_CATEGORIES.join(", ")}` },
+        { status: 400 }
       );
     }
+
+    // Validate file type
     if (!ALLOWED_TYPES.includes(file.type)) {
       return NextResponse.json(
-        {
-          error: "Invalid file type. Only PNG, JPG, GIF, WebP, and SVG are allowed.",
-        },
-        { status: 400 },
+        { error: "Invalid file type. Only PNG, JPG, GIF, WebP, and SVG are allowed." },
+        { status: 400 }
       );
     }
+
+    // Validate file size
     if (file.size > MAX_SIZE) {
       return NextResponse.json(
         { error: "File too large. Maximum size is 5MB." },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
-    // Get a fresh PB admin token (uploads collection has no public createRule;
-    // service-role-equivalent admin token is required).
-    const authRes = await fetch(`${pbUrl}/api/admins/auth-with-password`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        identity: PB_ADMIN_EMAIL,
-        password: pbPassword,
-      }),
-    });
-    if (!authRes.ok) {
-      return NextResponse.json(
-        { error: "PB admin auth failed" },
-        { status: 500 },
-      );
-    }
-    const { token } = (await authRes.json()) as { token: string };
-
-    // Sanitize filename for the PB record (PB preserves the original name
-    // but strips weird chars).
+    // Build storage path
+    const timestamp = Date.now();
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const ts = Date.now();
-    const renamed = new File([file], `${ts}-${safeName}`, { type: file.type });
+    const storagePath = `${tenantId}/${category}/${timestamp}-${safeName}`;
 
-    const pbForm = new FormData();
-    pbForm.set("tenant_id", tenantId);
-    pbForm.set("category", category);
-    pbForm.set("file", renamed);
-    pbForm.set("uploaded_by", session.user.email);
+    // Upload to Supabase Storage
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const { error: uploadError } = await supabase.storage
+      .from("tenant-assets")
+      .upload(storagePath, buffer, {
+        contentType: file.type,
+        upsert: false,
+      });
 
-    const createRes = await fetch(
-      `${pbUrl}/api/collections/uploads/records`,
-      {
-        method: "POST",
-        headers: { Authorization: token },
-        body: pbForm,
-      },
-    );
-    if (!createRes.ok) {
-      const body = await createRes.text();
+    if (uploadError) {
       return NextResponse.json(
-        { error: `Upload failed: ${body}` },
-        { status: 500 },
+        { error: `Upload failed: ${uploadError.message}` },
+        { status: 500 }
       );
     }
-    const record = (await createRes.json()) as {
-      id: string;
-      file: string;
-      tenant_id: string;
-      category: string;
-    };
 
-    // Public URL for the uploaded file. PB serves these from
-    // /api/files/<collection>/<recordId>/<filename>.
-    const url = `${pbUrl}/api/files/uploads/${record.id}/${record.file}`;
+    const url = `${SUPABASE_URL}/storage/v1/object/public/tenant-assets/${storagePath}`;
 
-    return NextResponse.json({
-      url,
-      path: `${record.tenant_id}/${record.category}/${record.file}`,
-      record_id: record.id,
-    });
+    return NextResponse.json({ url, path: storagePath });
   } catch (err) {
     console.error("Upload error:", err);
     return NextResponse.json(
       { error: "Upload failed. Please try again." },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

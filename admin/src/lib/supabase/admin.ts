@@ -1,18 +1,23 @@
-import { createCompatClient, type CompatClient } from "@/lib/admin-db/shim";
+import { createClient } from "@supabase/supabase-js";
 
 /**
- * Service-role-equivalent client for the admin database.
+ * Service-role client for the **admin database** — bypasses RLS, so use only
+ * server-side and only when the route has performed its own authorization.
  *
- * Now backed by Pocketbase via the compat shim. The shim authenticates
- * with `mbg-pb-admin`'s admin token, which bypasses every collection
- * access rule — equivalent to Supabase's service-role key. Use only
- * server-side and only after route-level authorization has run.
- *
- * This export is kept under `lib/supabase/admin.ts` for backward
- * compatibility with the ~10 callers that still import from here.
- * The path will be renamed to `lib/admin-db/` in a follow-up cleanup
- * once we're satisfied nothing breaks.
+ * Distinct from `createTenantClient` (in tenant.ts), which connects to a
+ * specific tenant's own Supabase project. Use this client when you need
+ * unrestricted access to the admin tables (tenants, builds, push_tokens,
+ * analytics_events, tenant_users, etc.).
  */
-export function createAdminServiceClient(): CompatClient {
-  return createCompatClient();
+export function createAdminServiceClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    throw new Error(
+      "createAdminServiceClient requires NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY"
+    );
+  }
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
 }

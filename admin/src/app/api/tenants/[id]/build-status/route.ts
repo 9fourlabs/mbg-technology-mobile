@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getServerSession } from "@/lib/auth-pb/server";
 import { getWorkflowRun, getFailureReason } from "@/lib/github";
 import { getExpoBuildPageUrl, getExpoInstallUrl, getEASBuilds, getEASBuildById } from "@/lib/eas";
 
@@ -62,12 +61,16 @@ export async function GET(
       );
     }
 
-    // Authenticate via PB session.
-    const session = await getServerSession();
-    if (!session) {
+    // Authenticate
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const supabase = await createClient();
 
     // Load build record
     const { data: build, error: buildError } = await supabase
