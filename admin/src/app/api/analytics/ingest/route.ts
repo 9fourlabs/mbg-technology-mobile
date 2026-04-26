@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createCompatClient } from "@/lib/admin-db/shim";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +13,10 @@ export async function POST(request: NextRequest) {
     // Limit batch size
     const batch = events.slice(0, 100);
 
-    const supabase = createCompatClient();
+    const supabase = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
 
     const { error } = await supabase.from("analytics_events").insert(batch);
 

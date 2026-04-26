@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createCompatClient } from "@/lib/admin-db/shim";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { getExpoInstallUrl } from "@/lib/eas";
 import { getEASBuildById } from "@/lib/eas";
 import { uploadToAppetize, updateAppetizeApp } from "@/lib/appetize";
@@ -47,9 +47,11 @@ export async function POST(
       );
     }
 
-    // Admin DB now lives on Pocketbase. The compat client mimics the
-    // Supabase API so the rest of this route is unchanged.
-    const supabase = createCompatClient();
+    // Use service role — this endpoint is called by GitHub Actions, not a browser
+    const supabase = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
 
     // Verify the build belongs to this tenant
     const { data: build, error: buildError } = await supabase

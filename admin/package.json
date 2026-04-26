@@ -18,6 +18,8 @@
     "@refinedev/nextjs-router": "^7.0.5",
     "@refinedev/react-hook-form": "^5.0.4",
     "@refinedev/simple-rest": "^6.0.1",
+    "@supabase/ssr": "^0.10.2",
+    "@supabase/supabase-js": "^2.104.1",
     "@tailwindcss/forms": "^0.5.11",
     "@tailwindcss/typography": "^0.5.19",
     "@tiptap/extension-link": "^3.22.4",
