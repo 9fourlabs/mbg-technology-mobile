@@ -2,6 +2,7 @@
 @import "preline/variants.css";
 @source "../node_modules/preline/dist/*.js";
 @plugin "@tailwindcss/forms";
+@plugin "@tailwindcss/typography";
 
 @theme inline {
   --font-sans: var(--font-inter);
