@@ -25,7 +25,10 @@
     "production": {
       "ios": {
         "ascAppId": "$ASC_APP_ID",
-        "appleTeamId": "$APPLE_TEAM_ID"
+        "appleTeamId": "$APPLE_TEAM_ID",
+        "ascApiKeyPath": "./credentials/asc-api-key.p8",
+        "ascApiKeyId": "$ASC_API_KEY_ID",
+        "ascApiKeyIssuerId": "$ASC_API_ISSUER_ID"
       },
       "android": {
         "track": "internal",

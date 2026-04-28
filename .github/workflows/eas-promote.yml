@@ -105,12 +105,35 @@ jobs:
           # Sanity check — must be valid JSON with a client_email field.
           node -e "const j=require('./credentials/google-play-service-account.json'); if(!j.client_email) process.exit(1)"
 
+      - name: Materialize App Store Connect API key (.p8)
+        if: ${{ inputs.platform == 'ios' || inputs.platform == 'both' }}
+        env:
+          ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+        run: |
+          mkdir -p credentials
+          # eas.json's submit.production.ios.ascApiKeyPath points here.
+          # Gitignored locally; injected from a GH secret at CI runtime.
+          # Mirror of the Play SA JSON pattern above.
+          printf '%s' "$ASC_API_KEY_P8" > credentials/asc-api-key.p8
+          # Sanity check — must look like a PEM-encoded private key.
+          if ! head -1 credentials/asc-api-key.p8 | grep -q "BEGIN PRIVATE KEY"; then
+            echo "::error::ASC_API_KEY_P8 doesn't look like a PEM file (first line missing BEGIN PRIVATE KEY)"
+            head -1 credentials/asc-api-key.p8
+            exit 1
+          fi
+          echo "ASC API key materialized at credentials/asc-api-key.p8 ($(wc -c < credentials/asc-api-key.p8) bytes)"
+
       - name: Submit to stores
         env:
           APP_TENANT: ${{ inputs.tenant }}
           NATIVE_ID_MODE: tenant
           APP_VERSION: ${{ inputs.version || '1.0.0' }}
           EAS_PROJECT_ID: ${{ steps.project.outputs.project_id }}
+          # Account-level Apple credentials — stable across tenants.
+          # Per-tenant ASC_APP_ID is loaded from the tenant config below.
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
         run: |
           set -e
           PLATFORM="${{ inputs.platform }}"
@@ -118,8 +141,9 @@ jobs:
           # `eas submit` waits for the latest production build per platform
           # to finish before submitting (default behavior with --latest).
           if [ "$PLATFORM" = "ios" ] || [ "$PLATFORM" = "both" ]; then
-            # Load per-tenant submit identifiers (ASC App ID, Apple Team ID)
-            # so eas.json's $ASC_APP_ID / $APPLE_TEAM_ID interpolate.
+            # Load per-tenant submit identifiers (ASC_APP_ID) so eas.json's
+            # $ASC_APP_ID interpolates. APPLE_TEAM_ID + ASC_API_KEY_ID +
+            # ASC_API_ISSUER_ID are already exported above (account-level).
             eval "$(npx --yes tsx scripts/getSubmitEnv.ts "${{ inputs.tenant }}" ios)"
             eas submit --profile production --platform ios --latest --non-interactive \
               --project-id "${{ steps.project.outputs.project_id }}"
@@ -127,7 +151,7 @@ jobs:
 
           if [ "$PLATFORM" = "android" ] || [ "$PLATFORM" = "both" ]; then
             # eas.json points at credentials/google-play-service-account.json
-            # — materialized in the previous step from GH secret.
+            # — materialized earlier from GH secret.
             eas submit --profile production --platform android --latest --non-interactive \
               --project-id "${{ steps.project.outputs.project_id }}"
           fi
