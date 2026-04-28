@@ -51,7 +51,7 @@ if (!projectId) {
 }
 
 // 4. Tenant ID must be valid for Android package names and iOS bundle IDs
-// Android: lowercase letters, digits, dots, hyphens (but we use it after com.mbg.info.)
+// Android: lowercase letters, digits, dots, hyphens (but we use it after com.9fourlabs.mbg.)
 // iOS: same constraints. Hyphens are valid in bundle IDs.
 if (!/^[a-z0-9][a-z0-9-]*[a-z0-9]$/.test(tenant) && !/^[a-z0-9]$/.test(tenant)) {
   errors.push(

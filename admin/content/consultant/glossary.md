@@ -44,7 +44,7 @@ Quick reference for the jargon you'll hear. If you're reading another guide and 
 
 ## Store terms
 
-**Bundle ID** (iOS) / **Package name** (Android) — A unique string that identifies the app in the stores. Example: `com.mbg.mbgtechnologymobile`. Cannot be changed after first store submission.
+**Bundle ID** (iOS) / **Package name** (Android) — A unique string that identifies the app in the stores. Example: `com.9fourlabs.mbg.app`. Cannot be changed after first store submission.
 
 **Keystore** (Android) — A cryptographic signing key. Google Play pins it to your app on first upload — lose it and you need a support ticket to reset. Stored in 1Password and on EAS.
 
