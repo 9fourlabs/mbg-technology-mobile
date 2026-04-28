@@ -21,8 +21,8 @@ Every production Android app needs an **upload keystore** to sign builds before 
 
 | Mode | When | Identifiers | Credentials |
 |------|------|-------------|-------------|
-| `NATIVE_ID_MODE=shared` | Preview / demo builds | All tenants use `com.mbg.mbgtechnologymobile` | EAS-managed (automatic) |
-| `NATIVE_ID_MODE=tenant` | Production / store builds | Each tenant gets `com.mbg.info.<tenant>` | Per-tenant keystore + certs (see below) |
+| `NATIVE_ID_MODE=shared` | Preview / demo builds | All tenants use `com.9fourlabs.mbg.app` | EAS-managed (automatic) |
+| `NATIVE_ID_MODE=tenant` | Production / store builds | Each tenant gets `com.9fourlabs.mbg.<tenant>` | Per-tenant keystore + certs (see below) |
 
 Preview builds require **zero** manual credential setup — EAS generates and manages them. The rest of this document applies to **production builds only**.
 

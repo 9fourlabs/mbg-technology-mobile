@@ -52,7 +52,7 @@ Push is **off by default** — the `expo-notifications` plugin is gated on the `
 
 #### Google (FCM)
 
-1. **Firebase console → your project → Project Settings → Service accounts → Generate new private key.** Download the JSON. (If you don't have a Firebase project, create one and link your Android app to it via the package name `com.mbg.info.<tenant>`.)
+1. **Firebase console → your project → Project Settings → Service accounts → Generate new private key.** Download the JSON. (If you don't have a Firebase project, create one and link your Android app to it via the package name `com.9fourlabs.mbg.<tenant>`.)
 2. Store in 1Password under `mbg-mobile/shared/fcm-service-account.json`.
 3. Upload to EAS:
 

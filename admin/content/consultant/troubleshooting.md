@@ -133,7 +133,7 @@ Then fix forward.
 
 You can't, not safely.
 
-- Package names are baked into the app. Users with an installed copy have an app tied to `com.mbg.info.oldslug`. Changing the slug breaks their ability to receive updates.
+- Package names are baked into the app. Users with an installed copy have an app tied to `com.9fourlabs.mbg.oldslug`. Changing the slug breaks their ability to receive updates.
 - Bundle IDs (iOS) have the same issue.
 - App Store / Play Store listings are keyed by these IDs. Changing means creating a new listing from scratch + losing reviews, ratings, analytics.
 

@@ -63,7 +63,7 @@ The short version: per-tenant identifiers (numeric ASC App ID, Play package) liv
 1. **iOS: register the app in App Store Connect:**
    - [App Store Connect](https://appstoreconnect.apple.com) → **My Apps** → **+ New App**.
    - Platform: iOS. Name, primary language, SKU (use the tenant ID).
-   - Bundle ID: select the one matching `app.config.ts` (`com.mbg.info.<tenant>` with dots-not-hyphens).
+   - Bundle ID: select the one matching `app.config.ts` (`com.9fourlabs.mbg.<tenant>` with dots-not-hyphens).
    - Save.
    - Go to **App Information** → note the numeric **Apple ID** (e.g. `1234567890`).
 

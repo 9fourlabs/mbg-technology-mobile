@@ -24,8 +24,13 @@ const nativeIdMode = process.env.NATIVE_ID_MODE ?? "tenant";
 const androidIdMode = process.env.NATIVE_ID_MODE_ANDROID ?? nativeIdMode;
 const iosIdMode = process.env.NATIVE_ID_MODE_IOS ?? nativeIdMode;
 
-const sharedAndroidPackage = "com.mbg.mbgtechnologymobile";
-const sharedIosBundleId = "com.mbg.mbgtechnologymobile";
+// Native identifiers live under 9Four Labs' namespace because that's the
+// org that owns both the Apple Developer Program account and the Google
+// Play Console account (the apps publish as "Developer: 9Four Labs"
+// regardless of bundle ID). MBG Technology's app uses the `.app` suffix;
+// per-tenant production builds get `com.9fourlabs.mbg.<tenant-slug>`.
+const sharedAndroidPackage = "com.9fourlabs.mbg.app";
+const sharedIosBundleId = "com.9fourlabs.mbg.app";
 
 /**
  * Resolve an asset path for the current tenant, falling back to the default.
@@ -89,8 +94,8 @@ const config: ExpoConfig = {
       iosIdMode === "shared"
         ? sharedIosBundleId
         : tenant === "mbg"
-          ? "com.mbg.mbgtechnologymobile"
-          : `com.mbg.info.${tenantSafe}`,
+          ? "com.9fourlabs.mbg.app"
+          : `com.9fourlabs.mbg.${tenantSafe}`,
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
     },
@@ -109,8 +114,8 @@ const config: ExpoConfig = {
       androidIdMode === "shared"
         ? sharedAndroidPackage
         : tenant === "mbg"
-          ? "com.mbg.mbgtechnologymobile"
-          : `com.mbg.info.${tenantSafe}`,
+          ? "com.9fourlabs.mbg.app"
+          : `com.9fourlabs.mbg.${tenantSafe}`,
   },
   plugins: [
     "expo-secure-store",

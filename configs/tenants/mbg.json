@@ -33,7 +33,7 @@
     "adaptiveIconBackgroundColor": "#d4af37",
     "splashBackgroundColor": "#000000",
     "pushEnabled": false,
-    "androidPackageName": "com.mbg.mbgtechnologymobile"
+    "androidPackageName": "com.9fourlabs.mbg.app"
   },
   "tabs": [
     {

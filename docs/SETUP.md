@@ -91,7 +91,7 @@ Repeat for every client app you onboard.
 #### B2. iOS app registration
 
 - [ ] [App Store Connect](https://appstoreconnect.apple.com) → My Apps → **+ New App**.
-- [ ] Bundle ID: select the one matching `app.config.ts` for this tenant (`com.mbg.info.<tenant-with-dots>`).
+- [ ] Bundle ID: select the one matching `app.config.ts` for this tenant (`com.9fourlabs.mbg.<tenant-with-dots>`).
 - [ ] After creation, App Information → note the numeric **Apple ID** (e.g. `1234567890`).
 - [ ] In the admin portal: Tenant → Config → App Store tab → paste into **App Store Connect App ID**.
 

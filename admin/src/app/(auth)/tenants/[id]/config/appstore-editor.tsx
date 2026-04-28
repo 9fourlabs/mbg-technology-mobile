@@ -188,7 +188,7 @@ export default function AppStoreEditor({ tenantId, config, onChange, expoProject
           </label>
           <p className="text-xs text-gray-400 mb-2">
             Only set this if the Play Console listing uses a package name different from
-            the auto-generated one. Defaults to <code className="px-1 py-0.5 bg-gray-100 rounded text-xs">com.mbg.info.&lt;tenant&gt;</code>.
+            the auto-generated one. Defaults to <code className="px-1 py-0.5 bg-gray-100 rounded text-xs">com.9fourlabs.mbg.&lt;tenant&gt;</code>.
           </p>
           <input
             type="text"
