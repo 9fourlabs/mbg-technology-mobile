@@ -33,7 +33,8 @@
     "adaptiveIconBackgroundColor": "#d4af37",
     "splashBackgroundColor": "#000000",
     "pushEnabled": false,
-    "androidPackageName": "com.9fourlabs.mbg.app"
+    "androidPackageName": "com.9fourlabs.mbg.app",
+    "iosAscAppId": "6764345725"
   },
   "tabs": [
     {

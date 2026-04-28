@@ -48,9 +48,9 @@ export const mbgTemplate: InformationalTemplate = {
     // app.config.ts derives this from NATIVE_ID_MODE=tenant; setting
     // explicitly matches what Play Console will need at registration.
     androidPackageName: "com.9fourlabs.mbg.app",
-    // iosAscAppId is intentionally left unset — it gets populated when
-    // Apple Dev D-U-N-S enrollment finalizes and the app is registered
-    // in App Store Connect (admin UI → App Store → Store Submission).
+    // App Store Connect numeric app ID — required by `eas submit` to
+    // route the binary to the right App Store Connect listing.
+    iosAscAppId: "6764345725",
   },
   tabs: [
     {
