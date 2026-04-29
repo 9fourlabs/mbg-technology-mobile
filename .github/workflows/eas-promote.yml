@@ -82,15 +82,16 @@ jobs:
           set -e
           PLATFORM="${{ inputs.platform }}"
 
+          # Note: `eas build` does NOT accept --project-id; it reads the
+          # project from app.config.ts's extra.eas.projectId, which we
+          # set via the EAS_PROJECT_ID env var above.
           if [ "$PLATFORM" = "ios" ] || [ "$PLATFORM" = "both" ]; then
-            eas build --profile production --platform ios --non-interactive --no-wait \
-              --project-id "${{ steps.project.outputs.project_id }}" &
+            eas build --profile production --platform ios --non-interactive --no-wait &
             IOS_PID=$!
           fi
 
           if [ "$PLATFORM" = "android" ] || [ "$PLATFORM" = "both" ]; then
-            eas build --profile production --platform android --non-interactive --no-wait \
-              --project-id "${{ steps.project.outputs.project_id }}" &
+            eas build --profile production --platform android --non-interactive --no-wait &
             ANDROID_PID=$!
           fi
 
@@ -151,13 +152,11 @@ jobs:
             # $ASC_APP_ID interpolates. APPLE_TEAM_ID + ASC_API_KEY_ID +
             # ASC_API_ISSUER_ID are already exported above (account-level).
             eval "$(npx --yes tsx scripts/getSubmitEnv.ts "${{ inputs.tenant }}" ios)"
-            eas submit --profile production --platform ios --latest --non-interactive \
-              --project-id "${{ steps.project.outputs.project_id }}"
+            eas submit --profile production --platform ios --latest --non-interactive
           fi
 
           if [ "$PLATFORM" = "android" ] || [ "$PLATFORM" = "both" ]; then
             # eas.json points at credentials/google-play-service-account.json
             # — materialized earlier from GH secret.
-            eas submit --profile production --platform android --latest --non-interactive \
-              --project-id "${{ steps.project.outputs.project_id }}"
+            eas submit --profile production --platform android --latest --non-interactive
           fi
