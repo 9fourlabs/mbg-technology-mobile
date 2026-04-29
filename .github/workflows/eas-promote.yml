@@ -26,6 +26,11 @@ on:
         required: false
         default: "0"
         type: string
+      submit:
+        description: "Submit the binary to App Store Connect / Play Console after build"
+        required: false
+        default: true
+        type: boolean
 
 jobs:
   promote:
@@ -93,7 +98,7 @@ jobs:
           [ -n "$ANDROID_PID" ] && wait $ANDROID_PID
 
       - name: Materialize Google Play service account JSON
-        if: ${{ inputs.platform == 'android' || inputs.platform == 'both' }}
+        if: ${{ inputs.submit && (inputs.platform == 'android' || inputs.platform == 'both') }}
         env:
           GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
         run: |
@@ -106,7 +111,7 @@ jobs:
           node -e "const j=require('./credentials/google-play-service-account.json'); if(!j.client_email) process.exit(1)"
 
       - name: Materialize App Store Connect API key (.p8)
-        if: ${{ inputs.platform == 'ios' || inputs.platform == 'both' }}
+        if: ${{ inputs.submit && (inputs.platform == 'ios' || inputs.platform == 'both') }}
         env:
           ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
         run: |
@@ -124,6 +129,7 @@ jobs:
           echo "ASC API key materialized at credentials/asc-api-key.p8 ($(wc -c < credentials/asc-api-key.p8) bytes)"
 
       - name: Submit to stores
+        if: ${{ inputs.submit }}
         env:
           APP_TENANT: ${{ inputs.tenant }}
           NATIVE_ID_MODE: tenant
